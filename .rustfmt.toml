@@ -1,0 +1,17 @@
+blank_lines_upper_bound = 1
+format_code_in_doc_comments = true
+format_macro_matchers = true
+format_strings = true
+indent_style = "Block"
+match_block_trailing_comma = true
+max_width = 80
+merge_imports = true
+normalize_comments = true
+normalize_doc_attributes = true
+overflow_delimited_expr = true
+reorder_imports = true
+reorder_modules = true
+tab_spaces = 4
+use_try_shorthand = true
+where_single_line = true
+wrap_comments = true
