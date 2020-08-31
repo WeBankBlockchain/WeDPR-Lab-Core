@@ -1,0 +1,9 @@
+[workspace]
+
+members = [
+"crypto",
+"solution/verifiable_confidential_ledger",
+"common/utils",
+"common/macros",
+"common/protos",
+]
