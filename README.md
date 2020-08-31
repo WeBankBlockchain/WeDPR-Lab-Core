@@ -57,7 +57,7 @@ cargo run
 
 ### 生成并查看Rust SDK接口文档
 
-在本项目的根目录（即`WeDPR-Lab-Core`目录）中，运行如下命令：
+在本项目的根目录（即`WeDPR-Lab-Core`目录）中，运行如下命令
 
 ```bash
 cargo doc
