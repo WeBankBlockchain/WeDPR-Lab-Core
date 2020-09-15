@@ -33,8 +33,7 @@ WeDPR全面拥抱开放，将陆续开源一系列核心算法组件，进一步
 
 ### 安装Rust环境
 
-1. 安装nightly版本的Rust开发环境，可参考[示例安装指引](https://wiki.jikexueyuan.com/project/rust/nightly-rust.html)。
-2. 若有疑问，可进一步参考[Rust官方文档](https://www.rust-lang.org/tools/install)。
+安装nightly版本的Rust开发环境，可参考[Rust官方文档](https://www.rust-lang.org/zh-CN/tools/install)。
 
 ### 下载WeDPR-Lab源代码
 
