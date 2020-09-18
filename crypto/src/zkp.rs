@@ -23,6 +23,8 @@ use wedpr_utils::error::WedprError;
 
 /// Uses a smaller value to reduce time cost of using range proofs.
 /// Uses a larger value to increase value limit of using range proofs.
+/// This is a critical parameter which is recommended to be fixed to
+/// prevent unexpected proof validity issues.
 const RANGE_SIZE_IN_BITS: usize = 32;
 const DEFAULT_BYTES_MESSAGE: &[u8] = b"WeDPR";
 
@@ -231,7 +233,7 @@ pub fn verify_value_range_in_batch(
 }
 
 /// Proves three commitments satisfying a sum relationship, i.e.
-/// the values embeded in them satisfying c1_value + c2_value = c3_value.
+/// the values embedded in them satisfying c1_value + c2_value = c3_value.
 /// c3_value is not in the argument list, and will be directly computed from
 /// c1_value + c2_value.
 /// c?_blinding are random blinding values used in the commitments.
@@ -313,7 +315,7 @@ pub fn prove_sum_relationship(
 }
 
 /// Verifies three commitments satisfying a sum relationship, i.e.
-/// the values embeded in c1_point, c2_point, c3_point satisfying
+/// the values embedded in c1_point, c2_point, c3_point satisfying
 /// c1_value + c2_value = c3_value.
 pub fn verify_sum_relationship(
     c1_point: &RistrettoPoint,
@@ -362,7 +364,7 @@ pub fn verify_sum_relationship(
 }
 
 /// Proves three commitments satisfying a product relationship, i.e.
-/// the values embeded in them satisfying c1_value * c2_value = c3_value.
+/// the values embedded in them satisfying c1_value * c2_value = c3_value.
 /// c3_value is not in the argument list, and will be directly computed from
 /// c1_value * c2_value.
 /// c?_blinding are random blinding values used in the commitments.
@@ -451,7 +453,7 @@ pub fn prove_product_relationship(
 }
 
 /// Verifies three commitments satisfying a product relationship, i.e.
-/// the values embeded in c1_point, c2_point, c3_point satisfying
+/// the values embedded in c1_point, c2_point, c3_point satisfying
 /// c1_value * c2_value = c3_value.
 pub fn verify_product_relationship(
     c1_point: &RistrettoPoint,

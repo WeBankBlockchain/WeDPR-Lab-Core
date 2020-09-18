@@ -78,7 +78,7 @@ pub fn rangeproof_to_string(proof: &RangeProof) -> String {
 }
 
 /// Converts an arbitrary string to Scalar.
-/// It will hash it first, and transform the numberic value of hash output to
+/// It will hash it first, and transform the numeric value of hash output to
 /// Scalar.
 pub fn hash_to_scalar(value: &str) -> Scalar {
     let mut array = [0; 32];

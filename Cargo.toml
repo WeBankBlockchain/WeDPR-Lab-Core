@@ -5,5 +5,8 @@ members = [
 "solution/verifiable_confidential_ledger",
 "common/utils",
 "common/macros",
-"common/protos",
+"ffi/ffi_common",
+"ffi/ffi_macros",
+"ffi/ffi_vcl",
+"protos",
 ]

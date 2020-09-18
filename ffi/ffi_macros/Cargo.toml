@@ -1,5 +1,5 @@
 [package]
-name = "wedpr_macros"
+name = "wedpr_ffi_macros"
 version = "1.0.0"
 authors = ["WeDPR <wedpr@webank.com>"]
 edition = "2018"
