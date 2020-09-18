@@ -25,7 +25,9 @@ fn generate_proto_for_all() {
     Codegen::new()
         .out_dir("./src/generated/")
         .includes(&["."])
-        .inputs(&["crypto/zkp.proto"])
+        // List all used proto files here.
+        // You can remove any proto files that are not used by your project.
+        .inputs(&["crypto/zkp.proto", "solution/vcl/vcl.proto"])
         .customize(Customize {
             ..Default::default()
         })
