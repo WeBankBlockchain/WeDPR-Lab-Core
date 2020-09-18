@@ -20,7 +20,7 @@ macro_rules! wedpr_println {
 /// Macros to handle errors and return bool type instead of Result type, which
 /// are mainly used to simplify type conversions for Rust FFI.
 
-/// Converts a string into a point if succeeded, otherwise returns false.
+/// Converts a string to a point if succeeded, otherwise returns false.
 #[macro_export]
 macro_rules! string_to_point {
     ($param:expr) => {
@@ -34,7 +34,7 @@ macro_rules! string_to_point {
     };
 }
 
-/// Converts a string into a scalar if succeeded, otherwise returns false.
+/// Converts a string to a scalar if succeeded, otherwise returns false.
 #[macro_export]
 macro_rules! string_to_scalar {
     ($param:expr) => {
@@ -48,7 +48,7 @@ macro_rules! string_to_scalar {
     };
 }
 
-/// Converts a string into a bytes vector if succeeded, otherwise returns false.
+/// Converts a string to a bytes vector if succeeded, otherwise returns false.
 #[macro_export]
 macro_rules! string_to_bytes {
     ($param:expr) => {

@@ -7,9 +7,15 @@ use std::fmt;
 use wedpr_crypto::{
     self,
     constant::{BASEPOINT_G1, BASEPOINT_G2},
-    utils::{point_to_string, scalar_to_string},
+    utils::{
+        point_to_string, scalar_to_string, string_to_point, string_to_scalar,
+    },
 };
-use wedpr_protos::generated::zkp::BalanceProof;
+use wedpr_protos::generated::{
+    vcl::{EncodedConfidentialCredit, EncodedOwnerSecret},
+    zkp::BalanceProof,
+};
+use wedpr_utils::error::WedprError;
 
 /// Owner secret used to spend a confidential credit.
 #[derive(Default, Debug, Clone)]
@@ -35,9 +41,56 @@ impl fmt::Display for OwnerSecret {
     }
 }
 
+impl OwnerSecret {
+    /// Encodes the struct to its protobuf form.
+    // TODO: Make it serde compatible and try Flexbuffers.
+    pub fn encode(&self) -> EncodedOwnerSecret {
+        EncodedOwnerSecret {
+            credit_value: self.credit_value as i64,
+            secret_blinding: scalar_to_string(&self.secret_blinding),
+            unknown_fields: Default::default(),
+            cached_size: Default::default(),
+        }
+    }
+
+    /// Decodes the protobuf to its struct form.
+    // TODO: Make it serde compatible and try Flexbuffers.
+    pub fn decode(
+        encoded_owner_secret: &EncodedOwnerSecret,
+    ) -> Result<OwnerSecret, WedprError> {
+        Ok(OwnerSecret {
+            credit_value: encoded_owner_secret.get_credit_value() as u64,
+            secret_blinding: string_to_scalar(
+                encoded_owner_secret.get_secret_blinding(),
+            )?,
+        })
+    }
+}
+
 impl ConfidentialCredit {
+    /// Gets the point representing the credit.
     pub fn get_point(&self) -> RistrettoPoint {
         self.point
+    }
+
+    /// Encodes the struct to its protobuf form.
+    // TODO: Make it serde compatible and try Flexbuffers.
+    pub fn encode(&self) -> EncodedConfidentialCredit {
+        EncodedConfidentialCredit {
+            point: point_to_string(&self.point),
+            unknown_fields: Default::default(),
+            cached_size: Default::default(),
+        }
+    }
+
+    // Decodes the protobuf to its struct form.
+    // TODO: Make it serde compatible and try Flexbuffers.
+    pub fn decode(
+        encoded_confidential_credit: &EncodedConfidentialCredit,
+    ) -> Result<ConfidentialCredit, WedprError> {
+        Ok(ConfidentialCredit {
+            point: string_to_point(encoded_confidential_credit.get_point())?,
+        })
     }
 }
 
@@ -47,7 +100,7 @@ impl fmt::Display for ConfidentialCredit {
     }
 }
 
-/// Makes a confidential credit record and owner secret for a numberic value.
+/// Makes a confidential credit record and owner secret for a numeric value.
 pub fn make_credit(value: u64) -> (ConfidentialCredit, OwnerSecret) {
     let blinding_r = wedpr_crypto::utils::get_random_scalar();
     let commitment_point = wedpr_crypto::utils::make_commitment_point(
@@ -69,7 +122,7 @@ pub fn make_credit(value: u64) -> (ConfidentialCredit, OwnerSecret) {
 }
 
 /// Proves three confidential credit records satisfying a sum relationship, i.e.
-/// the values embeded in them satisfying c1_value + c2_value = c3_value.
+/// the values embedded in them satisfying c1_value + c2_value = c3_value.
 /// c?_secret are the owner secrets for spending those commitments.
 /// It returns a proof for the above sum relationship.
 pub fn prove_sum_balance(
@@ -90,7 +143,7 @@ pub fn prove_sum_balance(
 }
 
 /// Verifies three commitments satisfying a sum relationship, i.e.
-/// the values embeded in c1_credit, c2_credit, c3_credit satisfying
+/// the values embedded in c1_credit, c2_credit, c3_credit satisfying
 /// c1_value + c2_value = c3_value.
 pub fn verify_sum_balance(
     c1_credit: &ConfidentialCredit,
@@ -110,7 +163,7 @@ pub fn verify_sum_balance(
 }
 
 /// Proves three confidential credit records satisfying a product relationship,
-/// i.e. the values embeded in them satisfying c1_value * c2_value = c3_value.
+/// i.e. the values embedded in them satisfying c1_value * c2_value = c3_value.
 /// c?_secret are the owner secrets for spending those commitments.
 /// It returns a proof for the above product relationship.
 pub fn prove_product_balance(
@@ -131,7 +184,7 @@ pub fn prove_product_balance(
 }
 
 /// Verifies three commitments satisfying a product relationship, i.e.
-/// the values embeded in c1_credit, c2_credit, c3_credit satisfying
+/// the values embedded in c1_credit, c2_credit, c3_credit satisfying
 /// c1_value * c2_value = c3_value.
 pub fn verify_product_balance(
     c1_credit: &ConfidentialCredit,
@@ -150,7 +203,7 @@ pub fn verify_product_balance(
     )
 }
 
-/// Proves whether the value embeded in a confidential credit record belongs
+/// Proves whether the value embedded in a confidential credit record belongs
 /// to (0, 2^RANGE_SIZE_IN_BITS - 1].
 pub fn prove_range(secret: &OwnerSecret) -> String {
     let (proof, _) = wedpr_crypto::zkp::prove_value_range_with_blinding(
@@ -160,7 +213,7 @@ pub fn prove_range(secret: &OwnerSecret) -> String {
     proof
 }
 
-/// Verifies whether the value embeded in a confidential credit record belongs
+/// Verifies whether the value embedded in a confidential credit record belongs
 /// to (0, 2^RANGE_SIZE_IN_BITS - 1].
 pub fn verify_range(c1: &ConfidentialCredit, proof: &str) -> bool {
     wedpr_crypto::zkp::verify_value_range(&c1.get_point(), proof)
