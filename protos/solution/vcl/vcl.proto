@@ -1,0 +1,18 @@
+// Copyright 2020 WeDPR Lab Project Authors. Licensed under Apache-2.0.
+
+syntax = "proto3";
+
+package com.webank.wedpr.vcl.proto;
+option java_package = "com.webank.wedpr.vcl.proto";
+option java_multiple_files = true;
+
+// Encoded data to represent a owner secret used by VCL solution.
+message EncodedOwnerSecret {
+    int64 credit_value = 1;
+    string secret_blinding = 2;
+}
+
+// Encoded data to represent a confidential credit used by VCL solution.
+message EncodedConfidentialCredit {
+    string point = 1;
+}

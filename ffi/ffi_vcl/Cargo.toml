@@ -1,0 +1,24 @@
+[package]
+name = "wedpr_ffi_vcl"
+version = "0.1.0"
+authors = ["HaoXuan40404 <444649358@qq.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "ffi_vcl"
+crate-type = ["cdylib"]
+
+[dependencies]
+jni = "0.13.0"
+protobuf = "2.10.1"
+verifiable_confidential_ledger = { path = "../../solution/verifiable_confidential_ledger" }
+wedpr_crypto = { path = "../../crypto/" }
+wedpr_ffi_common = { path = "../ffi_common/" }
+wedpr_ffi_macros = { path = "../../ffi/ffi_macros/" }
+wedpr_protos = { path = "../../protos/" }
+wedpr_utils = { path = "../../common/utils" }
+
+[build-dependencies]
+cbindgen = "0.9.0"
