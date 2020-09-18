@@ -454,7 +454,7 @@ fn wait_for_input() -> String {
     std::io::stdin()
         .read_line(&mut input)
         .expect("Failed to read line.");
-    input.replace("\n", "")
+        input.trim().to_string()
 }
 
 // In this demo, we set the upper limit of input value to 10000.
