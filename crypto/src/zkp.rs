@@ -135,13 +135,7 @@ pub fn verify_value_range_with_blinding_basepoint(
         RANGE_SIZE_IN_BITS,
     ) {
         Ok(_) => true,
-        Err(e) => {
-            wedpr_println!(
-                "RangeProof verify_single failed!, result = {:?}",
-                e
-            );
-            return false;
-        },
+        Err(_) => false,
     }
 }
 
@@ -225,10 +219,7 @@ pub fn verify_value_range_in_batch(
         RANGE_SIZE_IN_BITS,
     ) {
         Ok(_) => true,
-        Err(_) => {
-            wedpr_println!("RangeProof verify_multiple failed");
-            return false;
-        },
+        Err(_) => false,
     }
 }
 
