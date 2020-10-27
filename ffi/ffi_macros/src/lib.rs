@@ -10,10 +10,10 @@
 #[macro_export]
 macro_rules! java_safe_jstring_to_bytes {
     ($_env:expr, $result_jobject:expr, $java_string:expr) => {
-        match utils::java_jstring_to_bytes(&$_env, $java_string) {
+        match java_jstring_to_bytes(&$_env, $java_string) {
             Ok(v) => v,
             Err(_) => {
-                return utils::java_set_error_field_and_extract_jobject(
+                return java_set_error_field_and_extract_jobject(
                     &$_env,
                     &$result_jobject,
                     &format!(
@@ -30,10 +30,10 @@ macro_rules! java_safe_jstring_to_bytes {
 #[macro_export]
 macro_rules! java_safe_jbytes_to_bytes {
     ($_env:expr, $result_jobject:expr, $java_bytes:expr) => {
-        match utils::java_jbytes_to_bytes(&$_env, $java_bytes) {
+        match java_jbytes_to_bytes(&$_env, $java_bytes) {
             Ok(v) => v,
             Err(_) => {
-                return utils::java_set_error_field_and_extract_jobject(
+                return java_set_error_field_and_extract_jobject(
                     &$_env,
                     &$result_jobject,
                     &format!(
@@ -50,10 +50,10 @@ macro_rules! java_safe_jbytes_to_bytes {
 #[macro_export]
 macro_rules! java_safe_jstring_to_string {
     ($_env:expr, $result_jobject:expr, $java_string:expr) => {
-        match utils::java_jstring_to_string(&$_env, $java_string) {
+        match java_jstring_to_string(&$_env, $java_string) {
             Ok(v) => v,
             Err(_) => {
-                return utils::java_set_error_field_and_extract_jobject(
+                return java_set_error_field_and_extract_jobject(
                     &$_env,
                     &$result_jobject,
                     &format!(
@@ -73,7 +73,7 @@ macro_rules! java_safe_string_to_jstring {
         JObject::from(match $_env.new_string($rust_string) {
             Ok(v) => v,
             Err(_) => {
-                return utils::java_set_error_field_and_extract_jobject(
+                return java_set_error_field_and_extract_jobject(
                     &$_env,
                     &$result_jobject,
                     &format!(
@@ -107,7 +107,7 @@ macro_rules! java_safe_bytes_to_pb {
         match protobuf::parse_from_bytes::<$pb_type>(&$rust_bytes) {
             Ok(v) => v,
             Err(_) => {
-                return utils::java_set_error_field_and_extract_jobject(
+                return java_set_error_field_and_extract_jobject(
                     &$_env,
                     &$result_jobject,
                     &format!(
@@ -128,7 +128,7 @@ macro_rules! java_safe_pb_to_bytes {
         match $rust_pb.write_to_bytes() {
             Ok(v) => v,
             Err(_) => {
-                return utils::java_set_error_field_and_extract_jobject(
+                return java_set_error_field_and_extract_jobject(
                     &$_env,
                     &$result_jobject,
                     &format!(
@@ -161,7 +161,7 @@ macro_rules! java_safe_set_field {
         ) {
             Ok(v) => v,
             Err(_) => {
-                return utils::java_set_error_field_and_extract_jobject(
+                return java_set_error_field_and_extract_jobject(
                     &$_env,
                     &$result_jobject,
                     &format!(
@@ -252,7 +252,7 @@ macro_rules! java_safe_set_bytes_field {
         java_safe_set_string_field!(
             $_env,
             $result_jobject,
-            common_utils::bytes_to_string(&$rust_bytes),
+            bytes_to_string(&$rust_bytes),
             $field_name
         )
     };
@@ -269,5 +269,169 @@ macro_rules! java_safe_set_encoded_pb_field {
             java_safe_pb_to_bytes!($_env, $result_jobject, $rust_pb),
             $field_name
         )
+    };
+}
+
+// C/C++ FFI macros.
+
+/// Converts C char pointer to Rust string, and returns a specified error value
+/// if failed.
+#[macro_export]
+macro_rules! c_safe_c_char_pointer_to_string_with_error_value {
+    ($c_char_pointer:expr, $error_value:expr) => {
+        match c_char_pointer_to_string($c_char_pointer) {
+            Ok(v) => v,
+            Err(_) => {
+                wedpr_println!(
+                    "C char pointer to string failed, pointer_name={}",
+                    stringify!($c_char_pointer)
+                );
+                return $error_value;
+            },
+        }
+    };
+}
+
+/// Converts C char pointer to Rust string, and returns NULL if failed.
+#[macro_export]
+macro_rules! c_safe_c_char_pointer_to_string {
+    ($c_char_pointer:expr) => {
+        c_safe_c_char_pointer_to_string_with_error_value!(
+            $c_char_pointer,
+            ptr::null_mut()
+        )
+    };
+}
+
+/// Converts C char pointer to Rust bytes, and returns a specified error value
+/// if failed.
+#[macro_export]
+macro_rules! c_safe_c_char_pointer_to_bytes_with_error_value {
+    ($c_char_pointer:expr, $error_value:expr) => {
+        match string_to_bytes(
+            &c_safe_c_char_pointer_to_string_with_error_value!(
+                $c_char_pointer,
+                $error_value
+            ),
+        ) {
+            Ok(v) => v,
+            Err(_) => return $error_value,
+        }
+    };
+}
+
+/// Converts C char pointer to Rust bytes, and returns NULL if failed.
+#[macro_export]
+macro_rules! c_safe_c_char_pointer_to_bytes {
+    ($c_char_pointer:expr) => {
+        c_safe_c_char_pointer_to_bytes_with_error_value!(
+            $c_char_pointer,
+            ptr::null_mut()
+        )
+    };
+}
+
+/// Converts C char pointer to Rust proto, and returns a specified error value
+/// if failed.
+#[macro_export]
+macro_rules! c_safe_c_char_pointer_to_proto_with_error_value {
+    ($c_char_pointer:expr, $pb_type:ty, $error_value:expr) => {
+        match protobuf::parse_from_bytes::<$pb_type>(
+            &c_safe_c_char_pointer_to_bytes_with_error_value!(
+                $c_char_pointer,
+                $error_value
+            ),
+        ) {
+            Ok(v) => v,
+            Err(_) => return $error_value,
+        }
+    };
+}
+
+/// Converts C char pointer to Rust proto, and returns NULL if failed.
+#[macro_export]
+macro_rules! c_safe_c_char_pointer_to_proto {
+    ($c_char_pointer:expr, $pb_type:ty) => {
+        c_safe_c_char_pointer_to_proto_with_error_value!(
+            $c_char_pointer,
+            $pb_type,
+            ptr::null_mut()
+        )
+    };
+}
+
+/// Converts Rust string to C char pointer, and returns a specified error value
+/// if failed.
+#[macro_export]
+macro_rules! c_safe_string_to_c_char_pointer_with_error_value {
+    ($rust_string:expr, $error_value:expr) => {
+        match CString::new($rust_string) {
+            Ok(v) => v.into_raw(),
+            Err(_) => return $error_value,
+        }
+    };
+}
+
+/// Converts Rust string to C char pointer, and returns NULL if failed.
+#[macro_export]
+macro_rules! c_safe_string_to_c_char_pointer {
+    ($rust_string:expr) => {
+        c_safe_string_to_c_char_pointer_with_error_value!(
+            $rust_string,
+            ptr::null_mut()
+        )
+    };
+}
+
+/// Converts Rust bytes to C char pointer, and returns NULL if failed.
+#[macro_export]
+macro_rules! c_safe_bytes_to_c_char_pointer {
+    ($rust_string:expr) => {
+        c_safe_string_to_c_char_pointer!(bytes_to_string($rust_string))
+    };
+}
+
+/// Converts Rust protobuf to C char pointer, and returns NULL if failed.
+#[macro_export]
+macro_rules! c_safe_proto_to_c_char_pointer {
+    ($rust_proto:expr) => {
+        c_safe_bytes_to_c_char_pointer!(&match $rust_proto.write_to_bytes() {
+            Ok(v) => v,
+            Err(_) => return ptr::null_mut(),
+        })
+    };
+}
+
+/// Converts encodable Rust struct to Rust string, which a implemented encode
+/// function.
+#[macro_export]
+macro_rules! encodable_struct_to_string {
+    ($rust_struct:expr) => {
+        bytes_to_string(
+            &$rust_struct
+                .encode()
+                .write_to_bytes()
+                .expect("struct to bytes should not fail"),
+        )
+    };
+}
+
+/// Returns C data, and returns a specified error value if any exception
+/// occurred.
+#[macro_export]
+macro_rules! c_safe_return_with_error_value {
+    ($result:expr, $error_value:expr) => {
+        match $result {
+            Ok(v) => v,
+            Err(_) => $error_value,
+        }
+    };
+}
+
+/// Returns C data, and returns NULL if any exception occurred.
+#[macro_export]
+macro_rules! c_safe_return {
+    ($result:expr) => {
+        c_safe_return_with_error_value!($result, ptr::null_mut())
     };
 }

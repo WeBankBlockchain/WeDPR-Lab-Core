@@ -1,6 +1,7 @@
 // Copyright 2020 WeDPR Lab Project Authors. Licensed under Apache-2.0.
 
-//! Library of macros and functions for FFI of VCL solution.
+//! Library of macros and functions for FFI of VCL solution, targeting
+//! Java-compatible architectures (including Android).
 
 extern crate jni;
 
@@ -14,19 +15,22 @@ use jni::{
 };
 use protobuf::{self, Message};
 use verifiable_confidential_ledger;
-use wedpr_crypto::utils as common_utils;
-use wedpr_ffi_common::utils;
+use wedpr_crypto::utils::bytes_to_string;
+use wedpr_ffi_common::utils::{
+    java_jstring_to_bytes, java_jstring_to_string, java_new_jobject,
+    java_set_error_field_and_extract_jobject,
+};
 
 use wedpr_protos::generated::{
     vcl::{EncodedConfidentialCredit, EncodedOwnerSecret},
     zkp::BalanceProof,
 };
 
-// Java FFI: Java interface files will be generated under
+// Java FFI: Java interfaces will be generated under
 // package name 'com.webank.wedpr.vcl'.
 
 // Result class name is 'com.webank.wedpr.vcl.VclResult'.
-const RESULT_JAVA_CLASS_NAME: &str = "Lcom/webank/wedpr/vcl/VclResult;";
+const RESULT_JAVA_CLASS_NAME: &str = "com/webank/wedpr/vcl/VclResult";
 
 // Local macros and functions section.
 
@@ -37,7 +41,7 @@ macro_rules! decode_secret {
         ) {
             Ok(v) => v,
             Err(_) => {
-                return utils::java_set_error_field_and_extract_jobject(
+                return java_set_error_field_and_extract_jobject(
                     &$_env,
                     &$result_jobject,
                     &format!(
@@ -57,7 +61,7 @@ macro_rules! decode_credit {
         ) {
             Ok(v) => v,
             Err(_) => {
-                return utils::java_set_error_field_and_extract_jobject(
+                return java_set_error_field_and_extract_jobject(
                     &$_env,
                     &$result_jobject,
                     &format!(
@@ -71,7 +75,7 @@ macro_rules! decode_credit {
 }
 
 fn get_result_jobject<'a>(_env: &'a JNIEnv) -> JObject<'a> {
-    utils::java_new_jobject(_env, RESULT_JAVA_CLASS_NAME)
+    java_new_jobject(_env, RESULT_JAVA_CLASS_NAME)
 }
 
 // Java interface section.
@@ -403,5 +407,3 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_verifyRange(
     );
     result_jobject.into_inner()
 }
-
-// TODO: Add more FFI sections for more programming languages.

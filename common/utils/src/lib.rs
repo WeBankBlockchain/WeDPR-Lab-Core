@@ -4,5 +4,8 @@
 
 #[macro_use]
 extern crate failure;
+#[macro_use]
+extern crate wedpr_macros;
 
+pub mod coder;
 pub mod error;

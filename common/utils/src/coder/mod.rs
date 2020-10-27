@@ -3,8 +3,9 @@
 //! Data encoding and decoding functions.
 
 pub mod base_x;
+pub mod basic;
 
-use wedpr_utils::error::WedprError;
+use crate::error::WedprError;
 
 /// Trait of a replaceable coder algorithm.
 pub trait Coder {

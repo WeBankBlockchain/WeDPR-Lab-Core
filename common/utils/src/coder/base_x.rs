@@ -4,8 +4,7 @@
 
 extern crate base64;
 
-use crate::coder::Coder;
-use wedpr_utils::error::WedprError;
+use crate::{coder::Coder, error::WedprError};
 
 #[derive(Default, Debug, Clone)]
 pub struct WedprBase64 {}

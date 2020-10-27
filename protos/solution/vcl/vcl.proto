@@ -16,3 +16,10 @@ message EncodedOwnerSecret {
 message EncodedConfidentialCredit {
     string point = 1;
 }
+
+// Return data to FFI C interface
+message VclResult {
+    string credit = 1;
+    string secret = 2;
+    string proof = 3;
+}
