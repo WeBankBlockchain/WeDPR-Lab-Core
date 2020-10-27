@@ -1,21 +1,18 @@
 // Copyright 2020 WeDPR Lab Project Authors. Licensed under Apache-2.0.
 
 //! Common utility functions.
-use crate::constant::RISTRETTO_POINT_SIZE_IN_BYTES;
+use crate::{
+    constant::{CODER, HASH, RISTRETTO_POINT_SIZE_IN_BYTES},
+    hash::Hash,
+};
 use bulletproofs::RangeProof;
 use curve25519_dalek::{
     ristretto::{CompressedRistretto, RistrettoPoint},
     scalar::Scalar,
     traits::MultiscalarMul,
 };
-use wedpr_utils::error::WedprError;
-
-use crate::{
-    coder::Coder,
-    constant::{CODER, HASH},
-    hash::Hash,
-};
 use std::convert::TryInto;
+use wedpr_utils::{coder::Coder, error::WedprError};
 
 /// Converts bytes to an encoded string.
 pub fn bytes_to_string<T: ?Sized + AsRef<[u8]>>(input: &T) -> String {
@@ -25,6 +22,27 @@ pub fn bytes_to_string<T: ?Sized + AsRef<[u8]>>(input: &T) -> String {
 /// Converts an encoded string to a bytes vector.
 pub fn string_to_bytes(input: &str) -> Result<Vec<u8>, WedprError> {
     CODER.decode(input)
+}
+
+/// Converts bytes to a UTF8 string.
+pub fn bytes_to_utf8<T: ?Sized + AsRef<[u8]>>(
+    input: &T,
+) -> Result<String, WedprError> {
+    match String::from_utf8(input.as_ref().to_vec()) {
+        Ok(v) => Ok(v),
+        Err(_) => {
+            wedpr_println!(
+                "UTF8 encoding failed, input was: {}",
+                bytes_to_string(input)
+            );
+            return Err(WedprError::DecodeError);
+        },
+    }
+}
+
+/// Converts a UTF8 string to a bytes vector.
+pub fn utf8_to_bytes(input: &str) -> Vec<u8> {
+    String::from(input).into_bytes()
 }
 
 /// Converts Scalar to an encoded string.
@@ -82,7 +100,7 @@ pub fn rangeproof_to_string(proof: &RangeProof) -> String {
 /// Scalar.
 pub fn hash_to_scalar(value: &str) -> Scalar {
     let mut array = [0; 32];
-    array.clone_from_slice(&HASH.hash(value));
+    array.clone_from_slice(&HASH.hash(value.as_bytes()));
     Scalar::from_bytes_mod_order(array)
 }
 
@@ -139,6 +157,14 @@ mod tests {
         let str = "test";
         let bytes = string_to_bytes(&str).unwrap();
         let recovered_str = bytes_to_string(&bytes);
+        assert_eq!(str, recovered_str);
+    }
+
+    #[test]
+    pub fn test_utf8_conversion() {
+        let str = "test";
+        let bytes = utf8_to_bytes(&str);
+        let recovered_str = bytes_to_utf8(&bytes).unwrap();
         assert_eq!(str, recovered_str);
     }
 

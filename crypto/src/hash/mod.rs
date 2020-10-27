@@ -6,6 +6,7 @@ pub mod keccak256;
 
 /// Trait of a replaceable hash algorithm.
 pub trait Hash {
-    /// Generates a fixed length hash bytes vector from any string.
-    fn hash(&self, msg: &str) -> Vec<u8>;
+    /// Generates a fixed length hash bytes vector from a bytes array of any
+    /// length.
+    fn hash<T: ?Sized + AsRef<[u8]>>(&self, input: &T) -> Vec<u8>;
 }

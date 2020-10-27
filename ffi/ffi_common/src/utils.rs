@@ -11,6 +11,10 @@ use jni::{
     JNIEnv,
 };
 
+// From Rust to C/C++.
+use libc::c_char;
+use std::ffi::CStr;
+
 use wedpr_crypto::utils;
 use wedpr_utils::error::WedprError;
 
@@ -98,5 +102,23 @@ pub fn java_jbytes_to_bytes(
     match _env.get_direct_buffer_address(java_bytes) {
         Ok(rust_bytes_array) => Ok(rust_bytes_array.to_vec()),
         Err(_) => return Err(WedprError::FormatError),
+    }
+}
+
+// C/C++ FFI functions.
+
+/// Default success status return code for C/C++ functions.
+pub const SUCCESS: i8 = 0;
+/// Default failure status return code for C/C++ functions.
+pub const FAILURE: i8 = -1;
+
+/// Converts C char pointer to Rust string.
+pub fn c_char_pointer_to_string(
+    param: *const c_char,
+) -> Result<String, WedprError> {
+    let cstr_param = unsafe { CStr::from_ptr(param) };
+    match cstr_param.to_str() {
+        Ok(v) => Ok(v.to_owned()),
+        Err(_) => Err(WedprError::FormatError),
     }
 }
