@@ -7,6 +7,9 @@ members = [
 "common/macros",
 "ffi/ffi_common",
 "ffi/ffi_macros",
-"ffi/ffi_vcl",
+"ffi/ffi_c/ffi_c_vcl",
+"ffi/ffi_java/ffi_java_vcl",
+"ffi/ffi_c/ffi_c_crypto",
+"ffi/ffi_java/ffi_java_crypto",
 "protos",
 ]

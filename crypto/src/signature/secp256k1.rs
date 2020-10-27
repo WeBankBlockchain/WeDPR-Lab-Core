@@ -12,7 +12,6 @@ use self::secp256k1::{
 use crate::{
     constant::{SECP256K1_ALL, SECP256K1_VERIFY},
     signature::Signature,
-    utils::{bytes_to_string, string_to_bytes},
 };
 
 #[derive(Default, Debug, Clone)]
@@ -27,54 +26,65 @@ pub const FISCO_BCOS_SIGNATURE_END_INDEX: usize =
 /// sig\[0..64\): signature for the message hash.
 /// sig\[64\]: recovery id.
 impl Signature for WedprSecp256k1Recover {
-    fn sign(
+    fn sign<T: ?Sized + AsRef<[u8]>>(
         &self,
-        private_key: &str,
-        msg_hash_str: &str,
-    ) -> Result<String, WedprError>
+        private_key: &T,
+        msg_hash: &T,
+    ) -> Result<Vec<u8>, WedprError>
     {
-        let msg_hash = string_to_bytes(msg_hash_str)?;
-        let sk_str_bytes = string_to_bytes(private_key)?;
-        let secret_key = match SecretKey::from_slice(&sk_str_bytes) {
+        let secret_key = match SecretKey::from_slice(&private_key.as_ref()) {
             Ok(v) => v,
             Err(_) => {
-                wedpr_println!("Getting private key failed");
+                wedpr_println!("Parsing private key failed");
                 return Err(WedprError::FormatError);
             },
         };
-        let message_send = Message::from_slice(&msg_hash).expect("32 bytes");
-        let sig = SECP256K1_ALL.sign_recoverable(&message_send, &secret_key);
-        let (recid, signature_bytes) = &sig.serialize_compact();
-        let mut vec_sig = signature_bytes.to_vec();
-        vec_sig.push(recid.to_i32() as u8);
-        Ok(bytes_to_string(&vec_sig))
-    }
-
-    fn verify(
-        &self,
-        public_key: &str,
-        msg_hash_str: &str,
-        signature: &str,
-    ) -> bool
-    {
-        let msg_hash = string_to_bytes!(msg_hash_str);
-
-        let message_receive = Message::from_slice(&msg_hash).expect("32 bytes");
-        let pk_str_bytes = string_to_bytes!(&public_key);
-        let pub_str_get = match PublicKey::from_slice(&pk_str_bytes) {
+        // Message hash length for Secp256k1 signature should be 32 bytes.
+        let msg_hash_obj = match Message::from_slice(&msg_hash.as_ref()) {
             Ok(v) => v,
             Err(_) => {
-                wedpr_println!("Parsing public key to failed");
+                wedpr_println!("Parsing message hash failed");
+                return Err(WedprError::FormatError);
+            },
+        };
+        let signature_obj =
+            SECP256K1_ALL.sign_recoverable(&msg_hash_obj, &secret_key);
+        let (recid, signature_bytes) = &signature_obj.serialize_compact();
+        // Append recovery id to the end of signature bytes.
+        let mut signature_output = signature_bytes.to_vec();
+        signature_output.push(recid.to_i32() as u8);
+        Ok(signature_output)
+    }
+
+    fn verify<T: ?Sized + AsRef<[u8]>>(
+        &self,
+        public_key: &T,
+        msg_hash: &T,
+        signature: &T,
+    ) -> bool
+    {
+        // Message hash length for Secp256k1 signature should be 32 bytes.
+        let msg_hash_obj = match Message::from_slice(&msg_hash.as_ref()) {
+            Ok(v) => v,
+            Err(_) => {
+                wedpr_println!("Parsing message hash failed");
                 return false;
             },
         };
-        let sig_result_hex = string_to_bytes!(signature);
-        if sig_result_hex.len() != FISCO_BCOS_SIGNATURE_DATA_LENGTH {
-            wedpr_println!("Sigature length is not 65");
+        let inputted_pub_key = match PublicKey::from_slice(&public_key.as_ref())
+        {
+            Ok(v) => v,
+            Err(_) => {
+                wedpr_println!("Parsing public key failed");
+                return false;
+            },
+        };
+        if signature.as_ref().len() != FISCO_BCOS_SIGNATURE_DATA_LENGTH {
+            wedpr_println!("Signature length is not 65");
             return false;
         };
         let recid = match RecoveryId::from_i32(
-            sig_result_hex[FISCO_BCOS_SIGNATURE_END_INDEX] as i32,
+            signature.as_ref()[FISCO_BCOS_SIGNATURE_END_INDEX] as i32,
         ) {
             Ok(v) => v,
             Err(_) => {
@@ -85,7 +95,8 @@ impl Signature for WedprSecp256k1Recover {
 
         // The last byte is recovery id, we only need to get the first 64 bytes
         // for signature data.
-        let signature_byte = &sig_result_hex[0..FISCO_BCOS_SIGNATURE_END_INDEX];
+        let signature_byte =
+            &signature.as_ref()[0..FISCO_BCOS_SIGNATURE_END_INDEX];
 
         let get_sign_final =
             match RecoverableSignature::from_compact(signature_byte, recid) {
@@ -95,19 +106,35 @@ impl Signature for WedprSecp256k1Recover {
                     return false;
                 },
             };
-        let pk_recover_get =
-            match SECP256K1_VERIFY.recover(&message_receive, &get_sign_final) {
+        let recovered_public_key =
+            match SECP256K1_VERIFY.recover(&msg_hash_obj, &get_sign_final) {
                 Ok(v) => v,
                 Err(_) => {
                     wedpr_println!("Signature recover failed");
                     return false;
                 },
             };
-        if pub_str_get != pk_recover_get {
-            wedpr_println!("Signature recover failed");
+        if inputted_pub_key != recovered_public_key {
+            wedpr_println!("Matching signature public key failed");
             return false;
         }
         return true;
+    }
+
+    fn generate_keypair(&self) -> (Vec<u8>, Vec<u8>) {
+        let mut rng = rand::thread_rng();
+        loop {
+            // "rand" feature of secp256k1 need to be enabled for this.
+            let (secret_key, public_key) =
+                SECP256K1_ALL.generate_keypair(&mut rng);
+            // Drop weak secret key.
+            if secret_key[0] > 15 {
+                return (
+                    public_key.serialize_uncompressed().to_vec(),
+                    secret_key.as_ref().to_vec(),
+                );
+            }
+        }
     }
 }
 
@@ -120,7 +147,7 @@ mod tests {
             HASH,
         },
         hash::Hash,
-        utils::bytes_to_string,
+        utils::string_to_bytes,
     };
 
     #[test]
@@ -129,17 +156,20 @@ mod tests {
 
         // The message hash (NOT the original message) is required for
         // generating a valid signature.
-        let msg = "WeDPR";
-        let msg_hash_str = bytes_to_string(&HASH.hash(msg));
+        let msg = "WeDPR".as_bytes();
+        let msg_hash = HASH.hash(msg);
 
         let signature = secp256k1_recover
-            .sign(SECP256K1_TEST_SECRET_KEY, &msg_hash_str)
+            .sign(
+                &string_to_bytes(SECP256K1_TEST_SECRET_KEY).unwrap(),
+                &msg_hash,
+            )
             .unwrap();
         assert_eq!(
             true,
             secp256k1_recover.verify(
-                SECP256K1_TEST_PUBLIC_KEY,
-                &msg_hash_str,
+                &string_to_bytes(SECP256K1_TEST_PUBLIC_KEY).unwrap(),
+                &msg_hash,
                 &signature
             )
         );

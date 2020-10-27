@@ -7,8 +7,8 @@ extern crate wedpr_macros;
 #[macro_use]
 extern crate lazy_static;
 
-pub mod coder;
 pub mod constant;
+pub mod ecies;
 pub mod hash;
 pub mod signature;
 pub mod utils;

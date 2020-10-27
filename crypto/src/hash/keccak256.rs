@@ -12,24 +12,29 @@ pub struct WedprKeccak256 {}
 
 /// Implements FISCO-BCOS-compatible Keccak256 as a Hash instance.
 impl Hash for WedprKeccak256 {
-    fn hash(&self, msg: &str) -> Vec<u8> {
-        let mut mes = Keccak256::default();
-        mes.input(msg);
-        mes.result().to_vec()
+    fn hash<T: ?Sized + AsRef<[u8]>>(&self, input: &T) -> Vec<u8> {
+        let mut hash_algorithm = Keccak256::default();
+        hash_algorithm.input(input);
+        hash_algorithm.result().to_vec()
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::utils::bytes_to_string;
+    use crate::{
+        constant::tests::BASE64_ENCODED_TEST_MESSAGE,
+        utils::{bytes_to_string, string_to_bytes},
+    };
 
     #[test]
     fn test_keccak256() {
         let keccak256 = WedprKeccak256::default();
-        let msg = "WeDPR";
-        let computed_hash = bytes_to_string(&keccak256.hash(msg));
-        let expected_hash = "g6sLGLyLvnkOSvBcQdKNSPx8m4XmAogueNMmE6V0Ico=";
-        assert_eq!(expected_hash, computed_hash);
+        let msg = BASE64_ENCODED_TEST_MESSAGE;
+        let expected_hash = "5S04Vv6HBCWG6xNARqwPb294Hz/3BlaFVwKvAJByd9Q=";
+        assert_eq!(
+            expected_hash,
+            bytes_to_string(&keccak256.hash(&string_to_bytes(&msg).unwrap()))
+        );
     }
 }
