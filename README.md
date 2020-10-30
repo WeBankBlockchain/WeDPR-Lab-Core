@@ -69,12 +69,6 @@ cargo doc --no-deps
 
 进入`target/doc`文档目录后，会看到所有SDK相关的包名（包含WeDPR-Lab和其他依赖包），进入以下任意一个包名的目录，用网页浏览器打开其中的`index.html`文件，便可查看WeDPR-Lab相关的接口说明。
 
-- verifiable_confidential_ledger
-- wedpr_crypto
-- wedpr_macros
-- wedpr_protos
-- wedpr_utils
-
 ## 其他相关文档
 
 - [WeDPR方案白皮书](https://mp.weixin.qq.com/s?__biz=MzU0MDY4MDMzOA==&mid=2247483910&idx=1&sn=7b647dec9f046f1e6f94d103897f7efb&scene=19#wechat_redirect)
