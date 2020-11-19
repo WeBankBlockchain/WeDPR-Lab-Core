@@ -51,7 +51,7 @@ cargo ndk --target i686-linux-android --android-platform 21 -- build --release
 ```bash
 export ANDROID_NDK_HOME=~/Library/Android/sdk/ndk/21.3.6528147
 
-/Users/asher/Library/Android/sdk/ndk/21.3.6528147cd
+/Users/asher/Library/Android/sdk/ndk/21.3.6528147
 ```
 
 ```bash
@@ -60,15 +60,15 @@ export ANDROID_NDK_HOME=~/Library/Android/sdk/ndk/21.3.6528147
 ```java
 public class NativeInterface {
     public static native CryptoResult secp256k1EciesEncrypt(String pubKey, String plaintext);
-    
+
     public static native CryptoResult secp256k1EciesDecrypt(String priKey, String ciphertext);
-    
+
     public static native CryptoResult secp256k1GenKeyPair();
-    
+
     public static native CryptoResult keccak256Hash(String message);
-    
+
     public static native CryptoResult secp256k1Sign(String priKey, String messageHash);
-    
+
     public static native CryptoResult secp256k1Verify(String pubKey, String message, String signature);
 }
 ```

@@ -1,0 +1,19 @@
+[package]
+name = "bounty"
+version = "0.1.0"
+authors = ["julywang(王朝阳) <julywang@webank.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+colored = "1.8"
+curve25519-dalek = { version = "1", features = ["serde"] }
+wedpr_crypto = { path = "../crypto/" }
+wedpr_macros = { path = "../common/macros/" }
+wedpr_protos = { path = "../protos/" }
+wedpr_utils = { path = "../common/utils" }
+verifiable_confidential_ledger = { path = "../solution/verifiable_confidential_ledger" }
+selective_disclosure = {path = "../solution/selective_disclosure"}
+sha3 = "0.8"
+

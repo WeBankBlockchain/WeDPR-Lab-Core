@@ -1,0 +1,99 @@
+// Copyright 2020 WeDPR Lab Project Authors. Licensed under Apache-2.0.
+
+syntax = "proto3";
+
+package com.webank.wedpr.selective_disclosure.proto;
+option java_package = "com.webank.wedpr.selectivedisclosure.proto";
+option java_multiple_files = true;
+
+// Attribute template data used by selective disclosure solution.
+message AttributeTemplate {
+  repeated string attribute_key = 1;
+}
+
+// String to string mapping style pairs used by selective disclosure solution.
+message StringToStringPair {
+  string key = 1;
+  string value = 2;
+}
+
+// Credential template data used by selective disclosure solution.
+message CredentialTemplate {
+  AttributeTemplate credential_schema = 1;
+  string credential_key_correctness_proof = 2;
+  TemplatePublicKey public_key = 3;
+}
+
+// Template public data used by selective disclosure solution.
+message TemplatePublicKey {
+  string credential_public_key = 1;
+}
+
+// Template Secret data used by selective disclosure solution.
+message TemplateSecretKey {
+  string credential_secret_key = 1;
+}
+
+// Credential information used by selective disclosure solution.
+message CredentialInfo {
+  repeated StringToStringPair attribute_pair = 1;
+}
+
+// Credential Secret blind factors used by selective disclosure solution.
+message BlindedCredentialSecret {
+  string blinded_credential_secrets = 1;
+  string blinded_credential_secrets_correctness_proof = 2;
+}
+
+// Credential Signature data used by selective disclosure solution.
+message CredentialSignature {
+  string credential_signature = 1;
+  string signature_correctness_proof = 2;
+}
+
+// Predicate rules used by selective disclosure solution.
+message Predicate {
+  string attribute_name = 1;
+  string predicate_type = 2;
+  uint64 value = 3;
+}
+
+// Verification rules used by selective disclosure solution.
+message VerificationRule {
+  repeated string revealed_attribute = 1;
+  repeated Predicate predicate_attribute = 2;
+}
+
+// Revealed rules used by selective disclosure solution.
+message RevealedAttributeInfo {
+  repeated StringToStringPair attr = 1;
+}
+
+// Credential request used by selective disclosure solution.
+message CredentialSignatureRequest {
+  CredentialInfo credential_info = 1;
+  string blinded_credential_secrets = 2;
+  string blinded_credential_secrets_correctness_proof = 3;
+}
+
+// Verification request used by selective disclosure solution.
+message VerificationRequest {
+  CredentialTemplate credential_template = 1;
+  string verification_proof = 2;
+  string verification_nonce = 3;
+}
+
+// Return data to FFI C interface
+message SelectiveDisclosureResult {
+    CredentialTemplate credential_template = 1;
+    TemplateSecretKey template_secret_key = 2;
+    CredentialSignature credential_signature = 3;
+    string nonce = 4;
+    CredentialSignatureRequest credential_signature_request = 5;
+    string master_secret = 6;
+    string credential_secrets_blinding_factors = 7;
+    string nonce_credential = 8;
+    VerificationRequest verification_request = 9;
+    RevealedAttributeInfo revealed_attribute_info = 10;
+    bool result = 11;
+}
