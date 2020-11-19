@@ -3,6 +3,7 @@
 members = [
 "crypto",
 "solution/verifiable_confidential_ledger",
+"solution/selective_disclosure",
 "common/utils",
 "common/macros",
 "ffi/ffi_common",
@@ -11,5 +12,8 @@ members = [
 "ffi/ffi_java/ffi_java_vcl",
 "ffi/ffi_c/ffi_c_crypto",
 "ffi/ffi_java/ffi_java_crypto",
+"ffi/ffi_java/ffi_java_selective_disclosure",
+"ffi/ffi_c/ffi_c_selective_disclosure",
 "protos",
+"bounty",
 ]

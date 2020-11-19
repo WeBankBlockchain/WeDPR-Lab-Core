@@ -6,7 +6,7 @@ extern crate criterion;
 use criterion::{criterion_group, criterion_main, Criterion};
 
 extern crate verifiable_confidential_ledger;
-use verifiable_confidential_ledger::{vcl, vcl::make_credit};
+use verifiable_confidential_ledger::vcl::{self, make_credit};
 
 fn create_prove_sum_balance_helper(c: &mut Criterion) {
     let label = format!("create_prove_sum_balance_helper");

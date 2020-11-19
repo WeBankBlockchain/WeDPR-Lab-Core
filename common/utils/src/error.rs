@@ -12,4 +12,6 @@ pub enum WedprError {
     FormatError,
     #[fail(display = "Data cannot be decoded")]
     DecodeError,
+    #[fail(display = "Indy Crypto error.")]
+    IndyCryptoError,
 }

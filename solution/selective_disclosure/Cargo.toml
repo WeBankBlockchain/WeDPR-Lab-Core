@@ -1,6 +1,6 @@
 [package]
-name = "verifiable_confidential_ledger"
-version = "1.1.0"
+name = "selective_disclosure"
+version = "1.2.0"
 authors = ["WeDPR <wedpr@webank.com>"]
 edition = "2018"
 
@@ -8,7 +8,10 @@ edition = "2018"
 
 [dependencies]
 colored = "1.8"
-curve25519-dalek = { version = "1", features = ["serde"] }
+indy-crypto = { git = "https://github.com/WeDPR-Team/indy-crypto", branch = "feature-i64"}
+protobuf = "2.10.1"
+serde = "1.0.102"
+serde_json = "1.0.41"
 wedpr_crypto = { path = "../../crypto/" }
 wedpr_macros = { path = "../../common/macros/" }
 wedpr_protos = { path = "../../protos/" }
@@ -16,8 +19,4 @@ wedpr_utils = { path = "../../common/utils" }
 
 [dev-dependencies]
 criterion = "0.2"
-
-[[bench]]
-name = "vcl"
-harness = false
 
