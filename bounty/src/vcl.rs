@@ -195,7 +195,8 @@ pub fn flow_range() {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{wedpr_crypto::utils::string_to_bytes, *};
+    use crate::vcl_data::{VCL_C1_VEC, VCL_C2_VEC, VCL_C3_VEC, VCL_PROOF_VEC};
     use wedpr_crypto::{
         constant::{BASEPOINT_G1, BASEPOINT_G2},
         utils::string_to_point,
@@ -207,40 +208,28 @@ mod tests {
         let value_basepoint = *BASEPOINT_G1;
         let blinding_basepoint = *BASEPOINT_G2;
 
-        let mut proof = BalanceProof::new();
-
-        proof.set_c("kqIxNNCi4RZuFWXeo4uyuBfq8JL5E47y5uAP/rpTbws=".to_string());
-        proof
-            .set_m1("8+paKZINPDuwnwnIROxkghtcjMnKef6kIscPSKwLlwM=".to_string());
-        proof
-            .set_m2("Mool15sDHT9PmcqZ2yE7LzqmnkM7P4Q/7wHYAEGZDwQ=".to_string());
-        proof
-            .set_m3("BZY2UaNpTwzZ7pSGYCZ8b8ONQCrhh0UfgtcdcTi1ZgM=".to_string());
-        proof
-            .set_m4("nDWl4RLg3+i4oTl4CCVJwur3zRKQ3CRqukldCKuMjw0=".to_string());
-        proof
-            .set_m5("ArmHp8+uF0/n7YsAaqbR6JVaVktyxdw7dOHDbKMN2gI=".to_string());
-
-        let c1_point =
-            string_to_point("YG5CV1flrlUvAA9cOH+n7XpzBcKSffdF6Rgst+6thVk=")
-                .expect("secret bounty point");
-        let c2_point =
-            string_to_point("eO7NOPsaf6QTXS1I8dG/70255+DTgCxFFPy+fpZ8zTI=")
-                .expect("secret bounty point");
-        let c3_point =
-            string_to_point("QPfj58czyhYogopozKjjyyiIz2ONSnB+5sCGdLEMN3c=")
-                .expect("secret bounty point");
-
-        assert_eq!(
-            true,
-            zkp::verify_sum_relationship(
-                &c1_point,
-                &c2_point,
-                &c3_point,
-                &proof,
-                &value_basepoint,
-                &blinding_basepoint
+        for i in 0..100 {
+            let c1_point =
+                string_to_point(VCL_C1_VEC[i]).expect("secret bounty point");
+            let c2_point =
+                string_to_point(VCL_C2_VEC[i]).expect("secret bounty point");
+            let c3_point =
+                string_to_point(VCL_C3_VEC[i]).expect("secret bounty point");
+            let proof = protobuf::parse_from_bytes::<BalanceProof>(
+                &string_to_bytes(VCL_PROOF_VEC[i]).expect("decode bytes"),
             )
-        );
+            .expect("decode proto");
+            assert_eq!(
+                true,
+                zkp::verify_sum_relationship(
+                    &c1_point,
+                    &c2_point,
+                    &c3_point,
+                    &proof,
+                    &value_basepoint,
+                    &blinding_basepoint
+                )
+            );
+        }
     }
 }

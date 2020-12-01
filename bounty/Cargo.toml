@@ -16,4 +16,4 @@ wedpr_utils = { path = "../common/utils" }
 verifiable_confidential_ledger = { path = "../solution/verifiable_confidential_ledger" }
 selective_disclosure = {path = "../solution/selective_disclosure"}
 sha3 = "0.8"
-
+protobuf = "2.10.1"
