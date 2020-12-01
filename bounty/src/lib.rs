@@ -5,3 +5,4 @@
 pub mod bounty_utils;
 pub mod selective_disclosure;
 pub mod vcl;
+pub mod vcl_data;
