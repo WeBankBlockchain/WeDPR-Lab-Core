@@ -1,0 +1,97 @@
+// Copyright 2020 WeDPR Lab Project Authors. Licensed under Apache-2.0.
+
+syntax = "proto3";
+
+package com.webank.wedpr.scd.proto;
+option java_package = "com.webank.wedpr.scd.proto";
+option java_multiple_files = true;
+
+// Certificate schema.
+message CertificateSchema {
+  repeated string attribute_name = 1;
+}
+
+// String to string mapping pairs.
+message StringToStringPair {
+  string key = 1;
+  string value = 2;
+}
+
+// Certificate template.
+message CertificateTemplate {
+  CertificateSchema certificate_schema = 1;
+  string template_correctness_proof = 2;
+  TemplatePublicKey template_public_key = 3;
+}
+
+// Template public key.
+message TemplatePublicKey {
+  string key = 1;
+}
+
+// Template private key.
+message TemplatePrivateKey {
+  string key = 1;
+}
+
+// Certificate attribute dictionary.
+message AttributeDict {
+  repeated StringToStringPair pair = 1;
+}
+
+// Certificate secret blind factors.
+message BlindedCertificateSecret {
+  string blinded_certificate_secrets = 1;
+  string blinded_certificate_secrets_correctness_proof = 2;
+}
+
+// Certificate signature signed by an issuer.
+message CertificateSignature {
+  string certificate_signature = 1;
+  string signature_correctness_proof = 2;
+}
+
+// Predicate rule.
+message Predicate {
+  string attribute_name = 1;
+  string predicate_type = 2;
+  uint64 predicate_value = 3;
+}
+
+// Verification rule set.
+message VerificationRuleSet {
+  repeated string revealed_attribute_name = 1;
+  repeated Predicate attribute_predicate = 2;
+}
+
+// Request of signing a new certificate.
+message SignCertificateRequest {
+  AttributeDict certificate_attribute_dict = 1;
+  string blinded_certificate_secrets = 2;
+  string blinded_certificate_secrets_correctness_proof = 3;
+}
+
+// Request of verifying the selected information from a certificate.
+message VerifyRequest {
+  CertificateTemplate certificate_template = 1;
+  string verification_proof = 2;
+  string verification_nonce = 3;
+}
+
+// Return data to FFI C interface
+message ScdResult {
+    // Used by the issuer.
+    CertificateTemplate certificate_template = 1;
+    TemplatePrivateKey template_private_key = 2;
+    string issuer_nonce = 3;
+    // Used by the user.
+    CertificateSignature certificate_signature = 4;
+    string user_nonce = 5;
+    SignCertificateRequest sign_certificate_request = 6;
+    string user_private_key = 7;
+    string certificate_secrets_blinding_factors = 8;
+    // Used by the verifier.
+    VerifyRequest verify_request = 9;
+    AttributeDict revealed_attribute_dict = 10;
+    bool bool_result = 11;
+}

@@ -1,8 +1,9 @@
 // Copyright 2020 WeDPR Lab Project Authors. Licensed under Apache-2.0.
 
+//! Library of bounty utility functions.
+
 use colored::*;
 
-// Utility functions
 pub fn print_highlight(message: &str) {
     println!("{}\n", message.green());
 }
@@ -56,12 +57,8 @@ pub fn wait_for_number(error_message: &str) -> u64 {
 }
 
 pub fn wait_for_number_cn() -> u64 {
-    wait_for_number("请输入有效数字：")
+    wait_for_number("请输入有效整数：")
 }
-
-// pub fn wait_for_number_en() -> u64 {
-//    wait_for_number("Please input a valid number:")
-//}
 
 pub fn pause(info_message: &str) {
     let mut enter_continue = String::new();
@@ -75,7 +72,3 @@ pub fn pause(info_message: &str) {
 pub fn pause_cn() {
     pause("按任意键继续...");
 }
-
-// pub fn pause_en() {
-//    pause("Press any key to continue...");
-//}

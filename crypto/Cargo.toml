@@ -1,21 +1,20 @@
 [package]
 name = "wedpr_crypto"
-version = "1.1.0"
-authors = ["WeDPR <wedpr@webank.com>"]
+version = "1.2.0"
+authors = [ "WeDPR <wedpr@webank.com>" ]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 bulletproofs = "1.0.4"
-curve25519-dalek = { version = "1", features = ["serde"] }
+curve25519-dalek = { version = "1", features = [ "serde" ] }
 ecies = "0.1.4"
 lazy_static = "0.2"
 merlin = "1"
 rand = "0.6"
-secp256k1 = { version = "0.19.0", features = ["recovery", "rand"] }
+secp256k1 = { version = "0.19.0", features = [ "recovery", "rand" ] }
 sha3 = "0.8"
-wedpr_macros = { path = "../common/macros/"}
+wedpr_macros = { path = "../common/macros/" }
 wedpr_protos = { path = "../protos/" }
 wedpr_utils = { path = "../common/utils" }
-
