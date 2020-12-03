@@ -72,3 +72,20 @@ pub extern "C" fn wedpr_scd_verify_selective_disclosure(
     });
     c_safe_return!(result)
 }
+
+/// C interface for 'wedpr_scd_get_verification_nonce'.
+#[no_mangle]
+pub extern "C" fn wedpr_scd_get_verification_nonce() -> *mut c_char {
+    let result = panic::catch_unwind(|| {
+        let verification_nonce =
+            match selective_certificate_disclosure::verifier::get_verification_nonce(
+            ) {
+                Ok(v) => v,
+                Err(_) => return ptr::null_mut(),
+            };
+        let mut scd_result = ScdResult::new();
+        scd_result.set_verification_nonce(verification_nonce);
+        c_safe_proto_to_c_char_pointer!(scd_result)
+    });
+    c_safe_return!(result)
+}

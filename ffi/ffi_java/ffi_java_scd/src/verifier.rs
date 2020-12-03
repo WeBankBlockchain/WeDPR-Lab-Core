@@ -117,3 +117,38 @@ pub extern "system" fn Java_com_webank_wedpr_scd_NativeInterface_verifierVerifyS
     );
     result_jobject.into_inner()
 }
+
+/// Java interface for
+/// 'com.webank.wedpr.scd.NativeInterface->verifierGetVerificationNonce'.
+#[no_mangle]
+pub extern "system" fn Java_com_webank_wedpr_scd_NativeInterface_verifierGetVerificationNonce(
+    _env: JNIEnv,
+    _class: JClass,
+) -> jobject
+{
+    let result_jobject = get_result_jobject(&_env);
+
+    let verification_nonce =
+        match selective_certificate_disclosure::verifier::get_verification_nonce(
+        ) {
+            Ok(v) => v,
+            Err(e) => {
+                return java_set_error_field_and_extract_jobject(
+                    &_env,
+                    &result_jobject,
+                    &format!(
+                        "verifier get_verification_nonce failed, err = {:?}",
+                        e
+                    ),
+                )
+            },
+        };
+
+    java_safe_set_string_field!(
+        _env,
+        result_jobject,
+        verification_nonce,
+        "verificationNonce"
+    );
+    result_jobject.into_inner()
+}
