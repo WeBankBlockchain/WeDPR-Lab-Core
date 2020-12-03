@@ -2,6 +2,8 @@
 
 ## 接口调用Java文件
 
+
+
 ```java
 package com.webank.wedpr.scd;
 
@@ -156,6 +158,7 @@ import com.webank.wedpr.common.WedprResult;
 
 public class VerifierResult extends WedprResult {
     public String revealedAttributeInfo;
+    public String verificationNonce;
     public boolean result;
 }
 ```

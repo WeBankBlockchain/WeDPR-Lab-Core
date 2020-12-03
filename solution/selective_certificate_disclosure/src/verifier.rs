@@ -112,3 +112,8 @@ pub fn verify_selective_disclosure(
 
     utils::safe_indy_check(proof_verifier.verify(&proof, &proof_request_nonce))
 }
+
+/// Verifies generate random nonce
+pub fn get_verification_nonce() -> Result<String, WedprError> {
+    utils::get_random_nonce_str()
+}

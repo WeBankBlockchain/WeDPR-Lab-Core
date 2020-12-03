@@ -4,7 +4,7 @@
 
 use colored::*;
 
-use selective_certificate_disclosure::{issuer, user, utils, verifier};
+use selective_certificate_disclosure::{issuer, user, verifier};
 use std;
 use wedpr_protos::generated::scd::{
     AttributeDict, CertificateSchema, CertificateSignature,
@@ -787,7 +787,7 @@ fn user_prove_rule_set(
 {
     // In most cases, this nonce should be provided by the verifier to prevent
     // replaying attacks.
-    let verification_nonce_str = utils::get_random_nonce_str().unwrap();
+    let verification_nonce_str = verifier::get_verification_nonce().unwrap();
     user::prove_selective_disclosure(
         rule_set,
         new_certificate_signature,

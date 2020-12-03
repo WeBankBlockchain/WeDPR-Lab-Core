@@ -91,7 +91,8 @@ message ScdResult {
     string user_private_key = 7;
     string certificate_secrets_blinding_factors = 8;
     // Used by the verifier.
-    VerifyRequest verify_request = 9;
-    AttributeDict revealed_attribute_dict = 10;
-    bool bool_result = 11;
+    string verification_nonce = 9;
+    VerifyRequest verify_request = 10;
+    AttributeDict revealed_attribute_dict = 11;
+    bool bool_result = 12;
 }
