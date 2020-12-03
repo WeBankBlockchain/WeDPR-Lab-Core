@@ -129,9 +129,9 @@ package com.webank.wedpr.scd;
 import com.webank.wedpr.common.WedprResult;
 
 public class IssuerResult extends WedprResult {
-    public String credentialTemplate;
-    public String templateSecretKey;
-    public String credentialSignature;
+    public String certificateTemplate;
+    public String templatePrivateKey;
+    public String certificateSignature;
     public String issuerNonce;
 }
 ```
@@ -142,12 +142,12 @@ package com.webank.wedpr.scd;
 import com.webank.wedpr.common.WedprResult;
 
 public class UserResult extends WedprResult {
-    public String credentialSignatureRequest;
-    public String masterSecret;
-    public String credentialSecretsBlindingFactors;
+    public String signCertificateRequest;
+    public String userPrivateKey;
+    public String certificateSecretsBlindingFactors;
     public String userNonce;
-    public String credentialSignature;
-    public String verificationRequest;
+    public String certificateSignature;
+    public String verifyRequest;
 }
 ```
 
@@ -157,8 +157,8 @@ package com.webank.wedpr.scd;
 import com.webank.wedpr.common.WedprResult;
 
 public class VerifierResult extends WedprResult {
-    public String revealedAttributeInfo;
+    public String revealedAttributeDict;
     public String verificationNonce;
-    public boolean result;
+    public boolean boolResult;
 }
 ```
