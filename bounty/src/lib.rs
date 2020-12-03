@@ -1,8 +1,7 @@
 // Copyright 2020 WeDPR Lab Project Authors. Licensed under Apache-2.0.
 
-//! Library of bounty.
+//! Library of WeDPR bounty program.
 
-pub mod bounty_utils;
-pub mod selective_disclosure;
+pub mod utils;
 pub mod vcl;
 pub mod vcl_data;

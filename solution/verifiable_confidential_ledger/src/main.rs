@@ -428,7 +428,7 @@ fn flow_en() {
 }
 
 // Utility functions
-
+// TODO: Extract those common functions to solution utility.
 fn print_highlight(message: &str) {
     println!("{}", message.green());
 }

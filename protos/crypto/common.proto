@@ -6,7 +6,7 @@ package com.webank.wedpr.crypto.proto;
 option java_package = "com.webank.wedpr.crypto.proto";
 option java_multiple_files = true;
 
-// Public key pair
+// Cryptographic key pair containing a public key and a private key.
 message Keypair {
     string public_key = 1;
     string private_key = 2;

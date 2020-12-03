@@ -3,7 +3,7 @@
 ## 接口调用Java文件
 
 ```java
-package com.webank.wedpr.selectivedisclosure;
+package com.webank.wedpr.scd;
 
 import com.webank.wedpr.common.CompatibleResult;
 import com.webank.wedpr.common.NativeUtils;
@@ -27,16 +27,16 @@ public class NativeInterface {
             String osName = System.getProperty("os.name").toLowerCase();
             if (osName.contains("windows")) {
                 WEDPR_SELECTIVE_DISCLOSURE_LIB_PATH =
-                        "/WeDPR_dynamic_lib/ffi_selective_disclosure.dll";
+                        "/WeDPR_dynamic_lib/ffi_scd.dll";
                 NativeUtils.loadLibraryFromJar("/WeDPR_dynamic_lib/libeay32md.dll");
                 NativeUtils.loadLibraryFromJar("/WeDPR_dynamic_lib/ssleay32md.dll");
             } else if (osName.contains("linux")) {
                 if (hasLibsslVersion(LIBSSL_1_0)) {
                     WEDPR_SELECTIVE_DISCLOSURE_LIB_PATH =
-                            "/WeDPR_dynamic_lib/libffi_selective_disclosure_libssl_1_0.so";
+                            "/WeDPR_dynamic_lib/libffi_scd_libssl_1_0.so";
                 } else if (hasLibsslVersion(LIBSSL_1_1)) {
                     WEDPR_SELECTIVE_DISCLOSURE_LIB_PATH =
-                            "/WeDPR_dynamic_lib/libffi_selective_disclosure_libssl_1_1.so";
+                            "/WeDPR_dynamic_lib/libffi_scd_libssl_1_1.so";
                 } else {
                     throw new WedprException(
                             "The Linux needs " + LIBSSL_1_1 + " or " + LIBSSL_1_0 + ".");
@@ -44,7 +44,7 @@ public class NativeInterface {
 
             } else if (osName.contains("mac")) {
                 WEDPR_SELECTIVE_DISCLOSURE_LIB_PATH =
-                        "/WeDPR_dynamic_lib/libffi_selective_disclosure.dylib";
+                        "/WeDPR_dynamic_lib/libffi_scd.dylib";
             } else {
                 throw new WedprException("Unsupported the os " + osName + ".");
             }
@@ -83,7 +83,7 @@ public class NativeInterface {
 
     public static native CompatibleResult isCompatible(String targetVersion);
 
-    public static native IssuerResult issuerMakeCredentialTemplate(String attributeTemplate);
+    public static native IssuerResult issuerMakeCertificateTemplate(String attributeTemplate);
 
     public static native IssuerResult issuerSignCredential(
             String credentialTemplate,
@@ -95,7 +95,7 @@ public class NativeInterface {
     public static native UserResult userMakeCredential(
             String credentialInfoInput, String credentialTemplate);
 
-    public static native UserResult userBlindCredentialSignature(
+    public static native UserResult userBlindCertificateSignature(
             String credentialSignature,
             String credentialInfo,
             String credentialTemplate,
@@ -103,7 +103,7 @@ public class NativeInterface {
             String credentialSecretsBlindingFactors,
             String nonceCredential);
 
-    public static native UserResult userProveCredentialInfo(
+    public static native UserResult userProveAttributeDict(
             String verificationPredicateRule,
             String credentialSignature,
             String credentialInfo,
@@ -113,7 +113,7 @@ public class NativeInterface {
     public static native VerifierResult verifierVerifyProof(
             String verificationPredicateRule, String verificationRequest);
 
-    public static native VerifierResult verifierGetRevealedAttrsFromVerificationRequest(
+    public static native VerifierResult verifierGetRevealedAttrsFromVerifyRequest(
             String verificationRequest);
 }
 
@@ -122,7 +122,7 @@ public class NativeInterface {
 ## 返回值
 
 ```java
-package com.webank.wedpr.selectivedisclosure;
+package com.webank.wedpr.scd;
 
 import com.webank.wedpr.common.WedprResult;
 
@@ -135,7 +135,7 @@ public class IssuerResult extends WedprResult {
 ```
 
 ```java
-package com.webank.wedpr.selectivedisclosure;
+package com.webank.wedpr.scd;
 
 import com.webank.wedpr.common.WedprResult;
 
@@ -150,7 +150,7 @@ public class UserResult extends WedprResult {
 ```
 
 ```java
-package com.webank.wedpr.selectivedisclosure;
+package com.webank.wedpr.scd;
 
 import com.webank.wedpr.common.WedprResult;
 
