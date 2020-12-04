@@ -29,9 +29,9 @@ fn get_result_jobject<'a>(_env: &'a JNIEnv) -> JObject<'a> {
 
 /// Java interface for
 /// 'com.webank.wedpr.scd.
-/// NativeInterface->verifierGetRevealedAttrsFromVerifyRequest'.
+/// NativeInterface->verifierGetRevealedAttributes'.
 #[no_mangle]
-pub extern "system" fn Java_com_webank_wedpr_scd_NativeInterface_verifierGetRevealedAttrsFromVerifyRequest(
+pub extern "system" fn Java_com_webank_wedpr_scd_NativeInterface_verifierGetRevealedAttributes(
     _env: JNIEnv,
     _class: JClass,
     verify_request_jstring: JString,
