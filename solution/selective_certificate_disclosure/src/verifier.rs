@@ -10,6 +10,8 @@ use wedpr_protos::generated::scd::{
 use wedpr_utils::error::WedprError;
 
 /// Gets revealed attributes selected by a user.
+/// Before calling this function, verify_selective_disclosure should be called
+/// to verify the validity of the VerifyRequest.
 pub fn get_revealed_attributes(
     verify_request: &VerifyRequest,
 ) -> Result<AttributeDict, WedprError> {
@@ -113,7 +115,7 @@ pub fn verify_selective_disclosure(
     utils::safe_indy_check(proof_verifier.verify(&proof, &proof_request_nonce))
 }
 
-/// Verifies generate random nonce
+/// Generates a new nonce as the challenge for a user to generate a fresh proof.
 pub fn get_verification_nonce() -> Result<String, WedprError> {
     utils::get_random_nonce_str()
 }

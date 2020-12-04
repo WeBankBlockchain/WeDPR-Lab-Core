@@ -76,6 +76,7 @@ where T: serde::Deserialize<'a> {
 
 /// Gets Indy-compatible random nonce.
 pub fn get_random_nonce() -> Result<Nonce, WedprError> {
+    // Indy uses 80 bits random nonces.
     safe_indy_check(BigNumber::rand(80))
 }
 
