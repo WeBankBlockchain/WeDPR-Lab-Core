@@ -61,7 +61,7 @@ pub fn play_vcl_prove_sum_balance() {
     );
 
     utils::print_alert("现在请输入第一个明文数据a：▼▼▼");
-    utils::print_highlight("加和证明的输入范围为：[0, 2^64]。");
+    utils::print_highlight("加和证明的输入范围为：[0, 2^64)。");
     let value1 = utils::wait_for_number_cn();
     let (c1_credit, c1_secret) = vcl::make_credit(value1);
 
@@ -119,7 +119,7 @@ pub fn play_vcl_prove_product_balance() {
     );
 
     utils::print_alert("现在请输入第一个明文数据a：▼▼▼");
-    utils::print_highlight("乘积证明的输入范围为：[0, 2^64]。");
+    utils::print_highlight("乘积证明的输入范围为：[0, 2^64)。");
     let value1 = utils::wait_for_number_cn();
     let (c1_credit, c1_secret) = vcl::make_credit(value1);
 
@@ -183,7 +183,7 @@ pub fn play_zkp_verify_value_range() {
     );
 
     utils::print_alert("现在请输入明文数据a：▼▼▼");
-    utils::print_highlight("明文数据输入范围为：[0, 2^64]。");
+    utils::print_highlight("明文数据输入范围为：[0, 2^64)。");
     let input = utils::wait_for_number_cn();
     let (proof_c1, c1_point, _) = zkp::prove_value_range(input);
     let within_range = zkp::verify_value_range(&c1_point, &proof_c1);
