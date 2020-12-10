@@ -17,8 +17,7 @@ impl Ecies for WedprSecp256k1Ecies {
         &self,
         public_key: &T,
         message: &T,
-    ) -> Result<Vec<u8>, WedprError>
-    {
+    ) -> Result<Vec<u8>, WedprError> {
         match ecies::encrypt(public_key.as_ref(), message.as_ref()) {
             Ok(v) => Ok(v.to_vec()),
             Err(_) => {
@@ -32,8 +31,7 @@ impl Ecies for WedprSecp256k1Ecies {
         &self,
         private_key: &T,
         ciphertext: &T,
-    ) -> Result<Vec<u8>, WedprError>
-    {
+    ) -> Result<Vec<u8>, WedprError> {
         match ecies::decrypt(private_key.as_ref(), ciphertext.as_ref()) {
             Ok(v) => Ok(v.to_vec()),
             Err(_) => {

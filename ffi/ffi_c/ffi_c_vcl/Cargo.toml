@@ -13,7 +13,7 @@ crate-type = [ "cdylib", "staticlib" ]
 [dependencies]
 libc = "0.2.60"
 protobuf = "2.10.1"
-verifiable_confidential_ledger = { path = "../../../solution/verifiable_confidential_ledger" }
+wedpr_s_verifiable_confidential_ledger = { path = "../../../solution/verifiable_confidential_ledger" }
 wedpr_crypto = { path = "../../../crypto/" }
 wedpr_ffi_c_common = { path = "../ffi_c_common/" }
 wedpr_ffi_common = { path = "../../ffi_common/" }

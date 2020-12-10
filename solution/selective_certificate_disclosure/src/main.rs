@@ -4,13 +4,13 @@
 
 use colored::*;
 
-use selective_certificate_disclosure::{issuer, user, verifier};
 use std;
 use wedpr_protos::generated::scd::{
     AttributeDict, CertificateSchema, CertificateSignature,
     CertificateTemplate, Predicate, StringToStringPair, TemplatePrivateKey,
     VerificationRuleSet, VerifyRequest,
 };
+use wedpr_s_selective_certificate_disclosure::{issuer, user, verifier};
 use wedpr_utils::error::WedprError;
 
 fn main() {
@@ -253,8 +253,7 @@ fn subflow_predicate_only_cn(
     certificate_attribute_dict: &AttributeDict,
     certificate_template: &CertificateTemplate,
     user_private_key_str: &str,
-)
-{
+) {
     print_alert("断言证明生成中。。。");
     print_highlight(
         "若您之前输入的信息不满足申请条件，将无法生成有效的断言证明。",
@@ -309,8 +308,7 @@ fn subflow_mixed_disclosure_cn(
     certificate_attribute_dict: &AttributeDict,
     certificate_template: &CertificateTemplate,
     user_private_key_str: &str,
-)
-{
+) {
     print_alert(
         "凭证中已认证的贡献级信息正确性证明，和年龄断言证明生成中。。。",
     );
@@ -599,8 +597,7 @@ fn subflow_predicate_only_en(
     certificate_attribute_dict: &AttributeDict,
     certificate_template: &CertificateTemplate,
     user_private_key_str: &str,
-)
-{
+) {
     print_alert("Generating proofs for predicates ...");
     print_highlight(
         "If your certificate (based on your previous inputs) does not satisfy \
@@ -659,8 +656,7 @@ fn subflow_mixed_disclosure_en(
     certificate_attribute_dict: &AttributeDict,
     certificate_template: &CertificateTemplate,
     user_private_key_str: &str,
-)
-{
+) {
     print_alert(
         "Extracting the contribution level and generating proof for the age \
          ...",
@@ -743,8 +739,7 @@ fn issuer_init_certificate_template(
 fn user_fill_contribution_attribute(
     certificate_attribute_dict: &mut AttributeDict,
     contribution: u64,
-)
-{
+) {
     let mut contribution_kv = StringToStringPair::new();
     contribution_kv.set_key(ATTRIBUTE_CONTRIBUTION.to_string());
     contribution_kv.set_value(contribution.to_string());
@@ -756,8 +751,7 @@ fn user_fill_contribution_attribute(
 fn user_fill_age_attribute(
     certificate_attribute_dict: &mut AttributeDict,
     age: u64,
-)
-{
+) {
     let mut age_kv = StringToStringPair::new();
     age_kv.set_key(ATTRIBUTE_AGE.to_string());
     age_kv.set_value(age.to_string());
@@ -783,8 +777,7 @@ fn user_prove_rule_set(
     certificate_template: &CertificateTemplate,
     user_private_key_str: &str,
     rule_set: &mut VerificationRuleSet,
-) -> Result<VerifyRequest, WedprError>
-{
+) -> Result<VerifyRequest, WedprError> {
     // In most cases, this nonce should be provided by the verifier to prevent
     // replaying attacks.
     let verification_nonce_str = verifier::get_verification_nonce().unwrap();
@@ -801,8 +794,7 @@ fn user_prove_rule_set(
 fn verifier_verify_rule_set(
     rule_set: &mut VerificationRuleSet,
     request: &VerifyRequest,
-) -> bool
-{
+) -> bool {
     verifier::verify_selective_disclosure(&rule_set, &request).unwrap()
 }
 

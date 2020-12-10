@@ -3,7 +3,7 @@
 //! Playground of VCL bounty targets.
 
 use super::utils;
-use verifiable_confidential_ledger::vcl;
+use wedpr_s_verifiable_confidential_ledger::vcl;
 extern crate wedpr_crypto;
 use wedpr_crypto::zkp;
 

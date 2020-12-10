@@ -1,0 +1,20 @@
+[package]
+name = "wedpr_s_hierarchical_deterministic_wallet"
+version = "1.2.1"
+authors = ["wedpr <wedpr@webank.com>"]
+edition = "2018"
+license = "Apache-2.0"
+description = "Library of Hierarchical Deterministic Wallet (HDW) solution."
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+hex = "0.3"
+rand = "0.7"
+wagyu-bitcoin = "0.6.3"
+wagyu-model = "0.6.3"
+wedpr_crypto = { path = "../../../crypto/", version = "1.2.0"}
+wedpr_macros = { path = "../../../common/macros/", version = "1.1.0"}
+wedpr_protos = { path = "../../../protos/", version = "1.2.0"}
+wedpr_utils = { path = "../../../common/utils", version = "1.1.0" }
+

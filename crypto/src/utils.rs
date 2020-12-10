@@ -116,8 +116,7 @@ pub fn make_commitment_point(
     blinding: &Scalar,
     value_basepoint: &RistrettoPoint,
     blinding_basepoint: &RistrettoPoint,
-) -> RistrettoPoint
-{
+) -> RistrettoPoint {
     RistrettoPoint::multiscalar_mul(&[Scalar::from(value), *blinding], &[
         *value_basepoint,
         *blinding_basepoint,
