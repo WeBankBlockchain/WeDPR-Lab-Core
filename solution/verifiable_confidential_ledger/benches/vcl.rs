@@ -6,7 +6,7 @@ extern crate criterion;
 use criterion::{criterion_group, criterion_main, Criterion};
 
 extern crate verifiable_confidential_ledger;
-use verifiable_confidential_ledger::{vcl, vcl::make_credit};
+use verifiable_confidential_ledger::vcl;
 
 fn create_prove_sum_balance_helper(c: &mut Criterion) {
     let label = format!("create_prove_sum_balance_helper");
@@ -14,9 +14,9 @@ fn create_prove_sum_balance_helper(c: &mut Criterion) {
     let c1_value = 10;
     let c2_value = 20;
 
-    let (_, c1_secret) = make_credit(c1_value);
-    let (_, c2_secret) = make_credit(c2_value);
-    let (_, c3_secret) = make_credit(c1_value + c2_value);
+    let (_, c1_secret) = vcl::make_credit(c1_value);
+    let (_, c2_secret) = vcl::make_credit(c2_value);
+    let (_, c3_secret) = vcl::make_credit(c1_value + c2_value);
 
     c.bench_function(&label, move |b| {
         b.iter(|| {
@@ -31,9 +31,9 @@ fn create_verify_sum_balance_helper(c: &mut Criterion) {
     let c1_value = 10;
     let c2_value = 20;
 
-    let (c1_credit, c1_secret) = make_credit(c1_value);
-    let (c2_credit, c2_secret) = make_credit(c2_value);
-    let (c3_credit, c3_secret) = make_credit(c1_value + c2_value);
+    let (c1_credit, c1_secret) = vcl::make_credit(c1_value);
+    let (c2_credit, c2_secret) = vcl::make_credit(c2_value);
+    let (c3_credit, c3_secret) = vcl::make_credit(c1_value + c2_value);
 
     let sum_proof = vcl::prove_sum_balance(&c1_secret, &c2_secret, &c3_secret);
 
@@ -55,9 +55,9 @@ fn create_prove_product_balance_helper(c: &mut Criterion) {
     let c1_value = 10;
     let c2_value = 20;
 
-    let (_, c1_secret) = make_credit(c1_value);
-    let (_, c2_secret) = make_credit(c2_value);
-    let (_, c3_secret) = make_credit(c1_value * c2_value);
+    let (_, c1_secret) = vcl::make_credit(c1_value);
+    let (_, c2_secret) = vcl::make_credit(c2_value);
+    let (_, c3_secret) = vcl::make_credit(c1_value * c2_value);
 
     c.bench_function(&label, move |b| {
         b.iter(|| {
@@ -73,9 +73,9 @@ fn create_verify_product_balance_helper(c: &mut Criterion) {
     let c1_value = 10;
     let c2_value = 20;
 
-    let (c1_credit, c1_secret) = make_credit(c1_value);
-    let (c2_credit, c2_secret) = make_credit(c2_value);
-    let (c3_credit, c3_secret) = make_credit(c1_value * c2_value);
+    let (c1_credit, c1_secret) = vcl::make_credit(c1_value);
+    let (c2_credit, c2_secret) = vcl::make_credit(c2_value);
+    let (c3_credit, c3_secret) = vcl::make_credit(c1_value * c2_value);
 
     let product_proof =
         vcl::prove_product_balance(&c1_secret, &c2_secret, &c3_secret);
@@ -98,7 +98,7 @@ fn create_verify_product_balance_helper(c: &mut Criterion) {
 fn create_prove_range_helper(c: &mut Criterion) {
     let label = format!("create_prove_range_helper");
 
-    let (_, c1_secret) = make_credit(10);
+    let (_, c1_secret) = vcl::make_credit(10);
 
     c.bench_function(&label, move |b| {
         b.iter(|| {
@@ -110,7 +110,7 @@ fn create_prove_range_helper(c: &mut Criterion) {
 fn create_verify_range_helper(c: &mut Criterion) {
     let label = format!("create_verify_range_helper");
 
-    let (c1_credit, c1_secret) = make_credit(10);
+    let (c1_credit, c1_secret) = vcl::make_credit(10);
     let range_proof = vcl::prove_range(&c1_secret);
 
     c.bench_function(&label, move |b| {

@@ -259,11 +259,12 @@ pub fn prove_sum_relationship(
         &value_basepoint,
         &blinding_basepoint,
     );
-    let c3_point = make_commitment_point(
-        c1_value + c2_value,
-        &c3_blinding,
-        &value_basepoint,
-        &blinding_basepoint,
+    let c3_point = RistrettoPoint::multiscalar_mul(
+        &[
+            Scalar::from(c1_value) + Scalar::from(c2_value),
+            *c3_blinding,
+        ],
+        &[*value_basepoint, *blinding_basepoint],
     );
     let t1_p = RistrettoPoint::multiscalar_mul(&[blinding_a, blinding_b], &[
         *value_basepoint,
@@ -390,12 +391,14 @@ pub fn prove_product_relationship(
         &value_basepoint,
         &blinding_basepoint,
     );
-    let c3_point = make_commitment_point(
-        c1_value * c2_value,
-        &c3_blinding,
-        &value_basepoint,
-        &blinding_basepoint,
+    let c3_point = RistrettoPoint::multiscalar_mul(
+        &[
+            Scalar::from(c1_value) * Scalar::from(c2_value),
+            *c3_blinding,
+        ],
+        &[*value_basepoint, *blinding_basepoint],
     );
+
     let t1_p = RistrettoPoint::multiscalar_mul(&[blinding_a, blinding_b], &[
         *value_basepoint,
         *blinding_basepoint,

@@ -1,0 +1,18 @@
+[package]
+name = "wedpr_bounty"
+version = "0.1.0"
+authors = [ "WeDPR <wedpr@webank.com>" ]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+colored = "1.8"
+curve25519-dalek = { version = "1", features = [ "serde" ] }
+protobuf = "2.10.1"
+sha3 = "0.8"
+verifiable_confidential_ledger = { path = "../solution/verifiable_confidential_ledger" }
+wedpr_crypto = { path = "../crypto/" }
+wedpr_macros = { path = "../common/macros/" }
+wedpr_protos = { path = "../protos/" }
+wedpr_utils = { path = "../common/utils" }
