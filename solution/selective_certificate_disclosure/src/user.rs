@@ -3,7 +3,7 @@
 //! Library for a certificate user (holder).
 
 use crate::utils;
-use indy_crypto::cl::{issuer, prover, verifier, Nonce};
+use wedpr_indy_crypto::cl::{issuer, prover, verifier, Nonce};
 use wedpr_protos::generated::scd::{
     AttributeDict, CertificateSignature, CertificateTemplate,
     SignCertificateRequest, VerificationRuleSet, VerifyRequest,
@@ -17,11 +17,11 @@ pub fn fill_certificate(
     attribute_dict: &AttributeDict,
     certificate_template: &CertificateTemplate,
 ) -> Result<(SignCertificateRequest, String, String, String), WedprError> {
-    let cred_key_correctness_proof: indy_crypto::cl::CredentialKeyCorrectnessProof =
+    let cred_key_correctness_proof: wedpr_indy_crypto::cl::CredentialKeyCorrectnessProof =
         utils::safe_deserialize(
             certificate_template.get_template_correctness_proof(),
         )?;
-    let cred_pub_key: indy_crypto::cl::CredentialPublicKey =
+    let cred_pub_key: wedpr_indy_crypto::cl::CredentialPublicKey =
         utils::safe_deserialize(
             certificate_template.get_template_public_key().get_key(),
         )?;
@@ -95,21 +95,21 @@ pub fn blind_certificate_signature(
     certificate_secrets_blinding_factors: &str,
     issuer_nonce_str: &str,
 ) -> Result<CertificateSignature, WedprError> {
-    let mut cred_signature: indy_crypto::cl::CredentialSignature =
+    let mut cred_signature: wedpr_indy_crypto::cl::CredentialSignature =
         utils::safe_deserialize(
             certificate_signature.get_certificate_signature(),
         )?;
-    let signature_correctness_proof: indy_crypto::cl::SignatureCorrectnessProof = utils::safe_deserialize(
+    let signature_correctness_proof: wedpr_indy_crypto::cl::SignatureCorrectnessProof = utils::safe_deserialize(
         certificate_signature.get_signature_correctness_proof()
     )?;
 
-    let certificate_secrets_blinding_factors: indy_crypto::cl::CredentialSecretsBlindingFactors = utils::safe_deserialize(
+    let certificate_secrets_blinding_factors: wedpr_indy_crypto::cl::CredentialSecretsBlindingFactors = utils::safe_deserialize(
         certificate_secrets_blinding_factors
     )?;
 
-    let issuer_nonce: indy_crypto::cl::Nonce =
+    let issuer_nonce: wedpr_indy_crypto::cl::Nonce =
         utils::safe_deserialize(issuer_nonce_str)?;
-    let cred_pub_key: indy_crypto::cl::CredentialPublicKey =
+    let cred_pub_key: wedpr_indy_crypto::cl::CredentialPublicKey =
         utils::safe_deserialize(
             certificate_template.get_template_public_key().get_key(),
         )?;
@@ -117,7 +117,7 @@ pub fn blind_certificate_signature(
     let mut credential_values_builder = utils::safe_indy_check(
         issuer::Issuer::new_credential_values_builder(),
     )?;
-    let master_key: indy_crypto::cl::MasterSecret =
+    let master_key: wedpr_indy_crypto::cl::MasterSecret =
         utils::safe_deserialize(user_private_key)?;
     let master_value = utils::safe_indy_check(master_key.value())?;
     utils::safe_indy_check(
@@ -173,12 +173,12 @@ pub fn prove_selective_disclosure(
             certificate_template.get_certificate_schema(),
         )?;
 
-    let cred_pub_key: indy_crypto::cl::CredentialPublicKey =
+    let cred_pub_key: wedpr_indy_crypto::cl::CredentialPublicKey =
         utils::safe_deserialize(
             certificate_template.get_template_public_key().get_key(),
         )?;
 
-    let cred_signature: indy_crypto::cl::CredentialSignature =
+    let cred_signature: wedpr_indy_crypto::cl::CredentialSignature =
         utils::safe_deserialize(
             certificate_signature.get_certificate_signature(),
         )?;
@@ -186,7 +186,7 @@ pub fn prove_selective_disclosure(
     let mut credential_values_builder = utils::safe_indy_check(
         issuer::Issuer::new_credential_values_builder(),
     )?;
-    let master_key: indy_crypto::cl::MasterSecret =
+    let master_key: wedpr_indy_crypto::cl::MasterSecret =
         utils::safe_deserialize(user_private_key_str)?;
     let master_value = utils::safe_indy_check(master_key.value())?;
     utils::safe_indy_check(

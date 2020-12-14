@@ -10,7 +10,7 @@ description = "Library of selective certificate disclosure (SCD) solution."
 
 [dependencies]
 colored = "1.8"
-indy-crypto = { git = "https://github.com/WeDPR-Team/indy-crypto", branch = "feature-i64", version = "0.4.5"}
+wedpr-indy-crypto = "0.4.5"
 protobuf = "2.10.1"
 serde = "1.0.102"
 serde_json = "1.0.41"

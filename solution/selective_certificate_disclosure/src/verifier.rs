@@ -3,7 +3,7 @@
 //! Library for a certificate verifier.
 
 use crate::utils;
-use indy_crypto::cl::verifier;
+use wedpr_indy_crypto::cl::verifier;
 use wedpr_protos::generated::scd::{
     AttributeDict, StringToStringPair, VerificationRuleSet, VerifyRequest,
 };
@@ -15,7 +15,7 @@ use wedpr_utils::error::WedprError;
 pub fn get_revealed_attributes(
     verify_request: &VerifyRequest,
 ) -> Result<AttributeDict, WedprError> {
-    let proof: indy_crypto::cl::Proof =
+    let proof: wedpr_indy_crypto::cl::Proof =
         utils::safe_deserialize(verify_request.get_verification_proof())?;
     let eq_value = utils::safe_indy_check(proof.get_revealed_attrs_value())?;
     let mut attrs = AttributeDict::new();
@@ -41,7 +41,7 @@ pub fn verify_selective_disclosure(
                 .get_certificate_schema(),
         )?;
 
-    let proof: indy_crypto::cl::Proof =
+    let proof: wedpr_indy_crypto::cl::Proof =
         utils::safe_deserialize(verify_request.get_verification_proof())?;
 
     let eq_value = utils::safe_indy_check(proof.get_revealed_attrs_value())?;
@@ -88,7 +88,7 @@ pub fn verify_selective_disclosure(
     let sub_proof_request =
         utils::safe_indy_check(sub_proof_request_builder.finalize())?;
 
-    let cred_pub_key: indy_crypto::cl::CredentialPublicKey =
+    let cred_pub_key: wedpr_indy_crypto::cl::CredentialPublicKey =
         utils::safe_deserialize(
             verify_request
                 .get_certificate_template()
@@ -96,7 +96,7 @@ pub fn verify_selective_disclosure(
                 .get_key(),
         )?;
 
-    let proof_request_nonce: indy_crypto::cl::Nonce =
+    let proof_request_nonce: wedpr_indy_crypto::cl::Nonce =
         utils::safe_deserialize(verify_request.get_verification_nonce())?;
 
     let mut proof_verifier =
