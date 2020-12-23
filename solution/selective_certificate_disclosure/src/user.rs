@@ -280,3 +280,42 @@ pub fn prove_selective_disclosure(
 
     Ok(request)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::issuer::make_certificate_template;
+    use wedpr_protos::generated::scd::{CertificateSchema, StringToStringPair};
+
+    #[test]
+    fn test_fill_certificate() {
+        let attribute_name = "age";
+        let mut schema = CertificateSchema::new();
+        schema.mut_attribute_name().
+            push(attribute_name.to_string());
+        let (certificate_template, _template_private_key) =
+            make_certificate_template(&schema).unwrap();
+
+        let mut certificate_attribute_dict = AttributeDict::new();
+        let age = 40;
+        let mut age_kv = StringToStringPair::new();
+        age_kv.set_key(attribute_name.to_string());
+        age_kv.set_value(age.to_string());
+        certificate_attribute_dict.mut_pair().push(age_kv);
+
+        let (
+            sign_certificate_request,
+            _user_private_key_str,
+            _certificate_secrets_blinding_factors_str,
+            _user_nonce_str,
+        ) = fill_certificate(
+            &certificate_attribute_dict,
+            &certificate_template,
+        )
+            .unwrap();
+        let get_age_string = (sign_certificate_request.get_certificate_attribute_dict().get_pair())[0].get_value();
+        let age_string = age.to_string();
+        assert_eq!(age_string, get_age_string);
+
+    }
+}

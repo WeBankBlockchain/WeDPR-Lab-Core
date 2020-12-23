@@ -76,7 +76,7 @@ fn flow_cn() {
         "首先，用户需向权威机构提供个人信息，请求认证，然后获得认证后的凭证。",
         "最后，用户可以基于选择性认证披露功能，选择以下不同方式提出奖项申请，\
          以满足其隐私偏好：",
-        "A. 用户经提交满足申请条件的断言证明，但不披露任何明文信息。".yellow(),
+        "A. 用户提交满足申请条件的断言证明，但不披露任何明文信息。".yellow(),
         "B. 用户选择性披露部分明文信息及其正确性证明，\
          但不披露任何未被选择的明文信息。"
             .yellow(),
@@ -508,9 +508,7 @@ fn flow_en() {
         "But, in order to prevent the authority to track the certificate \
          usage, you can further blind this certificate before using it.",
     );
-    pause_en();
-
-    let new_certificate_signature = user::blind_certificate_signature(
+    pause_en();let new_certificate_signature = user::blind_certificate_signature(
         &certificate_signature,
         &certificate_attribute_dict,
         &certificate_template,
@@ -518,7 +516,9 @@ fn flow_en() {
         &certificate_secrets_blinding_factors_str,
         &issuer_nonce_str,
     )
-    .unwrap();
+        .unwrap();
+
+
     println!(
         "\n{}\n{:?}\n",
         "The blinded certificate is:".yellow(),

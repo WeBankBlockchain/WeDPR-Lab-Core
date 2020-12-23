@@ -112,3 +112,32 @@ pub fn sign_certificate(
 
     Ok((certificate_signature, issuer_nonce_str))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+//    use crate::user::fill_certificate;
+//    use crate::user::blind_certificate_signature;
+//    use wedpr_protos::generated::scd::{
+//        AttributeDict};
+
+    #[test]
+    fn test_make_certificate_template() {
+        let attribute_name1 = "id";
+        let attribute_name2 = "age";
+        let mut attr_vec = Vec::new();
+        attr_vec.push(attribute_name1.to_string());
+        attr_vec.push(attribute_name2.to_string());
+        let mut schema = CertificateSchema::new();
+        schema
+            .mut_attribute_name()
+            .push(attribute_name1.to_string());
+        schema.mut_attribute_name().
+            push(attribute_name2.to_string());
+        let (certificate_template, _template_private_key) =
+            make_certificate_template(&schema).unwrap();
+        let get_attribute = certificate_template.get_certificate_schema().get_attribute_name();
+        assert_eq!(attr_vec, get_attribute);
+    }
+}
+
