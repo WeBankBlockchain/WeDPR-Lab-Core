@@ -8,8 +8,8 @@ use jni::{
     JNIEnv,
 };
 use wedpr_ffi_common::utils::{
-    java_jstring_to_string, java_new_jobject,
-    java_set_error_field_and_extract_jobject,
+    bytes_to_string, java_jstring_to_string, java_new_jobject,
+    java_set_error_field_and_extract_jobject, string_to_bytes,
 };
 
 // Java FFI: Java interfaces will be generated under
@@ -81,7 +81,12 @@ pub extern "system" fn Java_com_webank_wedpr_hdw_NativeInterface_createMasterKey
             },
         };
 
-    java_safe_set_string_field!(_env, result_jobject, master_key, "masterKey");
+    java_safe_set_string_field!(
+        _env,
+        result_jobject,
+        bytes_to_string(&master_key),
+        "masterKey"
+    );
     result_jobject.into_inner()
 }
 
@@ -99,8 +104,19 @@ pub extern "system" fn Java_com_webank_wedpr_hdw_NativeInterface_extendedKey(
 ) -> jobject {
     let result_jobject = get_result_jobject(&_env);
 
-    let master_key =
+    let master_key_str =
         java_safe_jstring_to_string!(_env, result_jobject, master_key_jstring);
+
+    let master_key = match string_to_bytes(&master_key_str) {
+        Ok(v) => v,
+        Err(e) => {
+            return java_set_error_field_and_extract_jobject(
+                &_env,
+                &result_jobject,
+                &format!("string_to_bytes failed, err = {:?}", e),
+            )
+        },
+    };
 
     let key_pair =
         match wedpr_s_hierarchical_deterministic_wallet::hdw::derive_extended_key(
@@ -124,14 +140,14 @@ pub extern "system" fn Java_com_webank_wedpr_hdw_NativeInterface_extendedKey(
     java_safe_set_string_field!(
         _env,
         result_jobject,
-        key_pair.get_extended_private_key(),
+        bytes_to_string(&key_pair.get_extended_private_key()),
         "extendedPrivateKey"
     );
 
     java_safe_set_string_field!(
         _env,
         result_jobject,
-        key_pair.get_extended_public_key(),
+        bytes_to_string(&key_pair.get_extended_public_key()),
         "extendedPublicKey"
     );
     result_jobject.into_inner()

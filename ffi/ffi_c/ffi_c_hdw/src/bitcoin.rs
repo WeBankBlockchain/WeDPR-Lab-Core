@@ -1,11 +1,12 @@
 // Copyright 2020 WeDPR Lab Project Authors. Licensed under Apache-2.0.
 
 use protobuf::{self, Message};
-use wedpr_crypto::utils::bytes_to_string;
-use wedpr_ffi_common::utils::c_char_pointer_to_string;
+use wedpr_ffi_common::utils::{
+    bytes_to_string, c_char_pointer_to_string, string_to_bytes,
+};
 use wedpr_s_hierarchical_deterministic_wallet;
 
-use wedpr_protos::generated::hdw::HdwResult;
+use wedpr_s_protos::generated::hdw::HdwResult;
 
 use libc::{c_char, c_uchar};
 use std::{ffi::CString, panic, ptr};
@@ -67,7 +68,12 @@ pub extern "C" fn wedpr_extended_key(
     address_index: c_uchar,
 ) -> *mut c_char {
     let result = panic::catch_unwind(|| {
-        let master_key = c_safe_c_char_pointer_to_string!(master_key_cstring);
+        let master_key_str =
+            c_safe_c_char_pointer_to_string!(master_key_cstring);
+        let master_key = match string_to_bytes(&master_key_str) {
+            Ok(v) => v,
+            Err(_) => return ptr::null_mut(),
+        };
         let key_pair =
             match wedpr_s_hierarchical_deterministic_wallet::hdw::derive_extended_key(
                 &master_key,

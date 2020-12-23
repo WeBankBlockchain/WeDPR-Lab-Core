@@ -14,16 +14,16 @@ use jni::{
     JNIEnv,
 };
 use protobuf::{self, Message};
-use wedpr_crypto::utils::bytes_to_string;
 use wedpr_ffi_common::utils::{
-    java_jstring_to_bytes, java_jstring_to_string, java_new_jobject,
-    java_set_error_field_and_extract_jobject,
+    bytes_to_string, java_jstring_to_bytes, java_jstring_to_string,
+    java_new_jobject, java_set_error_field_and_extract_jobject,
+    string_to_bytes,
 };
 use wedpr_s_verifiable_confidential_ledger;
 
-use wedpr_protos::generated::{
-    vcl::{EncodedConfidentialCredit, EncodedOwnerSecret},
-    zkp::BalanceProof,
+use wedpr_l_protos::generated::zkp::BalanceProof;
+use wedpr_s_protos::generated::vcl::{
+    EncodedConfidentialCredit, EncodedOwnerSecret,
 };
 
 // Java FFI: Java interfaces will be generated under
@@ -211,12 +211,24 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_verifySumBalanc
         )
     );
 
+    let result =
+        match wedpr_s_verifiable_confidential_ledger::vcl::verify_sum_balance(
+            &c1_credit, &c2_credit, &c3_credit, &proof,
+        ) {
+            Ok(v) => v,
+            Err(e) => {
+                return java_set_error_field_and_extract_jobject(
+                    &_env,
+                    &result_jobject,
+                    &format!("verify_sum_balance failed, err = {:?}", e),
+                )
+            },
+        };
+
     java_safe_set_boolean_field!(
         _env,
         result_jobject,
-        wedpr_s_verifiable_confidential_ledger::vcl::verify_sum_balance(
-            &c1_credit, &c2_credit, &c3_credit, &proof,
-        ),
+        result,
         "verificationResult"
     );
 
@@ -328,12 +340,23 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_verifyProductBa
         )
     );
 
+    let result = match wedpr_s_verifiable_confidential_ledger::vcl::verify_product_balance(
+        &c1_credit, &c2_credit, &c3_credit, &proof,
+    ) {
+        Ok(v) => v,
+        Err(e) => {
+            return java_set_error_field_and_extract_jobject(
+                &_env,
+                &result_jobject,
+                &format!("verify_product_balance failed, err = {:?}", e),
+            )
+        },
+    };
+
     java_safe_set_boolean_field!(
         _env,
         result_jobject,
-        wedpr_s_verifiable_confidential_ledger::vcl::verify_product_balance(
-            &c1_credit, &c2_credit, &c3_credit, &proof,
-        ),
+        result,
         "verificationResult"
     );
     result_jobject.into_inner()
@@ -362,7 +385,9 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_proveRange(
     java_safe_set_string_field!(
         _env,
         result_jobject,
-        wedpr_s_verifiable_confidential_ledger::vcl::prove_range(&secret),
+        bytes_to_string(
+            &wedpr_s_verifiable_confidential_ledger::vcl::prove_range(&secret)
+        ),
         "proof"
     );
     result_jobject.into_inner()
@@ -378,8 +403,19 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_verifyRange(
 ) -> jobject {
     let result_jobject = get_result_jobject(&_env);
 
-    let proof =
+    let proof_str =
         java_safe_jstring_to_string!(_env, result_jobject, proof_jstring);
+
+    let proof = match string_to_bytes(&proof_str) {
+        Ok(v) => v,
+        Err(e) => {
+            return java_set_error_field_and_extract_jobject(
+                &_env,
+                &result_jobject,
+                &format!("string_to_bytes failed, err = {:?}", e),
+            )
+        },
+    };
 
     let credit = decode_credit!(
         _env,
