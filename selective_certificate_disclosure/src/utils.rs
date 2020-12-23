@@ -15,7 +15,7 @@ use wedpr_indy_crypto::{
     errors::IndyCryptoError,
 };
 
-/// Builds credential scheme.
+/// Builds credential schema.
 pub fn build_certificate_schema(
     template: &CertificateSchema,
 ) -> Result<(CredentialSchema, NonCredentialSchema), WedprError> {
