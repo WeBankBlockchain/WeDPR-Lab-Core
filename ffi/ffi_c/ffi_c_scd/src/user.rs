@@ -5,17 +5,17 @@
 
 // C/C++ FFI: C-style interfaces will be generated.
 
-use wedpr_protos::generated::scd::{
+use wedpr_s_protos::generated::scd::{
     AttributeDict, CertificateSignature, CertificateTemplate, ScdResult,
     VerificationRuleSet,
 };
 
-use wedpr_crypto::utils::{bytes_to_string, string_to_bytes};
-
 use libc::c_char;
 use protobuf::{self, Message};
 use std::{ffi::CString, panic, ptr};
-use wedpr_ffi_common::utils::c_char_pointer_to_string;
+use wedpr_ffi_common::utils::{
+    bytes_to_string, c_char_pointer_to_string, string_to_bytes,
+};
 
 /// C interface for 'wedpr_scd_fill_certificate'.
 #[no_mangle]

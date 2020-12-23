@@ -9,13 +9,13 @@ option java_multiple_files = true;
 // Hierarchical deterministic wallet result.
 message HdwResult {
   string mnemonic = 1;
-  string master_key = 2;
+  bytes master_key = 2;
   ExtendedKeyPair key_pair = 3;
 }
 
 
 // Extended KeyPair.
 message ExtendedKeyPair {
-  string extended_private_key = 1;
-  string extended_public_key = 2;
+  bytes extended_private_key = 1;
+  bytes extended_public_key = 2;
 }

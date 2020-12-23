@@ -12,4 +12,4 @@ pub mod verifier;
 #[macro_use]
 extern crate wedpr_ffi_macros;
 #[macro_use]
-extern crate wedpr_macros;
+extern crate wedpr_l_macros;

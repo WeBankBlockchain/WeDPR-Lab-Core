@@ -83,15 +83,15 @@ message ScdResult {
     // Used by the issuer.
     CertificateTemplate certificate_template = 1;
     TemplatePrivateKey template_private_key = 2;
-    string issuer_nonce = 3;
+  string issuer_nonce = 3;
     // Used by the user.
     CertificateSignature certificate_signature = 4;
-    string user_nonce = 5;
+  string user_nonce = 5;
     SignCertificateRequest sign_certificate_request = 6;
-    string user_private_key = 7;
-    string certificate_secrets_blinding_factors = 8;
+  string user_private_key = 7;
+  string certificate_secrets_blinding_factors = 8;
     // Used by the verifier.
-    string verification_nonce = 9;
+  string verification_nonce = 9;
     VerifyRequest verify_request = 10;
     AttributeDict revealed_attribute_dict = 11;
     bool bool_result = 12;
