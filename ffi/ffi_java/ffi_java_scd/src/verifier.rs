@@ -11,15 +11,13 @@ use jni::{
 use protobuf::{self, Message};
 
 use wedpr_ffi_common::utils::{
-    java_jstring_to_bytes, java_new_jobject,
+    bytes_to_string, java_jstring_to_bytes, java_new_jobject,
     java_set_error_field_and_extract_jobject,
 };
 
 use wedpr_s_selective_certificate_disclosure;
 
-use wedpr_protos::generated::scd::{VerificationRuleSet, VerifyRequest};
-
-use wedpr_crypto::utils::bytes_to_string;
+use wedpr_s_protos::generated::scd::{VerificationRuleSet, VerifyRequest};
 
 const RESULT_JAVA_CLASS_NAME: &str = "com/webank/wedpr/scd/VerifierResult";
 

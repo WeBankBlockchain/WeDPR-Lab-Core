@@ -7,16 +7,18 @@
 #[macro_use]
 extern crate wedpr_ffi_macros;
 #[macro_use]
-extern crate wedpr_macros;
+extern crate wedpr_l_macros;
 
 use protobuf::{self, Message};
-use wedpr_crypto::utils::{bytes_to_string, string_to_bytes};
-use wedpr_ffi_common::utils::{c_char_pointer_to_string, FAILURE, SUCCESS};
+use wedpr_ffi_common::utils::{
+    bytes_to_string, c_char_pointer_to_string, string_to_bytes, FAILURE,
+    SUCCESS,
+};
 use wedpr_s_verifiable_confidential_ledger;
 
-use wedpr_protos::generated::{
-    vcl::{EncodedConfidentialCredit, EncodedOwnerSecret, VclResult},
-    zkp::BalanceProof,
+use wedpr_l_protos::generated::zkp::BalanceProof;
+use wedpr_s_protos::generated::vcl::{
+    EncodedConfidentialCredit, EncodedOwnerSecret, VclResult,
 };
 
 use libc::{c_char, c_ulong};
@@ -128,9 +130,13 @@ pub extern "C" fn wedpr_vcl_verify_sum_balance(
                 FAILURE
             ));
 
-        match wedpr_s_verifiable_confidential_ledger::vcl::verify_sum_balance(
+        let result = match wedpr_s_verifiable_confidential_ledger::vcl::verify_sum_balance(
             &c1_credit, &c2_credit, &c3_credit, &proof,
         ) {
+            Ok(v) => v,
+            Err(_) => return FAILURE,
+        };
+        match result {
             true => SUCCESS,
             false => FAILURE,
         }
@@ -201,9 +207,13 @@ pub extern "C" fn wedpr_vcl_verify_product_balance(
                 FAILURE
             ));
 
-        match wedpr_s_verifiable_confidential_ledger::vcl::verify_product_balance(
+        let result = match wedpr_s_verifiable_confidential_ledger::vcl::verify_sum_balance(
             &c1_credit, &c2_credit, &c3_credit, &proof,
         ) {
+            Ok(v) => v,
+            Err(_) => return FAILURE,
+        };
+        match result {
             true => SUCCESS,
             false => FAILURE,
         }
@@ -236,7 +246,7 @@ pub extern "C" fn wedpr_vcl_verify_range(
     proof_cstring: *mut c_char,
 ) -> i8 {
     let result = panic::catch_unwind(|| {
-        let proof = c_safe_c_char_pointer_to_string_with_error_value!(
+        let proof_str = c_safe_c_char_pointer_to_string_with_error_value!(
             proof_cstring,
             FAILURE
         );
@@ -246,6 +256,10 @@ pub extern "C" fn wedpr_vcl_verify_range(
                 EncodedConfidentialCredit,
                 FAILURE
             ));
+        let proof = match string_to_bytes(&proof_str) {
+            Ok(v) => v,
+            Err(_) => return FAILURE,
+        };
 
         match wedpr_s_verifiable_confidential_ledger::vcl::verify_range(
             &credit, &proof,
