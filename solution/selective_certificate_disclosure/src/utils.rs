@@ -6,7 +6,7 @@ use wedpr_protos::generated::scd::CertificateSchema;
 use wedpr_utils::error::WedprError;
 extern crate serde;
 extern crate serde_json;
-use indy_crypto::{
+use wedpr_indy_crypto::{
     bn::BigNumber,
     cl::{
         issuer, CredentialSchema, NonCredentialSchema,

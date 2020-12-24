@@ -3,7 +3,7 @@
 //! Library for a certificate issuer.
 
 use crate::utils;
-use indy_crypto::cl::{issuer, Nonce};
+use wedpr_indy_crypto::cl::{issuer, Nonce};
 use wedpr_protos::generated::scd::{
     CertificateSchema, CertificateSignature, CertificateTemplate,
     SignCertificateRequest, TemplatePrivateKey, TemplatePublicKey,
@@ -57,17 +57,17 @@ pub fn sign_certificate(
 {
     let certificate_attribute_dict =
         sign_request.get_certificate_attribute_dict();
-    let blinded_credential_secrets: indy_crypto::cl::BlindedCredentialSecrets =
+    let blinded_credential_secrets: wedpr_indy_crypto::cl::BlindedCredentialSecrets =
         utils::safe_deserialize(sign_request.get_blinded_certificate_secrets())?;
-    let blinded_credential_secrets_correctness_proof: indy_crypto::cl::BlindedCredentialSecretsCorrectnessProof =
+    let blinded_credential_secrets_correctness_proof: wedpr_indy_crypto::cl::BlindedCredentialSecretsCorrectnessProof =
         utils::safe_deserialize(
             sign_request.get_blinded_certificate_secrets_correctness_proof()
         )?;
 
-    let cred_priv_key: indy_crypto::cl::CredentialPrivateKey =
+    let cred_priv_key: wedpr_indy_crypto::cl::CredentialPrivateKey =
         utils::safe_deserialize(template_private_key.get_key())?;
 
-    let cred_pub_key: indy_crypto::cl::CredentialPublicKey =
+    let cred_pub_key: wedpr_indy_crypto::cl::CredentialPublicKey =
         utils::safe_deserialize(
             certificate_template.get_template_public_key().get_key(),
         )?;
