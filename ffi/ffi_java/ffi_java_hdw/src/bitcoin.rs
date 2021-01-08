@@ -121,11 +121,11 @@ pub extern "system" fn Java_com_webank_wedpr_hdw_NativeInterface_extendedKey(
     let key_pair =
         match wedpr_s_hierarchical_deterministic_wallet::hdw::derive_extended_key(
             &master_key,
-            purpose_type as u8,
-            coin_type as u8,
-            account as u8,
-            change as u8,
-            address_index as u8,
+            purpose_type,
+            coin_type,
+            account,
+            change,
+            address_index,
         ) {
             Ok(v) => v,
             Err(e) => {

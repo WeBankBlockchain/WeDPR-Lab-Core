@@ -64,11 +64,11 @@ pub fn create_master_key_en(
 /// Derive extended keys for users to send transaction.
 pub fn derive_extended_key(
     master_key_bytes: &[u8],
-    protocol_type: u8,
-    asset_type: u8,
-    account: u8,
-    change: u8,
-    address_index: u8,
+    protocol_type: i32,
+    asset_type: i32,
+    account: i32,
+    change: i32,
+    address_index: i32,
 ) -> Result<ExtendedKeyPair, WedprError> {
     let master_key_str = match str::from_utf8(&master_key_bytes) {
         Ok(v) => v,
@@ -164,7 +164,7 @@ mod tests {
     use wedpr_l_crypto_ecies_secp256k1::WedprSecp256k1Ecies;
     use wedpr_l_crypto_hash_keccak256::WedprKeccak256;
     use wedpr_l_crypto_signature_secp256k1::WedprSecp256k1Recover;
-    use wedpr_l_utils::wedpr_trait::{Ecies, Hash, Signature};
+    use wedpr_l_utils::traits::{Signature, Hash, Ecies};
 
     #[test]
     fn test_hd_wallet() {

@@ -8,7 +8,7 @@ use wedpr_s_hierarchical_deterministic_wallet;
 
 use wedpr_s_protos::generated::hdw::HdwResult;
 
-use libc::{c_char, c_uchar};
+use libc::{c_char, c_uchar, c_int};
 use std::{ffi::CString, panic, ptr};
 
 // C/C++ FFI: C-style interfaces will be generated.
@@ -61,11 +61,11 @@ pub extern "C" fn wedpr_create_master_key(
 #[no_mangle]
 pub extern "C" fn wedpr_extended_key(
     master_key_cstring: *mut c_char,
-    purpose_type: c_uchar,
-    coin_type: c_uchar,
-    account: c_uchar,
-    change: c_uchar,
-    address_index: c_uchar,
+    purpose_type: c_int,
+    coin_type: c_int,
+    account: c_int,
+    change: c_int,
+    address_index: c_int,
 ) -> *mut c_char {
     let result = panic::catch_unwind(|| {
         let master_key_str =

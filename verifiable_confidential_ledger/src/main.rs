@@ -5,8 +5,7 @@
 use colored::*;
 use std;
 use wedpr_l_crypto_zkp_utils::{
-    bytes_to_point, bytes_to_scalar, get_random_scalar, point_to_bytes,
-    scalar_to_bytes, BASEPOINT_G1, BASEPOINT_G2,
+    point_to_bytes,
 };
 use wedpr_s_verifiable_confidential_ledger::vcl;
 
