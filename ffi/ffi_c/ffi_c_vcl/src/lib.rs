@@ -73,7 +73,8 @@ pub extern "C" fn wedpr_vcl_prove_sum_balance(
     c1_secret_cstring: *mut c_char,
     c2_secret_cstring: *mut c_char,
     c3_secret_cstring: *mut c_char,
-) -> *mut c_char {
+) -> *mut c_char
+{
     let result = panic::catch_unwind(|| {
         let c1_secret = decode_secret!(c_safe_c_char_pointer_to_proto!(
             c1_secret_cstring,
@@ -104,7 +105,8 @@ pub extern "C" fn wedpr_vcl_verify_sum_balance(
     c2_credit_cstring: *mut c_char,
     c3_credit_cstring: *mut c_char,
     proof_cstring: *mut c_char,
-) -> i8 {
+) -> i8
+{
     let result = panic::catch_unwind(|| {
         let proof = c_safe_c_char_pointer_to_proto_with_error_value!(
             proof_cstring,
@@ -150,7 +152,8 @@ pub extern "C" fn wedpr_vcl_prove_product_balance(
     c1_secret_cstring: *mut c_char,
     c2_secret_cstring: *mut c_char,
     c3_secret_cstring: *mut c_char,
-) -> *mut c_char {
+) -> *mut c_char
+{
     let result = panic::catch_unwind(|| {
         let c1_secret = decode_secret!(c_safe_c_char_pointer_to_proto!(
             c1_secret_cstring,
@@ -181,7 +184,8 @@ pub extern "C" fn wedpr_vcl_verify_product_balance(
     c2_credit_cstring: *mut c_char,
     c3_credit_cstring: *mut c_char,
     proof_cstring: *mut c_char,
-) -> i8 {
+) -> i8
+{
     let result = panic::catch_unwind(|| {
         let proof = c_safe_c_char_pointer_to_proto_with_error_value!(
             proof_cstring,
@@ -244,7 +248,8 @@ pub extern "C" fn wedpr_vcl_prove_range(
 pub extern "C" fn wedpr_vcl_verify_range(
     credit_cstring: *mut c_char,
     proof_cstring: *mut c_char,
-) -> i8 {
+) -> i8
+{
     let result = panic::catch_unwind(|| {
         let proof_str = c_safe_c_char_pointer_to_string_with_error_value!(
             proof_cstring,

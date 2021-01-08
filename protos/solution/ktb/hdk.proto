@@ -1,0 +1,20 @@
+// Copyright 2020 WeDPR Lab Project Authors. Licensed under Apache-2.0.
+
+syntax = "proto3";
+
+package com.webank.wedpr.scd.proto;
+option java_package = "com.webank.wedpr.ktb.proto";
+option java_multiple_files = true;
+
+// Return data to FFI interface used by HDK.
+message HdkResult {
+  string mnemonic = 1;
+  bytes master_key = 2;
+  ExtendedKeyPair key_pair = 3;
+}
+
+// Extended KeyPair.
+message ExtendedKeyPair {
+  bytes extended_private_key = 1;
+  bytes extended_public_key = 2;
+}

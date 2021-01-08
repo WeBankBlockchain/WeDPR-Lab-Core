@@ -2,6 +2,7 @@
 
 //! Library of WeDPR bounty program.
 
+pub mod scd;
 pub mod utils;
 pub mod vcl;
 pub mod vcl_data;
