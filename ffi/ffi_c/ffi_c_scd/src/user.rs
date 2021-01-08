@@ -22,7 +22,8 @@ use wedpr_ffi_common::utils::{
 pub extern "C" fn wedpr_scd_fill_certificate(
     attribute_dict_cstring: *mut c_char,
     certificate_template_cstring: *mut c_char,
-) -> *mut c_char {
+) -> *mut c_char
+{
     let result = panic::catch_unwind(|| {
         let attribute_dict_pb = c_safe_c_char_pointer_to_proto!(
             attribute_dict_cstring,
@@ -66,7 +67,8 @@ pub extern "C" fn wedpr_scd_blind_certificate_signature(
     user_private_key_cstring: *mut c_char,
     certificate_secrets_blinding_factors_cstring: *mut c_char,
     issuer_nonce_cstring: *mut c_char,
-) -> *mut c_char {
+) -> *mut c_char
+{
     let result = panic::catch_unwind(|| {
         let certificate_signature_pb = c_safe_c_char_pointer_to_proto!(
             certificate_signature_cstring,
@@ -116,7 +118,8 @@ pub extern "C" fn wedpr_scd_prove_selective_disclosure(
     certificate_template_cstring: *mut c_char,
     user_private_key_cstring: *mut c_char,
     verification_nonce_cstring: *mut c_char,
-) -> *mut c_char {
+) -> *mut c_char
+{
     let result = panic::catch_unwind(|| {
         let certificate_signature_pb = c_safe_c_char_pointer_to_proto!(
             certificate_signature_cstring,

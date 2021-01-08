@@ -8,18 +8,18 @@ option java_multiple_files = true;
 
 // Encoded data to represent a owner secret.
 message EncodedOwnerSecret {
-    int64 credit_value = 1;
-    bytes secret_blinding = 2;
+  int64 credit_value = 1;
+  bytes secret_blinding = 2;
 }
 
 // Encoded data to represent a confidential credit.
 message EncodedConfidentialCredit {
-    bytes point = 1;
+  bytes point = 1;
 }
 
-// Return data to FFI C interface
+// Return data to FFI interface used by VCL.
 message VclResult {
-    string credit = 1;
-    string secret = 2;
-    string proof = 3;
+  string credit = 1;
+  string secret = 2;
+  string proof = 3;
 }

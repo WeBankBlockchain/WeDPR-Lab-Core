@@ -12,12 +12,12 @@ crate-type = [ "cdylib", "staticlib" ]
 
 [dependencies]
 jni = "0.13.0"
-protobuf = "2.10.1"
-wedpr_s_verifiable_confidential_ledger = { path = "../../../verifiable_confidential_ledger" }
-wedpr_ffi_common = { path = "/Users/asher/WeDPR/WeDPR-Lab-Crypto/ffi/ffi_common/",  features = [ "wedpr_f_base64" ] }
-wedpr_ffi_macros = { path = "/Users/asher/WeDPR/WeDPR-Lab-Crypto/ffi/ffi_macros/" }
+protobuf = "2.20.0"
+wedpr_s_verifiable_confidential_ledger = { path = "../../../solution/verifiable_confidential_ledger" }
+wedpr_ffi_common = "0.0.1"
+wedpr_ffi_macros = "0.0.1"
 wedpr_s_protos = { path = "../../../protos/" }
-wedpr_l_protos = { path = "/Users/asher/WeDPR/WeDPR-Lab-Crypto/protos/" }
+wedpr_l_protos = "0.0.1"
 
 [build-dependencies]
 cbindgen = "0.9.0"

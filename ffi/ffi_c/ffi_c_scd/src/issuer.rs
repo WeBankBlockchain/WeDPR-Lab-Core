@@ -49,7 +49,8 @@ pub extern "C" fn wedpr_scd_sign_certificate(
     sign_request_cstring: *mut c_char,
     user_id_cstring: *mut c_char,
     user_nonce_cstring: *mut c_char,
-) -> *mut c_char {
+) -> *mut c_char
+{
     let result = panic::catch_unwind(|| {
         let certificate_template_pb = c_safe_c_char_pointer_to_proto!(
             certificate_template_cstring,

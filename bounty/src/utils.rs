@@ -28,6 +28,23 @@ pub fn print_alert3(message1: &str, message2: &str, message3: &str) {
         message3.yellow()
     );
 }
+pub fn print_alert5(
+    message1: &str,
+    message2: &str,
+    message3: &str,
+    message4: &str,
+    message5: &str,
+)
+{
+    println!(
+        "{}\n{}\n{}\n{}\n{}\n",
+        message1.yellow(),
+        message2.yellow(),
+        message3.yellow(),
+        message4.yellow(),
+        message5.yellow(),
+    );
+}
 
 pub fn print_wide(message: &str) {
     println!("\n{}\n", message);
@@ -56,8 +73,8 @@ pub fn wait_for_number(error_message: &str) -> u64 {
     }
 }
 
-pub fn wait_for_number_cn() -> u64 {
-    wait_for_number("请输入有效整数：")
+pub fn wait_for_number_en() -> u64 {
+    wait_for_number("Please input a valid number:")
 }
 
 pub fn pause(info_message: &str) {
@@ -69,6 +86,11 @@ pub fn pause(info_message: &str) {
     println!("... {}\n", enter_continue.trim());
 }
 
-pub fn pause_cn() {
-    pause("按任意键继续...");
+pub fn pause_en() {
+    pause("Press any key to continue...");
+}
+
+pub fn print_try_again() {
+    print_wide("Your inputs DID NOT break the algorithm.");
+    print_alert("Try again?");
 }
