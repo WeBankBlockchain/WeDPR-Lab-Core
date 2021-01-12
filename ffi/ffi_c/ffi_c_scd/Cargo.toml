@@ -12,12 +12,12 @@ crate-type = [ "cdylib", "staticlib" ]
 
 [dependencies]
 libc = "0.2.60"
-protobuf = "2.10.1"
+protobuf = "2.20.0"
 wedpr_s_selective_certificate_disclosure = { path = "../../../selective_certificate_disclosure" }
-wedpr_ffi_common = { path = "/Users/asher/WeDPR/WeDPR-Lab-Crypto/ffi/ffi_common/",  features = [ "wedpr_f_base64" ] }
-wedpr_ffi_macros = { path = "/Users/asher/WeDPR/WeDPR-Lab-Crypto/ffi/ffi_macros/" }
+wedpr_ffi_common = { path = "/mnt/e/git_home/WeDPR-Lab-Crypto/ffi/ffi_common/",  features = [ "wedpr_f_base64" ] }
+wedpr_ffi_macros = { path = "/mnt/e/git_home/WeDPR-Lab-Crypto/ffi/ffi_macros/" }
 wedpr_s_protos = { path = "../../../protos/" }
-wedpr_l_macros = { path = "/Users/asher/WeDPR/WeDPR-Lab-Crypto/common/macros/" }
+wedpr_l_macros = { path = "/mnt/e/git_home/WeDPR-Lab-Crypto/common/macros/" }
 
 # This is required to generate C/C++ header files.
 [build-dependencies]

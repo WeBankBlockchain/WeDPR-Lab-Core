@@ -9,11 +9,10 @@ edition = "2018"
 [dependencies]
 colored = "1.8"
 curve25519-dalek = { version = "1", features = [ "serde" ] }
-protobuf = "2.10.1"
+protobuf = "2.20.0"
 sha3 = "0.8"
 wedpr_s_verifiable_confidential_ledger = { path = "../solution/verifiable_confidential_ledger" }
 wedpr_crypto = { path = "../crypto/" }
 wedpr_macros = { path = "../common/macros/" }
 wedpr_protos = { path = "../protos/" }
 wedpr_utils = { path = "../common/utils" }
-
