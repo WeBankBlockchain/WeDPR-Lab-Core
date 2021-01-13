@@ -1,6 +1,6 @@
 // Copyright 2020 WeDPR Lab Project Authors. Licensed under Apache-2.0.
 
-use wedpr_bounty::{utils, vcl, scd};
+use wedpr_bounty::{scd, utils, vcl};
 
 fn main() {
     // TODO: Translate instructions to English.
@@ -18,7 +18,7 @@ fn main() {
     println!("目前，我们开放了以下两个解决方案的证明验证靶场：");
     utils::print_alert2(
         "▶ 1. 可验证匿名账本（Verifiable Confidential Ledger，VCL）",
-        "▶ 2. 选择性认证披露（Selective Certificate Disclosure，SCD）"
+        "▶ 2. 选择性认证披露（Selective Certificate Disclosure，SCD）",
     );
 
     println!("现在请选择待挑战的证明验证靶场编号：▼▼▼");

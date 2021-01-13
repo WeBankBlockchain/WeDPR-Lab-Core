@@ -164,7 +164,7 @@ mod tests {
     use wedpr_l_crypto_ecies_secp256k1::WedprSecp256k1Ecies;
     use wedpr_l_crypto_hash_keccak256::WedprKeccak256;
     use wedpr_l_crypto_signature_secp256k1::WedprSecp256k1Recover;
-    use wedpr_l_utils::traits::{Signature, Hash, Ecies};
+    use wedpr_l_utils::traits::{Ecies, Hash, Signature};
 
     #[test]
     fn test_hd_wallet() {

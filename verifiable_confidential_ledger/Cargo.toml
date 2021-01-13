@@ -18,6 +18,9 @@ wedpr_l_utils = { path = "/mnt/e/github/WeDPR-Lab-Crypto/common/utils", version 
 wedpr_l_crypto_zkp_discrete_logarithm_proof = { path = "/mnt/e/github/WeDPR-Lab-Crypto/crypto/zkp/discrete_logarithm_proof", version = "1.0.0" }
 wedpr_l_crypto_zkp_range_proof = { path = "/mnt/e/github/WeDPR-Lab-Crypto/crypto/zkp/range_proof", version = "1.0.0" }
 wedpr_l_crypto_zkp_utils = { path = "/mnt/e/github/WeDPR-Lab-Crypto/crypto/zkp/utils", version = "1.0.0" }
+wedpr_l_common_coder_base64 = {path = "/mnt/e/github/WeDPR-Lab-Crypto/common/coder/base64", version = "1.0.0" }
+protobuf = "2.20.0"
+#protoc-rust = "2.20.0"
 
 [dev-dependencies]
 criterion = "0.2"

@@ -219,15 +219,55 @@ pub fn verify_range(c1: &ConfidentialCredit, proof: &[u8]) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use wedpr_l_common_coder_base64::WedprBase64;
+    use wedpr_l_utils::traits::Coder;
+    extern crate wedpr_l_crypto_zkp_utils;
+    use wedpr_l_crypto_zkp_utils::point_to_bytes;
+
+    extern crate wedpr_l_protos;
+    use protobuf::Message;
+
+    #[test]
+    fn test_vcl_data() {
+        let base64 = WedprBase64::default();
+        let mut c1_credit_vec = Vec::new();
+        let mut c2_credit_vec = Vec::new();
+        let mut c3_credit_vec = Vec::new();
+        let mut proof_vec = Vec::new();
+        for _i in 0..100 {
+            let (c1_credit, c1_secret) = make_credit(10);
+            c1_credit_vec
+                .push(base64.encode(&point_to_bytes(&c1_credit.get_point())));
+
+            let (c2_credit, c2_secret) = make_credit(20);
+            c2_credit_vec
+                .push(base64.encode(&point_to_bytes(&c2_credit.get_point())));
+
+            // 10 + 20 = 30
+            let (c3_credit, c3_secret) = make_credit(30);
+            c3_credit_vec
+                .push(base64.encode(&point_to_bytes(&c3_credit.get_point())));
+
+            let proof = prove_sum_balance(&c1_secret, &c2_secret, &c3_secret);
+            let proof_str = base64.encode(&proof.write_to_bytes().unwrap());
+            proof_vec.push(proof_str);
+        }
+        println!("{:?}", c1_credit_vec);
+        println!("{:?}", c2_credit_vec);
+        println!("{:?}", c3_credit_vec);
+        println!("{:?}", proof_vec);
+    }
 
     #[test]
     fn test_sum_balance_proof() {
         let (c1_credit, c1_secret) = make_credit(10);
         let (c2_credit, c2_secret) = make_credit(20);
+
         // 10 + 20 = 30
         let (correct_c3_credit, correct_c3_secret) = make_credit(30);
         let correct_proof =
             prove_sum_balance(&c1_secret, &c2_secret, &correct_c3_secret);
+
         // 10 + 20 != 31
         let (wrong_c3_credit, wrong_c3_secret) = make_credit(31);
         let wrong_proof =

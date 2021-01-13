@@ -11,11 +11,12 @@ colored = "1.8"
 curve25519-dalek = { version = "1", features = [ "serde" ] }
 protobuf = "2.20.0"
 sha3 = "0.8"
-#wedpr_l_crypto_zkp_discrete_logarithm_proof = { path = "/mnt/e/github/WeDPR-Lab-Crypto/crypto/zkp/discrete_logarithm_proof", version = "1.0.0" }
+wedpr_l_crypto_zkp_discrete_logarithm_proof = { path = "/mnt/e/github/WeDPR-Lab-Crypto/crypto/zkp/discrete_logarithm_proof", version = "1.0.0" }
 wedpr_l_crypto_zkp_range_proof = { path = "/mnt/e/github/WeDPR-Lab-Crypto/crypto/zkp/range_proof", version = "1.0.0" }
-#wedpr_l_crypto_zkp_utils = { path = "/mnt/e/github/WeDPR-Lab-Crypto/crypto/zkp/utils", version = "1.0.0" }
 wedpr_s_verifiable_confidential_ledger = { path = "../verifiable_confidential_ledger" }
 wedpr_l_macros = { path = "/mnt/e/github/WeDPR-Lab-Crypto/common/macros/", version = "1.0.0"}
 wedpr_s_protos = { path = "../protos", version = "1.3.0"}
-
-#wedpr_utils = { path = "../common/utils" }
+wedpr_l_protos = { path = "/mnt/e/github/WeDPR-Lab-Crypto/protos", version = "1.0.0"}
+wedpr_l_utils = { path = "/mnt/e/github/WeDPR-Lab-Crypto/common/utils", version = "1.0.0" }
+wedpr_l_crypto_zkp_utils = { path = "/mnt/e/github/WeDPR-Lab-Crypto/crypto/zkp/utils", version = "1.0.0" }
+wedpr_l_common_coder_base64 = {path = "/mnt/e/github/WeDPR-Lab-Crypto/common/coder/base64", version = "1.0.0" }

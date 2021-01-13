@@ -43,7 +43,8 @@ fn create_verify_sum_balance_helper(c: &mut Criterion) {
                 true,
                 vcl::verify_sum_balance(
                     &c1_credit, &c2_credit, &c3_credit, &sum_proof
-                ).unwrap()
+                )
+                .unwrap()
             );
         });
     });
@@ -89,7 +90,8 @@ fn create_verify_product_balance_helper(c: &mut Criterion) {
                     &c2_credit,
                     &c3_credit,
                     &product_proof
-                ).unwrap()
+                )
+                .unwrap()
             );
         });
     });

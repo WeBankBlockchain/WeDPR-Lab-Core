@@ -8,7 +8,7 @@ use wedpr_s_hierarchical_deterministic_wallet;
 
 use wedpr_s_protos::generated::hdw::HdwResult;
 
-use libc::{c_char, c_uchar, c_int};
+use libc::{c_char, c_int, c_uchar};
 use std::{ffi::CString, panic, ptr};
 
 // C/C++ FFI: C-style interfaces will be generated.

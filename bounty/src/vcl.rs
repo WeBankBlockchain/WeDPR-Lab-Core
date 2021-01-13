@@ -76,7 +76,8 @@ pub fn play_vcl_prove_sum_balance() {
     println!("\n加和证明的验证结果为：");
     let sum_proof = vcl::prove_sum_balance(&c1_secret, &c2_secret, &c3_secret);
     let satisfy_sum_balance =
-        vcl::verify_sum_balance(&c1_credit, &c2_credit, &c3_credit, &sum_proof).unwrap();
+        vcl::verify_sum_balance(&c1_credit, &c2_credit, &c3_credit, &sum_proof)
+            .unwrap();
 
     if satisfy_sum_balance {
         println!(
@@ -139,7 +140,8 @@ pub fn play_vcl_prove_product_balance() {
         &c2_credit,
         &c3_credit,
         &product_proof,
-    ).unwrap();
+    )
+    .unwrap();
     if satisfy_product_balance {
         println!(
             "✓ 您的输入：{} * {} = {}，所以通过乘积验证。",
@@ -185,8 +187,11 @@ pub fn play_zkp_verify_value_range() {
     utils::print_alert("现在请输入明文数据a：▼▼▼");
     utils::print_highlight("明文数据输入范围为：[0, 2^64)。");
     let input = utils::wait_for_number_cn();
-    let (proof_c1, c1_point, _) = wedpr_l_crypto_zkp_range_proof::prove_value_range(input);
-    let within_range = wedpr_l_crypto_zkp_range_proof::verify_value_range(&c1_point, &proof_c1);
+    let (proof_c1, c1_point, _) =
+        wedpr_l_crypto_zkp_range_proof::prove_value_range(input);
+    let within_range = wedpr_l_crypto_zkp_range_proof::verify_value_range(
+        &c1_point, &proof_c1,
+    );
 
     println!("\n范围证明验证结果为：");
     if within_range && input <= RANGE_MAX {
@@ -211,42 +216,53 @@ pub fn play_zkp_verify_value_range() {
 
 #[cfg(test)]
 mod tests {
-    use super::{wedpr_crypto::utils::string_to_bytes, *};
+    extern crate wedpr_l_crypto_zkp_discrete_logarithm_proof;
+    extern crate wedpr_l_crypto_zkp_utils;
+    extern crate wedpr_l_utils;
+    use wedpr_l_crypto_zkp_utils::{
+        bytes_to_point, BASEPOINT_G1, BASEPOINT_G2,
+    };
+    extern crate wedpr_l_common_coder_base64;
+    extern crate wedpr_l_crypto_zkp_range_proof;
+    extern crate wedpr_l_protos;
+    extern crate wedpr_s_verifiable_confidential_ledger;
     use crate::vcl_data::{
         TARGET_SIZE, VCL_C1_VEC, VCL_C2_VEC, VCL_C3_VEC, VCL_PROOF_VEC,
     };
-    use wedpr_crypto::{
-        constant::{BASEPOINT_G1, BASEPOINT_G2},
-        utils::string_to_point,
-    };
-    use wedpr_protos::generated::zkp::BalanceProof;
+    use protobuf::Message;
+    use wedpr_l_common_coder_base64::WedprBase64;
+    use wedpr_l_protos::generated::zkp::BalanceProof;
+    use wedpr_l_utils::traits::Coder;
 
     #[test]
     fn test_bounty_data_validity() {
         let value_basepoint = *BASEPOINT_G1;
         let blinding_basepoint = *BASEPOINT_G2;
-
+        let base64 = WedprBase64::default();
         for i in 0..TARGET_SIZE {
             let c1_point =
-                string_to_point(VCL_C1_VEC[i]).expect("failed to decode point");
+                bytes_to_point(&base64.decode(&VCL_C1_VEC[i]).unwrap())
+                    .expect("failed to decode point");
             let c2_point =
-                string_to_point(VCL_C2_VEC[i]).expect("failed to decode point");
+                bytes_to_point(&base64.decode(&VCL_C2_VEC[i]).unwrap())
+                    .expect("failed to decode point");
             let c3_point =
-                string_to_point(VCL_C3_VEC[i]).expect("failed to decode point");
-            let proof = protobuf::parse_from_bytes::<BalanceProof>(
-                &string_to_bytes(VCL_PROOF_VEC[i])
-                    .expect("failed to decode proof"),
+                bytes_to_point(&base64.decode(&VCL_C3_VEC[i]).unwrap())
+                    .expect("failed to decode point");
+
+            let proof = <BalanceProof>::parse_from_bytes(
+                &base64.decode(&VCL_PROOF_VEC[i]).unwrap(),
             )
             .expect("failed to parse proof PB");
 
-            assert!(zkp::verify_sum_relationship(
+            assert!(wedpr_l_crypto_zkp_discrete_logarithm_proof::verify_sum_relationship(
                 &c1_point,
                 &c2_point,
                 &c3_point,
                 &proof,
                 &value_basepoint,
                 &blinding_basepoint
-            ));
+            ).unwrap());
         }
     }
 }
