@@ -3,9 +3,9 @@
 //! Playground of VCL bounty targets.
 
 use super::utils;
+extern crate wedpr_s_verifiable_confidential_ledger;
 use wedpr_s_verifiable_confidential_ledger::vcl;
-extern crate wedpr_crypto;
-use wedpr_crypto::zkp;
+extern crate wedpr_l_crypto_zkp_range_proof;
 
 pub fn flow_vcl() {
     utils::print_highlight("## 欢迎来到VCL零知识证明靶场! ##");
@@ -76,7 +76,7 @@ pub fn play_vcl_prove_sum_balance() {
     println!("\n加和证明的验证结果为：");
     let sum_proof = vcl::prove_sum_balance(&c1_secret, &c2_secret, &c3_secret);
     let satisfy_sum_balance =
-        vcl::verify_sum_balance(&c1_credit, &c2_credit, &c3_credit, &sum_proof);
+        vcl::verify_sum_balance(&c1_credit, &c2_credit, &c3_credit, &sum_proof).unwrap();
 
     if satisfy_sum_balance {
         println!(
@@ -139,7 +139,7 @@ pub fn play_vcl_prove_product_balance() {
         &c2_credit,
         &c3_credit,
         &product_proof,
-    );
+    ).unwrap();
     if satisfy_product_balance {
         println!(
             "✓ 您的输入：{} * {} = {}，所以通过乘积验证。",
@@ -185,8 +185,8 @@ pub fn play_zkp_verify_value_range() {
     utils::print_alert("现在请输入明文数据a：▼▼▼");
     utils::print_highlight("明文数据输入范围为：[0, 2^64)。");
     let input = utils::wait_for_number_cn();
-    let (proof_c1, c1_point, _) = zkp::prove_value_range(input);
-    let within_range = zkp::verify_value_range(&c1_point, &proof_c1);
+    let (proof_c1, c1_point, _) = wedpr_l_crypto_zkp_range_proof::prove_value_range(input);
+    let within_range = wedpr_l_crypto_zkp_range_proof::verify_value_range(&c1_point, &proof_c1);
 
     println!("\n范围证明验证结果为：");
     if within_range && input <= RANGE_MAX {

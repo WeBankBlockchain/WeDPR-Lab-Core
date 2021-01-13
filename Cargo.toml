@@ -1,7 +1,7 @@
 [workspace]
 
 members = [
-#"bounty",
+"bounty",
 "blockchain_wallet/hierarchical_deterministic_wallet",
 "verifiable_confidential_ledger",
 "selective_certificate_disclosure",
