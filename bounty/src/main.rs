@@ -1,6 +1,6 @@
 // Copyright 2020 WeDPR Lab Project Authors. Licensed under Apache-2.0.
 
-use wedpr_bounty::{utils, vcl};
+use wedpr_bounty::{utils, vcl, scd};
 
 fn main() {
     // TODO: Translate instructions to English.
@@ -15,12 +15,30 @@ fn main() {
         "关于证明生成及验证的具体算法及实现，如需了解更多，\
          您可参考WeDPR-Lab-Core\\solution。"
     );
-    println!("目前，我们开放了以下个解决方案的证明验证靶场：");
-    utils::print_alert(
-        "▶ 1. 可验证匿名账本（verifiable confidential ledger，vcl）",
+    println!("目前，我们开放了以下两个解决方案的证明验证靶场：");
+    utils::print_alert2(
+        "▶ 1. 可验证匿名账本（Verifiable Confidential Ledger，VCL）",
+        "▶ 2. 选择性认证披露（Selective Certificate Disclosure，SCD）"
     );
 
-    vcl::flow_vcl();
+    println!("现在请选择待挑战的证明验证靶场编号：▼▼▼");
+    utils::print_alert2(
+        "▶ 输入 \"1\" 选择可验证匿名账本VCL（默认选项）",
+        "▶ 输入 \"2\" 选择选择性认证披露SCD",
+    );
+    let mut choice = utils::wait_for_input();
+    loop {
+        if choice == "1" || choice.is_empty() {
+            vcl::flow_vcl();
+            break;
+        } else if choice == "2" {
+            scd::flow_scd();
+            break;
+        } else {
+            utils::print_alert("输入错误！请重新输入：");
+            choice = utils::wait_for_input();
+        }
+    }
 
     // TODO: Extract these common message printing to common/utils.
     println!(
