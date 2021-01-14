@@ -20,7 +20,7 @@ pub fn flow_vcl() {
     println!(
         "{}\n",
         "给定密文A, B, C，在不解密的前提下，验证密文A, B, \
-         C对应的明文是否满足加和关系a * b =? c。"
+         C对应的明文是否满足乘积关系a * b =? c。"
     );
     utils::print_alert("▶ 3. 范围证明的效果：");
     println!(
