@@ -235,7 +235,7 @@ mod tests {
     use wedpr_l_utils::traits::Coder;
 
     #[test]
-    fn test_bounty_data_validity() {
+    fn test_vcl_bounty_data_validity() {
         let value_basepoint = *BASEPOINT_G1;
         let blinding_basepoint = *BASEPOINT_G2;
         let base64 = WedprBase64::default();

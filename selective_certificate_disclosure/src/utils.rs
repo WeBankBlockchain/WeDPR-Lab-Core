@@ -43,8 +43,8 @@ pub fn safe_indy_check<T>(
 ) -> Result<T, WedprError> {
     match result {
         Ok(v) => Ok(v),
-        Err(e) => {
-            wedpr_println!("Encounter IndyCryptoError: {:?}", e);
+        Err(_e) => {
+            //            wedpr_println!("Encounter IndyCryptoError: {:?}", e);
             return Err(WedprError::IndyCryptoError);
         },
     }

@@ -28,6 +28,22 @@ pub fn print_alert3(message1: &str, message2: &str, message3: &str) {
         message3.yellow()
     );
 }
+pub fn print_alert5(
+    message1: &str,
+    message2: &str,
+    message3: &str,
+    message4: &str,
+    message5: &str,
+) {
+    println!(
+        "{}\n{}\n{}\n{}\n{}\n",
+        message1.yellow(),
+        message2.yellow(),
+        message3.yellow(),
+        message4.yellow(),
+        message5.yellow(),
+    );
+}
 
 pub fn print_wide(message: &str) {
     println!("\n{}\n", message);
@@ -71,4 +87,9 @@ pub fn pause(info_message: &str) {
 
 pub fn pause_cn() {
     pause("按任意键继续...");
+}
+
+pub fn print_failure() {
+    print_wide("您的输入对应的验证结果符合预期。");
+    print_alert("您未能找到漏洞输入，再试一次？");
 }

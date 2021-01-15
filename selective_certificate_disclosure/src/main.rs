@@ -3,7 +3,9 @@
 //! Minimalist demo of selective certificate disclosure.
 
 use colored::*;
-
+// use protobuf::Message;
+// use wedpr_l_common_coder_base64::WedprBase64;
+// use wedpr_l_utils::traits::Coder;
 use std;
 use wedpr_l_utils::error::WedprError;
 use wedpr_s_protos::generated::scd::{
@@ -286,6 +288,8 @@ fn subflow_predicate_only_cn(
     };
 
     println!("断言证明已成功生成。");
+    //    let base64 = WedprBase64::default();
+    //    println!("{:?}", base64.encode(&request.write_to_bytes().unwrap()));
     pause_cn();
 
     println!(

@@ -20,11 +20,11 @@ fn main() {
         "▶ 1. 可验证匿名账本（Verifiable Confidential Ledger，VCL）",
         "▶ 2. 选择性认证披露（Selective Certificate Disclosure，SCD）",
     );
-
+    println!();
     println!("现在请选择待挑战的证明验证靶场编号：▼▼▼");
     utils::print_alert2(
-        "▶ 输入 \"1\" 选择可验证匿名账本VCL（默认选项）",
-        "▶ 输入 \"2\" 选择选择性认证披露SCD",
+        "▶ 输入 \"1\" 选择：可验证匿名账本VCL（默认选项）",
+        "▶ 输入 \"2\" 选择：选择性认证披露SCD",
     );
     let mut choice = utils::wait_for_input();
     loop {
