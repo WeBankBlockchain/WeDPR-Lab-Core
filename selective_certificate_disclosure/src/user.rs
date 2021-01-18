@@ -218,13 +218,14 @@ pub fn prove_selective_disclosure(
                     let expected = pair.get_value();
                     let read_value = predicate.get_predicate_value() as i64;
                     if !(expected.eq(&read_value.to_string())) {
-//                        wedpr_println!(
-//                            "predicate_eq_value not equal \
-//                             predicate.get_value(), expected = {:?}, \
-//                             read_value = {:?}",
-//                            expected,
-//                            read_value
-//                        );
+                        //                        wedpr_println!(
+                        //                            "predicate_eq_value not
+                        // equal \                      
+                        // predicate.get_value(), expected = {:?}, \
+                        //                             read_value = {:?}",
+                        //                            expected,
+                        //                            read_value
+                        //                        );
                         return Err(WedprError::VerificationError);
                     }
                 }
