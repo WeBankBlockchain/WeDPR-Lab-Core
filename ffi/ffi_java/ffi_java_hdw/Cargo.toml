@@ -15,7 +15,7 @@ jni = "0.13.0"
 protobuf = "2.20.0"
 wedpr_s_hierarchical_deterministic_wallet = { path = "../../../blockchain_wallet/hierarchical_deterministic_wallet" }
 wedpr_ffi_common = { path = "/mnt/e/github/WeDPR-Lab-Crypto/ffi/ffi_common/",  features = [ "wedpr_f_base64" ] }
-wedpr_ffi_macros = { path = "/mnt/e/github/WeDPR-Lab-Crypto/ffi/ffi_macros/" }
+wedpr_ffi_macros = "0.0.1"
 wedpr_s_protos = { path = "../../../protos/" }
 
 [build-dependencies]
