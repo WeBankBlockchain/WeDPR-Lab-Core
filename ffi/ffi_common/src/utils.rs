@@ -30,8 +30,7 @@ const DEFAULT_ERROR_FIELD: &str = "wedprErrorMessage";
 pub fn java_new_jobject<'a>(
     _env: &'a JNIEnv,
     java_class_name: &'a str,
-) -> JObject<'a>
-{
+) -> JObject<'a> {
     let java_class = _env
         .find_class(java_class_name)
         .expect(&format!("Could not find Java class {}", java_class_name));
@@ -48,8 +47,7 @@ pub fn java_set_error_field_and_extract_jobject(
     _env: &JNIEnv,
     java_object: &JObject,
     error_message: &str,
-) -> jobject
-{
+) -> jobject {
     let java_string;
     // Error message should not be empty.
     assert!(!error_message.is_empty());
@@ -72,8 +70,7 @@ pub fn java_set_error_field_and_extract_jobject(
 pub fn java_jstring_to_bytes(
     _env: &JNIEnv,
     java_string: JString,
-) -> Result<Vec<u8>, WedprError>
-{
+) -> Result<Vec<u8>, WedprError> {
     let rust_string = java_jstring_to_string(&_env, java_string)?;
     match utils::string_to_bytes(&rust_string) {
         Ok(rust_bytes) => Ok(rust_bytes),
@@ -85,8 +82,7 @@ pub fn java_jstring_to_bytes(
 pub fn java_jstring_to_string(
     _env: &JNIEnv,
     java_string: JString,
-) -> Result<String, WedprError>
-{
+) -> Result<String, WedprError> {
     match _env.get_string(java_string) {
         Ok(java_string_data) => Ok(java_string_data.into()),
         Err(_) => return Err(WedprError::FormatError),
@@ -97,8 +93,7 @@ pub fn java_jstring_to_string(
 pub fn java_jbytes_to_bytes(
     _env: &JNIEnv,
     java_bytes: JByteBuffer,
-) -> Result<Vec<u8>, WedprError>
-{
+) -> Result<Vec<u8>, WedprError> {
     match _env.get_direct_buffer_address(java_bytes) {
         Ok(rust_bytes_array) => Ok(rust_bytes_array.to_vec()),
         Err(_) => return Err(WedprError::FormatError),

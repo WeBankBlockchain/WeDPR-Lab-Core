@@ -10,9 +10,9 @@ extern crate wedpr_ffi_macros;
 extern crate wedpr_macros;
 
 use protobuf::{self, Message};
-use verifiable_confidential_ledger;
 use wedpr_crypto::utils::{bytes_to_string, string_to_bytes};
 use wedpr_ffi_common::utils::{c_char_pointer_to_string, FAILURE, SUCCESS};
+use wedpr_s_verifiable_confidential_ledger;
 
 use wedpr_protos::generated::{
     vcl::{EncodedConfidentialCredit, EncodedOwnerSecret, VclResult},
@@ -28,7 +28,7 @@ use std::{ffi::CString, panic, ptr};
 
 macro_rules! decode_credit {
     ($encoded_credit:expr) => {
-        match verifiable_confidential_ledger::vcl::ConfidentialCredit::decode(
+        match wedpr_s_verifiable_confidential_ledger::vcl::ConfidentialCredit::decode(
             &$encoded_credit,
         ) {
             Ok(v) => v,
@@ -39,7 +39,7 @@ macro_rules! decode_credit {
 
 macro_rules! decode_secret {
     ($encoded_secret:expr) => {
-        match verifiable_confidential_ledger::vcl::OwnerSecret::decode(
+        match wedpr_s_verifiable_confidential_ledger::vcl::OwnerSecret::decode(
             &$encoded_secret,
         ) {
             Ok(v) => v,
@@ -53,7 +53,9 @@ macro_rules! decode_secret {
 pub extern "C" fn wedpr_vcl_make_credit(value: c_ulong) -> *mut c_char {
     let result = panic::catch_unwind(|| {
         let (credit, secret) =
-            verifiable_confidential_ledger::vcl::make_credit(value as u64);
+            wedpr_s_verifiable_confidential_ledger::vcl::make_credit(
+                value as u64,
+            );
 
         let mut vcl_result = VclResult::new();
         vcl_result.set_credit(encodable_struct_to_string!(credit));
@@ -69,8 +71,7 @@ pub extern "C" fn wedpr_vcl_prove_sum_balance(
     c1_secret_cstring: *mut c_char,
     c2_secret_cstring: *mut c_char,
     c3_secret_cstring: *mut c_char,
-) -> *mut c_char
-{
+) -> *mut c_char {
     let result = panic::catch_unwind(|| {
         let c1_secret = decode_secret!(c_safe_c_char_pointer_to_proto!(
             c1_secret_cstring,
@@ -85,9 +86,10 @@ pub extern "C" fn wedpr_vcl_prove_sum_balance(
             EncodedOwnerSecret
         ));
 
-        let proof = verifiable_confidential_ledger::vcl::prove_sum_balance(
-            &c1_secret, &c2_secret, &c3_secret,
-        );
+        let proof =
+            wedpr_s_verifiable_confidential_ledger::vcl::prove_sum_balance(
+                &c1_secret, &c2_secret, &c3_secret,
+            );
         c_safe_proto_to_c_char_pointer!(proof)
     });
     c_safe_return!(result)
@@ -100,8 +102,7 @@ pub extern "C" fn wedpr_vcl_verify_sum_balance(
     c2_credit_cstring: *mut c_char,
     c3_credit_cstring: *mut c_char,
     proof_cstring: *mut c_char,
-) -> i8
-{
+) -> i8 {
     let result = panic::catch_unwind(|| {
         let proof = c_safe_c_char_pointer_to_proto_with_error_value!(
             proof_cstring,
@@ -127,7 +128,7 @@ pub extern "C" fn wedpr_vcl_verify_sum_balance(
                 FAILURE
             ));
 
-        match verifiable_confidential_ledger::vcl::verify_sum_balance(
+        match wedpr_s_verifiable_confidential_ledger::vcl::verify_sum_balance(
             &c1_credit, &c2_credit, &c3_credit, &proof,
         ) {
             true => SUCCESS,
@@ -143,8 +144,7 @@ pub extern "C" fn wedpr_vcl_prove_product_balance(
     c1_secret_cstring: *mut c_char,
     c2_secret_cstring: *mut c_char,
     c3_secret_cstring: *mut c_char,
-) -> *mut c_char
-{
+) -> *mut c_char {
     let result = panic::catch_unwind(|| {
         let c1_secret = decode_secret!(c_safe_c_char_pointer_to_proto!(
             c1_secret_cstring,
@@ -159,9 +159,10 @@ pub extern "C" fn wedpr_vcl_prove_product_balance(
             EncodedOwnerSecret
         ));
 
-        let proof = verifiable_confidential_ledger::vcl::prove_product_balance(
-            &c1_secret, &c2_secret, &c3_secret,
-        );
+        let proof =
+            wedpr_s_verifiable_confidential_ledger::vcl::prove_product_balance(
+                &c1_secret, &c2_secret, &c3_secret,
+            );
         c_safe_proto_to_c_char_pointer!(proof)
     });
     c_safe_return!(result)
@@ -174,8 +175,7 @@ pub extern "C" fn wedpr_vcl_verify_product_balance(
     c2_credit_cstring: *mut c_char,
     c3_credit_cstring: *mut c_char,
     proof_cstring: *mut c_char,
-) -> i8
-{
+) -> i8 {
     let result = panic::catch_unwind(|| {
         let proof = c_safe_c_char_pointer_to_proto_with_error_value!(
             proof_cstring,
@@ -201,7 +201,7 @@ pub extern "C" fn wedpr_vcl_verify_product_balance(
                 FAILURE
             ));
 
-        match verifiable_confidential_ledger::vcl::verify_product_balance(
+        match wedpr_s_verifiable_confidential_ledger::vcl::verify_product_balance(
             &c1_credit, &c2_credit, &c3_credit, &proof,
         ) {
             true => SUCCESS,
@@ -222,7 +222,8 @@ pub extern "C" fn wedpr_vcl_prove_range(
             EncodedOwnerSecret
         ));
 
-        let proof = verifiable_confidential_ledger::vcl::prove_range(&secret);
+        let proof =
+            wedpr_s_verifiable_confidential_ledger::vcl::prove_range(&secret);
         c_safe_string_to_c_char_pointer!(proof)
     });
     c_safe_return!(result)
@@ -233,8 +234,7 @@ pub extern "C" fn wedpr_vcl_prove_range(
 pub extern "C" fn wedpr_vcl_verify_range(
     credit_cstring: *mut c_char,
     proof_cstring: *mut c_char,
-) -> i8
-{
+) -> i8 {
     let result = panic::catch_unwind(|| {
         let proof = c_safe_c_char_pointer_to_string_with_error_value!(
             proof_cstring,
@@ -247,8 +247,9 @@ pub extern "C" fn wedpr_vcl_verify_range(
                 FAILURE
             ));
 
-        match verifiable_confidential_ledger::vcl::verify_range(&credit, &proof)
-        {
+        match wedpr_s_verifiable_confidential_ledger::vcl::verify_range(
+            &credit, &proof,
+        ) {
             true => SUCCESS,
             false => FAILURE,
         }

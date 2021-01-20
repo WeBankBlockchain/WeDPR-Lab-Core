@@ -28,7 +28,7 @@ pub extern "C" fn wedpr_scd_get_revealed_attributes(
         );
 
         let revealed_attribute_dict =
-            match selective_certificate_disclosure::verifier::get_revealed_attributes(
+            match wedpr_s_selective_certificate_disclosure::verifier::get_revealed_attributes(
                 &verify_request_pb,
             ) {
                 Ok(v) => v,
@@ -46,8 +46,7 @@ pub extern "C" fn wedpr_scd_get_revealed_attributes(
 pub extern "C" fn wedpr_scd_verify_selective_disclosure(
     rule_set_cstring: *mut c_char,
     verify_request_cstring: *mut c_char,
-) -> *mut c_char
-{
+) -> *mut c_char {
     let result = panic::catch_unwind(|| {
         let verify_request_pb = c_safe_c_char_pointer_to_proto!(
             verify_request_cstring,
@@ -59,7 +58,7 @@ pub extern "C" fn wedpr_scd_verify_selective_disclosure(
         );
 
         let bool_result =
-            match selective_certificate_disclosure::verifier::verify_selective_disclosure(
+            match wedpr_s_selective_certificate_disclosure::verifier::verify_selective_disclosure(
                 &rule_set_pb,
                 &verify_request_pb,
             ) {
@@ -78,7 +77,7 @@ pub extern "C" fn wedpr_scd_verify_selective_disclosure(
 pub extern "C" fn wedpr_scd_get_verification_nonce() -> *mut c_char {
     let result = panic::catch_unwind(|| {
         let verification_nonce =
-            match selective_certificate_disclosure::verifier::get_verification_nonce(
+            match wedpr_s_selective_certificate_disclosure::verifier::get_verification_nonce(
             ) {
                 Ok(v) => v,
                 Err(_) => return ptr::null_mut(),

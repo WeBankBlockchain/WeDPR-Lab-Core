@@ -1,18 +1,20 @@
 [package]
-name = "verifiable_confidential_ledger"
+name = "wedpr_s_verifiable_confidential_ledger"
 version = "1.1.0"
 authors = [ "WeDPR <wedpr@webank.com>" ]
 edition = "2018"
+license = "Apache-2.0"
+description = "Library of verifiable confidential ledger (VCL) solution."
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 colored = "1.8"
 curve25519-dalek = { version = "1", features = [ "serde" ] }
-wedpr_crypto = { path = "../../crypto/" }
-wedpr_macros = { path = "../../common/macros/" }
-wedpr_protos = { path = "../../protos/" }
-wedpr_utils = { path = "../../common/utils" }
+wedpr_crypto = { path = "../../crypto/", version = "1.2.0" }
+wedpr_macros = { path = "../../common/macros/", version = "1.1.0" }
+wedpr_protos = { path = "../../protos/", version = "1.2.0" }
+wedpr_utils = { path = "../../common/utils", version = "1.1.0" }
 
 [dev-dependencies]
 criterion = "0.2"
@@ -20,3 +22,4 @@ criterion = "0.2"
 [[bench]]
 name = "vcl"
 harness = false
+

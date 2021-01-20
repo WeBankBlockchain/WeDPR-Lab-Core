@@ -12,7 +12,7 @@ crate-type = [ "cdylib" ]
 [dependencies]
 jni = "0.13.0"
 protobuf = "2.10.1"
-selective_certificate_disclosure = { path = "../../../solution/selective_certificate_disclosure" }
+wedpr_s_selective_certificate_disclosure = { path = "../../../solution/selective_certificate_disclosure" }
 wedpr_crypto = { path = "../../../crypto/" }
 wedpr_ffi_common = { path = "../../ffi_common/" }
 wedpr_ffi_macros = { path = "../../../ffi/ffi_macros/" }

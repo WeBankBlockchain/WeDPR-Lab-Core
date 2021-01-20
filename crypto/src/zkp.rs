@@ -48,8 +48,7 @@ pub fn prove_value_range(value: u64) -> (String, RistrettoPoint, Scalar) {
 pub fn prove_value_range_with_blinding(
     value: u64,
     blinding: &Scalar,
-) -> (String, RistrettoPoint)
-{
+) -> (String, RistrettoPoint) {
     let (proof_str, value_commitment_point) =
         prove_value_range_with_blinding_and_blinding_basepoint(
             value,
@@ -70,8 +69,7 @@ pub fn prove_value_range_with_blinding_and_blinding_basepoint(
     value: u64,
     blinding: &Scalar,
     blinding_basepoint: &RistrettoPoint,
-) -> (String, RistrettoPoint)
-{
+) -> (String, RistrettoPoint) {
     let mut pc_gens = PedersenGens::default();
     // Allow replacing the blinding basepoint for customized protocol design.
     pc_gens.B_blinding = blinding_basepoint.clone();
@@ -110,8 +108,7 @@ pub fn verify_value_range_with_blinding_basepoint(
     commitment: &RistrettoPoint,
     proof: &str,
     blinding_basepoint: &RistrettoPoint,
-) -> bool
-{
+) -> bool {
     let mut pc_gens = PedersenGens::default();
     // Allow replacing the blinding basepoint for customized protocol design.
     pc_gens.B_blinding = blinding_basepoint.clone();
@@ -149,8 +146,7 @@ pub fn prove_value_range_in_batch(
     values: &[u64],
     blindings: &[Scalar],
     blinding_basepoint: &RistrettoPoint,
-) -> Result<(String, Vec<RistrettoPoint>), WedprError>
-{
+) -> Result<(String, Vec<RistrettoPoint>), WedprError> {
     // Two slices should have the same length, and the length should be a
     // multiple of 2.
     if values.len() != blindings.len() || values.len() & 0x1 != 0 {
@@ -191,8 +187,7 @@ pub fn verify_value_range_in_batch(
     commitments: &Vec<RistrettoPoint>,
     proof: &str,
     blinding_basepoint: &RistrettoPoint,
-) -> bool
-{
+) -> bool {
     let mut pc_gens = PedersenGens::default();
     // Allow replacing the blinding basepoint for customized protocol design.
     pc_gens.B_blinding = blinding_basepoint.clone();
@@ -240,8 +235,7 @@ pub fn prove_sum_relationship(
     c3_blinding: &Scalar,
     value_basepoint: &RistrettoPoint,
     blinding_basepoint: &RistrettoPoint,
-) -> BalanceProof
-{
+) -> BalanceProof {
     let blinding_a = get_random_scalar();
     let blinding_b = get_random_scalar();
     let blinding_c = get_random_scalar();
@@ -316,8 +310,7 @@ pub fn verify_sum_relationship(
     proof: &BalanceProof,
     value_basepoint: &RistrettoPoint,
     blinding_basepoint: &RistrettoPoint,
-) -> bool
-{
+) -> bool {
     let check = string_to_scalar!(proof.get_c());
     let m1 = string_to_scalar!(proof.get_m1());
     let m2 = string_to_scalar!(proof.get_m2());
@@ -372,8 +365,7 @@ pub fn prove_product_relationship(
     c3_blinding: &Scalar,
     value_basepoint: &RistrettoPoint,
     blinding_basepoint: &RistrettoPoint,
-) -> BalanceProof
-{
+) -> BalanceProof {
     let blinding_a = get_random_scalar();
     let blinding_b = get_random_scalar();
     let blinding_c = get_random_scalar();
@@ -456,8 +448,7 @@ pub fn verify_product_relationship(
     proof: &BalanceProof,
     value_basepoint: &RistrettoPoint,
     blinding_basepoint: &RistrettoPoint,
-) -> bool
-{
+) -> bool {
     let check = string_to_scalar!(proof.get_c());
     let m1 = string_to_scalar!(proof.get_m1());
     let m2 = string_to_scalar!(proof.get_m2());

@@ -4,8 +4,8 @@
 
 use colored::*;
 use std;
-use verifiable_confidential_ledger::vcl;
 use wedpr_crypto;
+use wedpr_s_verifiable_confidential_ledger::vcl;
 
 fn main() {
     print_highlight2(

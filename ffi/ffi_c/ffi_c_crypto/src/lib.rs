@@ -35,8 +35,7 @@ use wedpr_protos::generated::common;
 pub extern "C" fn wedpr_secp256k1_ecies_encrypt(
     encoded_public_key: *mut c_char,
     encoded_plaintext: *mut c_char,
-) -> *mut c_char
-{
+) -> *mut c_char {
     let result = panic::catch_unwind(|| {
         let public_key = c_safe_c_char_pointer_to_bytes!(encoded_public_key);
         let encoded_message =
@@ -63,8 +62,7 @@ pub extern "C" fn wedpr_secp256k1_ecies_encrypt(
 pub extern "C" fn wedpr_secp256k1_ecies_decrypt(
     encoded_private_key: *mut c_char,
     encoded_ciphertext: *mut c_char,
-) -> *mut c_char
-{
+) -> *mut c_char {
     let result = panic::catch_unwind(|| {
         let private_key = c_safe_c_char_pointer_to_bytes!(encoded_private_key);
         let ciphertext = c_safe_c_char_pointer_to_bytes!(encoded_ciphertext);
@@ -107,8 +105,7 @@ pub extern "C" fn wedpr_secp256k1_gen_key_pair() -> *mut c_char {
 pub extern "C" fn wedpr_secp256k1_sign(
     encoded_private_key: *mut c_char,
     encoded_message_hash: *mut c_char,
-) -> *mut c_char
-{
+) -> *mut c_char {
     let result = panic::catch_unwind(|| {
         let private_key = c_safe_c_char_pointer_to_bytes!(encoded_private_key);
         let message_hash =
@@ -131,8 +128,7 @@ pub extern "C" fn wedpr_secp256k1_verify(
     encoded_public_key: *mut c_char,
     encoded_message_hash: *mut c_char,
     encoded_signature: *mut c_char,
-) -> i8
-{
+) -> i8 {
     let result = panic::catch_unwind(|| {
         let public_key = c_safe_c_char_pointer_to_bytes_with_error_value!(
             encoded_public_key,

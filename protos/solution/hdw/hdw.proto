@@ -1,0 +1,21 @@
+// Copyright 2020 WeDPR Lab Project Authors. Licensed under Apache-2.0.
+
+syntax = "proto3";
+
+package com.webank.wedpr.scd.proto;
+option java_package = "com.webank.wedpr.hdw.proto";
+option java_multiple_files = true;
+
+// Hierarchical deterministic wallet result.
+message HdwResult {
+  string mnemonic = 1;
+  string master_key = 2;
+  ExtendedKeyPair key_pair = 3;
+}
+
+
+// Extended KeyPair.
+message ExtendedKeyPair {
+  string extended_private_key = 1;
+  string extended_public_key = 2;
+}
