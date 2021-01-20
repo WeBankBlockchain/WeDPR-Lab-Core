@@ -5,8 +5,8 @@
 extern crate criterion;
 use criterion::{criterion_group, criterion_main, Criterion};
 
-extern crate verifiable_confidential_ledger;
-use verifiable_confidential_ledger::vcl;
+extern crate wedpr_s_verifiable_confidential_ledger;
+use wedpr_s_verifiable_confidential_ledger::vcl;
 
 fn create_prove_sum_balance_helper(c: &mut Criterion) {
     let label = format!("create_prove_sum_balance_helper");

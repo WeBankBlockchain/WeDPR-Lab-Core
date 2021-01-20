@@ -15,7 +15,7 @@ use wedpr_ffi_common::utils::{
     java_set_error_field_and_extract_jobject,
 };
 
-use selective_certificate_disclosure;
+use wedpr_s_selective_certificate_disclosure;
 
 use wedpr_protos::generated::scd::{
     AttributeDict, CertificateSignature, CertificateTemplate,
@@ -38,8 +38,7 @@ pub extern "system" fn Java_com_webank_wedpr_scd_NativeInterface_userFillCertifi
     _class: JClass,
     attribute_dict_jstring: JString,
     certificate_template_jstring: JString,
-) -> jobject
-{
+) -> jobject {
     let result_jobject = get_result_jobject(&_env);
 
     let attribute_dict_pb = java_safe_jstring_to_pb!(
@@ -60,7 +59,7 @@ pub extern "system" fn Java_com_webank_wedpr_scd_NativeInterface_userFillCertifi
         user_private_key_str,
         certificate_secrets_blinding_factors_str,
         user_nonce_str,
-    ) = match selective_certificate_disclosure::user::fill_certificate(
+    ) = match wedpr_s_selective_certificate_disclosure::user::fill_certificate(
         &attribute_dict_pb,
         &certificate_template_pb,
     ) {
@@ -112,8 +111,7 @@ pub extern "system" fn Java_com_webank_wedpr_scd_NativeInterface_userBlindCertif
     user_private_key_jstring: JString,
     certificate_secrets_blinding_factors_jstring: JString,
     issuer_nonce_jstring: JString,
-) -> jobject
-{
+) -> jobject {
     let result_jobject = get_result_jobject(&_env);
 
     let certificate_signature_pb = java_safe_jstring_to_pb!(
@@ -151,7 +149,7 @@ pub extern "system" fn Java_com_webank_wedpr_scd_NativeInterface_userBlindCertif
     );
 
     let blinded_certificate_signature =
-        match selective_certificate_disclosure::user::blind_certificate_signature(
+        match wedpr_s_selective_certificate_disclosure::user::blind_certificate_signature(
             &certificate_signature_pb,
             &attribute_dict_pb,
             &certificate_template_pb,
@@ -192,8 +190,7 @@ pub extern "system" fn Java_com_webank_wedpr_scd_NativeInterface_userProveSelect
     certificate_template_jstring: JString,
     user_private_key_jstring: JString,
     verification_nonce_jstring: JString,
-) -> jobject
-{
+) -> jobject {
     let result_jobject = get_result_jobject(&_env);
 
     let rule_set_pb = java_safe_jstring_to_pb!(
@@ -232,7 +229,7 @@ pub extern "system" fn Java_com_webank_wedpr_scd_NativeInterface_userProveSelect
     );
 
     let verify_request =
-        match selective_certificate_disclosure::user::prove_selective_disclosure(
+        match wedpr_s_selective_certificate_disclosure::user::prove_selective_disclosure(
             &rule_set_pb,
             &certificate_signature_pb,
             &attribute_dict_pb,

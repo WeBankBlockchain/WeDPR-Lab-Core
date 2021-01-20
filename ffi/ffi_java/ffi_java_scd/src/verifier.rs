@@ -15,7 +15,7 @@ use wedpr_ffi_common::utils::{
     java_set_error_field_and_extract_jobject,
 };
 
-use selective_certificate_disclosure;
+use wedpr_s_selective_certificate_disclosure;
 
 use wedpr_protos::generated::scd::{VerificationRuleSet, VerifyRequest};
 
@@ -35,8 +35,7 @@ pub extern "system" fn Java_com_webank_wedpr_scd_NativeInterface_verifierGetReve
     _env: JNIEnv,
     _class: JClass,
     verify_request_jstring: JString,
-) -> jobject
-{
+) -> jobject {
     let result_jobject = get_result_jobject(&_env);
 
     let verify_request_pb = java_safe_jstring_to_pb!(
@@ -47,7 +46,7 @@ pub extern "system" fn Java_com_webank_wedpr_scd_NativeInterface_verifierGetReve
     );
 
     let revealed_attribute_dict =
-        match selective_certificate_disclosure::verifier::get_revealed_attributes(
+        match wedpr_s_selective_certificate_disclosure::verifier::get_revealed_attributes(
             &verify_request_pb,
         ) {
             Ok(v) => v,
@@ -79,8 +78,7 @@ pub extern "system" fn Java_com_webank_wedpr_scd_NativeInterface_verifierVerifyS
     _class: JClass,
     rule_set_jstring: JString,
     verify_request_jstring: JString,
-) -> jobject
-{
+) -> jobject {
     let result_jobject = get_result_jobject(&_env);
 
     let rule_set_pb = java_safe_jstring_to_pb!(
@@ -96,7 +94,7 @@ pub extern "system" fn Java_com_webank_wedpr_scd_NativeInterface_verifierVerifyS
         VerifyRequest
     );
 
-    let bool_result = match selective_certificate_disclosure::verifier::verify_selective_disclosure(
+    let bool_result = match wedpr_s_selective_certificate_disclosure::verifier::verify_selective_disclosure(
         &rule_set_pb,
         &verify_request_pb,
     ) {
@@ -124,12 +122,11 @@ pub extern "system" fn Java_com_webank_wedpr_scd_NativeInterface_verifierVerifyS
 pub extern "system" fn Java_com_webank_wedpr_scd_NativeInterface_verifierGetVerificationNonce(
     _env: JNIEnv,
     _class: JClass,
-) -> jobject
-{
+) -> jobject {
     let result_jobject = get_result_jobject(&_env);
 
     let verification_nonce =
-        match selective_certificate_disclosure::verifier::get_verification_nonce(
+        match wedpr_s_selective_certificate_disclosure::verifier::get_verification_nonce(
         ) {
             Ok(v) => v,
             Err(e) => {

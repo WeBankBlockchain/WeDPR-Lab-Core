@@ -15,7 +15,7 @@ use wedpr_ffi_common::utils::{
     java_set_error_field_and_extract_jobject,
 };
 
-use selective_certificate_disclosure;
+use wedpr_s_selective_certificate_disclosure;
 
 use wedpr_protos::generated::scd::{
     CertificateSchema, CertificateTemplate, SignCertificateRequest,
@@ -37,8 +37,7 @@ pub extern "system" fn Java_com_webank_wedpr_scd_NativeInterface_issuerMakeCerti
     _env: JNIEnv,
     _class: JClass,
     schema_jstring: JString,
-) -> jobject
-{
+) -> jobject {
     let result_jobject = get_result_jobject(&_env);
 
     let schema_pb = java_safe_jstring_to_pb!(
@@ -49,7 +48,7 @@ pub extern "system" fn Java_com_webank_wedpr_scd_NativeInterface_issuerMakeCerti
     );
 
     let (certificate_template, template_private_key) =
-        match selective_certificate_disclosure::issuer::make_certificate_template(
+        match wedpr_s_selective_certificate_disclosure::issuer::make_certificate_template(
             &schema_pb,
         ) {
             Ok(v) => v,
@@ -90,8 +89,7 @@ pub extern "system" fn Java_com_webank_wedpr_scd_NativeInterface_issuerSignCerti
     sign_request_jstring: JString,
     user_id_jstring: JString,
     user_nonce_jstring: JString,
-) -> jobject
-{
+) -> jobject {
     let result_jobject = get_result_jobject(&_env);
 
     let certificate_template_pb = java_safe_jstring_to_pb!(
@@ -118,7 +116,7 @@ pub extern "system" fn Java_com_webank_wedpr_scd_NativeInterface_issuerSignCerti
         java_safe_jstring_to_string!(_env, result_jobject, user_nonce_jstring);
 
     let (certificate_signature, issuer_nonce_str) =
-        match selective_certificate_disclosure::issuer::sign_certificate(
+        match wedpr_s_selective_certificate_disclosure::issuer::sign_certificate(
             &certificate_template_pb,
             &template_private_key_pb,
             &sign_request_pb,

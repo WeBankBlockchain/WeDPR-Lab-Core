@@ -129,8 +129,7 @@ pub fn prove_sum_balance(
     c1_secret: &OwnerSecret,
     c2_secret: &OwnerSecret,
     c3_secret: &OwnerSecret,
-) -> BalanceProof
-{
+) -> BalanceProof {
     wedpr_crypto::zkp::prove_sum_relationship(
         c1_secret.credit_value,
         c2_secret.credit_value,
@@ -150,8 +149,7 @@ pub fn verify_sum_balance(
     c2_credit: &ConfidentialCredit,
     c3_credit: &ConfidentialCredit,
     proof: &BalanceProof,
-) -> bool
-{
+) -> bool {
     wedpr_crypto::zkp::verify_sum_relationship(
         &c1_credit.get_point(),
         &c2_credit.get_point(),
@@ -170,8 +168,7 @@ pub fn prove_product_balance(
     c1_secret: &OwnerSecret,
     c2_secret: &OwnerSecret,
     c3_secret: &OwnerSecret,
-) -> BalanceProof
-{
+) -> BalanceProof {
     wedpr_crypto::zkp::prove_product_relationship(
         c1_secret.credit_value,
         c2_secret.credit_value,
@@ -191,8 +188,7 @@ pub fn verify_product_balance(
     c2_credit: &ConfidentialCredit,
     c3_credit: &ConfidentialCredit,
     proof: &BalanceProof,
-) -> bool
-{
+) -> bool {
     wedpr_crypto::zkp::verify_product_relationship(
         &c1_credit.get_point(),
         &c2_credit.get_point(),

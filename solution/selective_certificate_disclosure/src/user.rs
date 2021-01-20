@@ -95,9 +95,18 @@ pub fn blind_certificate_signature(
     user_private_key: &str,
     certificate_secrets_blinding_factors: &str,
     issuer_nonce_str: &str,
+<<<<<<< HEAD
 ) -> Result<CertificateSignature, WedprError>
 {
     let mut cred_signature: wedpr_indy_crypto::cl::CredentialSignature =
+=======
+) -> Result<CertificateSignature, WedprError> {
+<<<<<<< HEAD
+    let mut cred_signature: indy_crypto::cl::CredentialSignature =
+>>>>>>> aef007d... add hd wallet
+=======
+    let mut cred_signature: wedpr_indy_crypto::cl::CredentialSignature =
+>>>>>>> 30a0cbf... rename scd
         utils::safe_deserialize(
             certificate_signature.get_certificate_signature(),
         )?;
@@ -169,8 +178,7 @@ pub fn prove_selective_disclosure(
     certificate_template: &CertificateTemplate,
     user_private_key_str: &str,
     verification_nonce_str: &str,
-) -> Result<VerifyRequest, WedprError>
-{
+) -> Result<VerifyRequest, WedprError> {
     let (certificate_schema, non_certificate_schema) =
         utils::build_certificate_schema(
             certificate_template.get_certificate_schema(),

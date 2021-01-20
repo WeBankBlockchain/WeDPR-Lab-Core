@@ -14,12 +14,12 @@ use jni::{
     JNIEnv,
 };
 use protobuf::{self, Message};
-use verifiable_confidential_ledger;
 use wedpr_crypto::utils::bytes_to_string;
 use wedpr_ffi_common::utils::{
     java_jstring_to_bytes, java_jstring_to_string, java_new_jobject,
     java_set_error_field_and_extract_jobject,
 };
+use wedpr_s_verifiable_confidential_ledger;
 
 use wedpr_protos::generated::{
     vcl::{EncodedConfidentialCredit, EncodedOwnerSecret},
@@ -36,7 +36,7 @@ const RESULT_JAVA_CLASS_NAME: &str = "com/webank/wedpr/vcl/VclResult";
 
 macro_rules! decode_secret {
     ($_env:expr, $result_jobject:expr, $encoded_secret:expr) => {
-        match verifiable_confidential_ledger::vcl::OwnerSecret::decode(
+        match wedpr_s_verifiable_confidential_ledger::vcl::OwnerSecret::decode(
             &$encoded_secret,
         ) {
             Ok(v) => v,
@@ -56,7 +56,7 @@ macro_rules! decode_secret {
 
 macro_rules! decode_credit {
     ($_env:expr, $result_jobject:expr, $encoded_credit:expr) => {
-        match verifiable_confidential_ledger::vcl::ConfidentialCredit::decode(
+        match wedpr_s_verifiable_confidential_ledger::vcl::ConfidentialCredit::decode(
             &$encoded_credit,
         ) {
             Ok(v) => v,
@@ -88,12 +88,11 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_makeCredit(
     _env: JNIEnv,
     _class: JClass,
     value: jlong,
-) -> jobject
-{
+) -> jobject {
     let result_jobject = get_result_jobject(&_env);
 
     let (credit, secret) =
-        verifiable_confidential_ledger::vcl::make_credit(value as u64);
+        wedpr_s_verifiable_confidential_ledger::vcl::make_credit(value as u64);
     java_safe_set_encoded_pb_field!(
         _env,
         result_jobject,
@@ -117,8 +116,7 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_proveSumBalance
     c1_secret_jstring: JString,
     c2_secret_jstring: JString,
     c3_secret_jstring: JString,
-) -> jobject
-{
+) -> jobject {
     let result_jobject = get_result_jobject(&_env);
 
     let c1_secret = decode_secret!(
@@ -155,7 +153,7 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_proveSumBalance
     java_safe_set_encoded_pb_field!(
         _env,
         result_jobject,
-        verifiable_confidential_ledger::vcl::prove_sum_balance(
+        wedpr_s_verifiable_confidential_ledger::vcl::prove_sum_balance(
             &c1_secret, &c2_secret, &c3_secret,
         ),
         "proof"
@@ -172,8 +170,7 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_verifySumBalanc
     c2_credit_jstring: JString,
     c3_credit_jstring: JString,
     proof_jstring: JString,
-) -> jobject
-{
+) -> jobject {
     let result_jobject = get_result_jobject(&_env);
 
     let proof = java_safe_jstring_to_pb!(
@@ -217,7 +214,7 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_verifySumBalanc
     java_safe_set_boolean_field!(
         _env,
         result_jobject,
-        verifiable_confidential_ledger::vcl::verify_sum_balance(
+        wedpr_s_verifiable_confidential_ledger::vcl::verify_sum_balance(
             &c1_credit, &c2_credit, &c3_credit, &proof,
         ),
         "verificationResult"
@@ -235,8 +232,7 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_proveProductBal
     c1_secret_jstring: JString,
     c2_secret_jstring: JString,
     c3_secret_jstring: JString,
-) -> jobject
-{
+) -> jobject {
     let result_jobject = get_result_jobject(&_env);
 
     let c1_secret = decode_secret!(
@@ -273,7 +269,7 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_proveProductBal
     java_safe_set_encoded_pb_field!(
         _env,
         result_jobject,
-        verifiable_confidential_ledger::vcl::prove_product_balance(
+        wedpr_s_verifiable_confidential_ledger::vcl::prove_product_balance(
             &c1_secret, &c2_secret, &c3_secret,
         ),
         "proof"
@@ -291,8 +287,7 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_verifyProductBa
     c2_credit_jstring: JString,
     c3_credit_jstring: JString,
     proof_jstring: JString,
-) -> jobject
-{
+) -> jobject {
     let result_jobject = get_result_jobject(&_env);
 
     let proof = java_safe_jstring_to_pb!(
@@ -336,7 +331,7 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_verifyProductBa
     java_safe_set_boolean_field!(
         _env,
         result_jobject,
-        verifiable_confidential_ledger::vcl::verify_product_balance(
+        wedpr_s_verifiable_confidential_ledger::vcl::verify_product_balance(
             &c1_credit, &c2_credit, &c3_credit, &proof,
         ),
         "verificationResult"
@@ -350,8 +345,7 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_proveRange(
     _env: JNIEnv,
     _class: JClass,
     secret_jstring: JString,
-) -> jobject
-{
+) -> jobject {
     let result_jobject = get_result_jobject(&_env);
 
     let secret = decode_secret!(
@@ -368,7 +362,7 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_proveRange(
     java_safe_set_string_field!(
         _env,
         result_jobject,
-        verifiable_confidential_ledger::vcl::prove_range(&secret),
+        wedpr_s_verifiable_confidential_ledger::vcl::prove_range(&secret),
         "proof"
     );
     result_jobject.into_inner()
@@ -381,8 +375,7 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_verifyRange(
     _class: JClass,
     credit_jstring: JString,
     proof_jstring: JString,
-) -> jobject
-{
+) -> jobject {
     let result_jobject = get_result_jobject(&_env);
 
     let proof =
@@ -402,7 +395,9 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_verifyRange(
     java_safe_set_boolean_field!(
         _env,
         result_jobject,
-        verifiable_confidential_ledger::vcl::verify_range(&credit, &proof),
+        wedpr_s_verifiable_confidential_ledger::vcl::verify_range(
+            &credit, &proof
+        ),
         "verificationResult"
     );
     result_jobject.into_inner()
