@@ -182,21 +182,30 @@ mod tests {
     use wedpr_l_crypto_ecies_secp256k1::WedprSecp256k1Ecies;
     use wedpr_l_crypto_hash_keccak256::WedprKeccak256;
     use wedpr_l_crypto_signature_secp256k1::WedprSecp256k1Recover;
-    use wedpr_l_utils::traits::{Ecies, Hash, Signature};
+    use wedpr_l_utils::traits::{Ecies, Hash, Signature, Coder};
+    use wedpr_l_common_coder_base64::WedprBase64;
 
     #[test]
     fn test_hdk_usage() {
         // Create a master key.
-        let mnemonic = create_mnemonic_en(24).unwrap();
-        let password = "DO NOT USE REAL PASSWORD HERE";
+        // let mnemonic = create_mnemonic_en(24).unwrap();
+        let mnemonic = "engage wagon riot toe odor metal palm donor trumpet slight exercise taste burst sense smile curtain cheese sketch unable token suggest lab rain dolphin";
+        // let password = "DO NOT USE REAL PASSWORD HERE";
+        let password = "wi_wallet";
+
         let master_key = create_master_key_en(password, &mnemonic).unwrap();
+        let coder = WedprBase64::default();
+        println!("master_key = {:?}", coder.encode(&master_key));
 
         // Derive an extended key.
-        let key_derivation_path = create_key_derivation_path(44, 1, 1, 1, 0);
+        let key_derivation_path = create_key_derivation_path(44, 513866, 1, 0, 1000);
         let extended_key =
             derive_extended_key(&master_key, &key_derivation_path).unwrap();
         let private_key = extended_key.get_extended_private_key();
         let public_key = extended_key.get_extended_public_key();
+
+        println!("private_key = {:?}",  hex::encode(private_key));
+        println!("public_key = {:?}", hex::encode(public_key));
 
         // Test the derived key pair for signature functions.
         let message = "WeDPR TEST";

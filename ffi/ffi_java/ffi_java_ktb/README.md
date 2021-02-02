@@ -14,3 +14,11 @@ public class HdkResult extends WedprResult {
     public String extendedPublicKey;
 }
 ```
+
+```java
+public class NativeInterface {
+    public static native HdkResult createMnemonicEn(String word_count);
+    public static native HdkResult createMasterKeyEn(String password, String mnemonic);
+    public static native HdkResult deriveExtendedKey(String master_key, int purpose_type, int asset_type, int account, int change, int address_index);
+}
+```

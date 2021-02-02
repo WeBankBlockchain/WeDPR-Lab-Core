@@ -13,11 +13,11 @@ crate-type = [ "cdylib", "staticlib" ]
 [dependencies]
 libc = "0.2.60"
 protobuf = "2.20.0"
-wedpr_s_hierarchical_deterministic_key = { path = "../../../solution/key_tool_box/hierarchical_deterministic_key" }
-wedpr_ffi_common = "0.0.1"
-wedpr_ffi_macros = "0.0.1"
-wedpr_s_protos = { path = "../../../protos/" }
-wedpr_l_macros = "0.0.1"
+wedpr_s_hierarchical_deterministic_key = "1.3.0"
+wedpr_ffi_common = "1.0.0"
+wedpr_ffi_macros = "1.0.0"
+wedpr_s_protos = "1.3.0"
+wedpr_l_macros = "1.0.0"
 
 
 # This is required to generate C/C++ header files.
