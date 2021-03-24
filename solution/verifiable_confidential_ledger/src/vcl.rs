@@ -162,6 +162,43 @@ pub fn verify_sum_balance(
     )
 }
 
+/// Verifies multi three commitments pairs satisfying a sum relationship, i.e.
+/// the values embedded in c1_credit, c2_credit, c3_credit satisfying
+/// c1_value + c2_value = c3_value.
+pub fn verify_batch_sum_balance(
+    c1_credit_list: &Vec<ConfidentialCredit>,
+    c2_credit_list: &Vec<ConfidentialCredit>,
+    c3_credit_list: &Vec<ConfidentialCredit>,
+    proof_list: &Vec<BalanceProof>,
+) -> Result<bool, WedprError>
+{
+    let mut c1_points: Vec<RistrettoPoint> = vec![];
+    let mut c2_points: Vec<RistrettoPoint> = vec![];
+    let mut c3_points: Vec<RistrettoPoint> = vec![];
+    let mut proofs: Vec<BalanceProof> = vec![];
+    for c1 in c1_credit_list {
+        c1_points.push(c1.get_point());
+    }
+    for c2 in c2_credit_list {
+        c2_points.push(c2.get_point());
+    }
+    for c3 in c3_credit_list {
+        c3_points.push(c3.get_point());
+    }
+    for proof in proof_list {
+        proofs.push(proof.clone());
+    }
+
+    wedpr_l_crypto_zkp_discrete_logarithm_proof::verify_batch_sum_relationship(
+        &c1_points,
+        &c2_points,
+        &c3_points,
+        &proofs,
+        &BASEPOINT_G1,
+        &BASEPOINT_G2,
+    )
+}
+
 /// Proves three confidential credit records satisfying a product relationship,
 /// i.e. the values embedded in them satisfying c1_value * c2_value = c3_value.
 /// c?_secret are the owner secrets for spending those commitments.
@@ -203,6 +240,43 @@ pub fn verify_product_balance(
     )
 }
 
+/// Verifies multi three commitments satisfying a product relationship, i.e.
+/// the values embedded in c1_credit, c2_credit, c3_credit satisfying
+/// c1_value * c2_value = c3_value.
+pub fn verify_batch_product_balance(
+    c1_credit_list: &Vec<ConfidentialCredit>,
+    c2_credit_list: &Vec<ConfidentialCredit>,
+    c3_credit_list: &Vec<ConfidentialCredit>,
+    proof_list: &Vec<BalanceProof>,
+) -> Result<bool, WedprError>
+{
+    let mut c1_points: Vec<RistrettoPoint> = vec![];
+    let mut c2_points: Vec<RistrettoPoint> = vec![];
+    let mut c3_points: Vec<RistrettoPoint> = vec![];
+    let mut proofs: Vec<BalanceProof> = vec![];
+    for c1 in c1_credit_list {
+        c1_points.push(c1.get_point());
+    }
+    for c2 in c2_credit_list {
+        c2_points.push(c2.get_point());
+    }
+    for c3 in c3_credit_list {
+        c3_points.push(c3.get_point());
+    }
+    for proof in proof_list {
+        proofs.push(proof.clone());
+    }
+
+    wedpr_l_crypto_zkp_discrete_logarithm_proof::verify_batch_product_relationship(
+        &c1_points,
+        &c2_points,
+        &c3_points,
+        &proofs,
+        &BASEPOINT_G1,
+        &BASEPOINT_G2,
+    )
+}
+
 /// Proves whether the value embedded in a confidential credit record belongs
 /// to (0, 2^RANGE_SIZE_IN_BITS - 1].
 pub fn prove_range(secret: &OwnerSecret) -> Vec<u8> {
@@ -223,158 +297,164 @@ pub fn verify_range(c1: &ConfidentialCredit, proof: &[u8]) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use wedpr_l_common_coder_base64::WedprBase64;
-    use wedpr_l_utils::traits::Coder;
     extern crate wedpr_l_crypto_zkp_utils;
-    use wedpr_l_crypto_zkp_utils::point_to_bytes;
 
     extern crate wedpr_l_protos;
-    use protobuf::Message;
-
-    #[test]
-    fn test_vcl_data() {
-        let base64 = WedprBase64::default();
-        let mut c1_credit_vec = Vec::new();
-        let mut c2_credit_vec = Vec::new();
-        let mut c3_credit_vec = Vec::new();
-        let mut proof_vec = Vec::new();
-        for _i in 0..100 {
-            let (c1_credit, c1_secret) = make_credit(10);
-            c1_credit_vec
-                .push(base64.encode(&point_to_bytes(&c1_credit.get_point())));
-
-            let (c2_credit, c2_secret) = make_credit(20);
-            c2_credit_vec
-                .push(base64.encode(&point_to_bytes(&c2_credit.get_point())));
-
-            // 10 + 20 = 30
-            let (c3_credit, c3_secret) = make_credit(30);
-            c3_credit_vec
-                .push(base64.encode(&point_to_bytes(&c3_credit.get_point())));
-
-            let proof = prove_sum_balance(&c1_secret, &c2_secret, &c3_secret);
-            let proof_str = base64.encode(&proof.write_to_bytes().unwrap());
-            proof_vec.push(proof_str);
-        }
-        println!("{:?}", c1_credit_vec);
-        println!("{:?}", c2_credit_vec);
-        println!("{:?}", c3_credit_vec);
-        println!("{:?}", proof_vec);
-    }
 
     #[test]
     fn test_sum_balance_proof() {
-        let (c1_credit, c1_secret) = make_credit(10);
-        let (c2_credit, c2_secret) = make_credit(20);
+        let mut c1_credits: Vec<ConfidentialCredit> = vec![];
+        let mut c2_credits: Vec<ConfidentialCredit> = vec![];
+        let mut c3_credits: Vec<ConfidentialCredit> = vec![];
+        let mut proofs: Vec<BalanceProof> = vec![];
+        for _ in 0..100 {
+            let (c1_credit, c1_secret) = make_credit(10);
+            let (c2_credit, c2_secret) = make_credit(20);
+            // 10 + 20 = 30
+            let (correct_c3_credit, correct_c3_secret) = make_credit(30);
+            let correct_proof =
+                prove_sum_balance(&c1_secret, &c2_secret, &correct_c3_secret);
 
-        // 10 + 20 = 30
-        let (correct_c3_credit, correct_c3_secret) = make_credit(30);
-        let correct_proof =
-            prove_sum_balance(&c1_secret, &c2_secret, &correct_c3_secret);
+            // 10 + 20 != 31
+            let (wrong_c3_credit, wrong_c3_secret) = make_credit(31);
+            let wrong_proof =
+                prove_sum_balance(&c1_secret, &c2_secret, &wrong_c3_secret);
 
-        // 10 + 20 != 31
-        let (wrong_c3_credit, wrong_c3_secret) = make_credit(31);
-        let wrong_proof =
-            prove_sum_balance(&c1_secret, &c2_secret, &wrong_c3_secret);
+            assert_eq!(
+                true,
+                verify_sum_balance(
+                    &c1_credit,
+                    &c2_credit,
+                    &correct_c3_credit,
+                    &correct_proof
+                )
+                    .unwrap()
+            );
 
+            // Incorrect proof combinations.
+            assert_eq!(
+                false,
+                verify_sum_balance(
+                    &c1_credit,
+                    &c2_credit,
+                    &wrong_c3_credit,
+                    &wrong_proof
+                )
+                    .unwrap()
+            );
+            assert_eq!(
+                false,
+                verify_sum_balance(
+                    &c1_credit,
+                    &c2_credit,
+                    &correct_c3_credit,
+                    &wrong_proof
+                )
+                    .unwrap()
+            );
+            assert_eq!(
+                false,
+                verify_sum_balance(
+                    &c1_credit,
+                    &c2_credit,
+                    &wrong_c3_credit,
+                    &correct_proof
+                )
+                    .unwrap()
+            );
+            proofs.push(correct_proof);
+            c1_credits.push(c1_credit);
+            c2_credits.push(c2_credit);
+            c3_credits.push(correct_c3_credit);
+        }
         assert_eq!(
             true,
-            verify_sum_balance(
-                &c1_credit,
-                &c2_credit,
-                &correct_c3_credit,
-                &correct_proof
+            verify_batch_sum_balance(
+                &c1_credits,
+                &c2_credits,
+                &c3_credits,
+                &proofs
             )
-            .unwrap()
+                .unwrap()
         );
 
-        // Incorrect proof combinations.
-        assert_eq!(
-            false,
-            verify_sum_balance(
-                &c1_credit,
-                &c2_credit,
-                &wrong_c3_credit,
-                &wrong_proof
-            )
-            .unwrap()
-        );
-        assert_eq!(
-            false,
-            verify_sum_balance(
-                &c1_credit,
-                &c2_credit,
-                &correct_c3_credit,
-                &wrong_proof
-            )
-            .unwrap()
-        );
-        assert_eq!(
-            false,
-            verify_sum_balance(
-                &c1_credit,
-                &c2_credit,
-                &wrong_c3_credit,
-                &correct_proof
-            )
-            .unwrap()
-        );
+
     }
 
     #[test]
     fn test_product_balance_proof() {
-        let (c1_credit, c1_secret) = make_credit(10);
-        let (c2_credit, c2_secret) = make_credit(20);
-        let (correct_c3_credit, correct_c3_secret) = make_credit(200);
-        let (wrong_c3_credit, wrong_c3_secret) = make_credit(31);
-        // 10 * 20 = 200
-        let correct_proof =
-            prove_product_balance(&c1_secret, &c2_secret, &correct_c3_secret);
-        // 10 * 20 != 31
-        let wrong_proof =
-            prove_product_balance(&c1_secret, &c2_secret, &wrong_c3_secret);
+        let mut c1_credits: Vec<ConfidentialCredit> = vec![];
+        let mut c2_credits: Vec<ConfidentialCredit> = vec![];
+        let mut c3_credits: Vec<ConfidentialCredit> = vec![];
+        let mut proofs: Vec<BalanceProof> = vec![];
+        for _ in 0..100 {
+            let (c1_credit, c1_secret) = make_credit(10);
+            let (c2_credit, c2_secret) = make_credit(20);
+            let (correct_c3_credit, correct_c3_secret) = make_credit(200);
+            let (wrong_c3_credit, wrong_c3_secret) = make_credit(31);
+            // 10 * 20 = 200
+            let correct_proof =
+                prove_product_balance(&c1_secret, &c2_secret, &correct_c3_secret);
+            // 10 * 20 != 31
+            let wrong_proof =
+                prove_product_balance(&c1_secret, &c2_secret, &wrong_c3_secret);
 
+            assert_eq!(
+                true,
+                verify_product_balance(
+                    &c1_credit,
+                    &c2_credit,
+                    &correct_c3_credit,
+                    &correct_proof
+                )
+                    .unwrap()
+            );
+
+            // Incorrect proof combinations.
+            assert_eq!(
+                false,
+                verify_product_balance(
+                    &c1_credit,
+                    &c2_credit,
+                    &wrong_c3_credit,
+                    &wrong_proof
+                )
+                    .unwrap()
+            );
+            assert_eq!(
+                false,
+                verify_product_balance(
+                    &c1_credit,
+                    &c2_credit,
+                    &correct_c3_credit,
+                    &wrong_proof
+                )
+                    .unwrap()
+            );
+            assert_eq!(
+                false,
+                verify_product_balance(
+                    &c1_credit,
+                    &c2_credit,
+                    &wrong_c3_credit,
+                    &correct_proof
+                )
+                    .unwrap()
+            );
+            proofs.push(correct_proof);
+            c1_credits.push(c1_credit);
+            c2_credits.push(c2_credit);
+            c3_credits.push(correct_c3_credit);
+        }
         assert_eq!(
             true,
-            verify_product_balance(
-                &c1_credit,
-                &c2_credit,
-                &correct_c3_credit,
-                &correct_proof
+            verify_batch_product_balance(
+                &c1_credits,
+                &c2_credits,
+                &c3_credits,
+                &proofs
             )
-            .unwrap()
-        );
-
-        // Incorrect proof combinations.
-        assert_eq!(
-            false,
-            verify_product_balance(
-                &c1_credit,
-                &c2_credit,
-                &wrong_c3_credit,
-                &wrong_proof
-            )
-            .unwrap()
-        );
-        assert_eq!(
-            false,
-            verify_product_balance(
-                &c1_credit,
-                &c2_credit,
-                &correct_c3_credit,
-                &wrong_proof
-            )
-            .unwrap()
-        );
-        assert_eq!(
-            false,
-            verify_product_balance(
-                &c1_credit,
-                &c2_credit,
-                &wrong_c3_credit,
-                &correct_proof
-            )
-            .unwrap()
+                .unwrap()
         );
     }
 

@@ -23,3 +23,11 @@ message VclResult {
   string secret = 2;
   string proof = 3;
 }
+
+// Verify Multi proof to FFI interface used by VCL.
+message BatchProof {
+  repeated string c1_credit = 1;
+  repeated string c2_credit = 2;
+  repeated string c3_credit = 3;
+  repeated string proof = 4;
+}
