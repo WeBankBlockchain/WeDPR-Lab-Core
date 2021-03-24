@@ -23,8 +23,9 @@ use wedpr_s_verifiable_confidential_ledger;
 
 use wedpr_l_protos::generated::zkp::BalanceProof;
 use wedpr_s_protos::generated::vcl::{
-    EncodedConfidentialCredit, EncodedOwnerSecret,
+    EncodedConfidentialCredit, EncodedOwnerSecret, BatchProof
 };
+use wedpr_s_verifiable_confidential_ledger::vcl::ConfidentialCredit;
 
 // Java FFI: Java interfaces will be generated under
 // package name 'com.webank.wedpr.vcl'.
@@ -237,6 +238,94 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_verifySumBalanc
     result_jobject.into_inner()
 }
 
+/// Java interface for 'com.webank.wedpr.vcl.NativeInterface->verifyBatchSumBalance'.
+#[no_mangle]
+pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_verifyBatchSumBalance(
+    _env: JNIEnv,
+    _class: JClass,
+    batch_proof_jstring: JString,
+) -> jobject
+{
+    let result_jobject = get_result_jobject(&_env);
+
+    let batch_proofs = java_safe_jstring_to_pb!(
+            _env,
+            result_jobject,
+            batch_proof_jstring,
+            BatchProof
+        );
+    let mut c1_credits: Vec<ConfidentialCredit> = vec![];
+    let mut c2_credits: Vec<ConfidentialCredit> = vec![];
+    let mut c3_credits: Vec<ConfidentialCredit> = vec![];
+    let mut proofs: Vec<BalanceProof> = vec![];
+    for c1_credit in batch_proofs.c1_credit {
+        let c1_bytes = java_safe_string_to_bytes!(_env,
+        result_jobject,
+        c1_credit);
+        let c1_encode_credit = java_safe_bytes_to_pb!(_env,
+        result_jobject,c1_bytes, EncodedConfidentialCredit);
+        c1_credits.push(decode_credit!(_env,
+        result_jobject,
+        c1_encode_credit
+        ));
+    }
+    for c2_credit in batch_proofs.c2_credit {
+        let c2_bytes = java_safe_string_to_bytes!(_env,
+        result_jobject,
+        c2_credit);
+        let c2_encode_credit = java_safe_bytes_to_pb!(_env,
+        result_jobject,c2_bytes, EncodedConfidentialCredit);
+        c2_credits.push(decode_credit!(_env,
+        result_jobject,
+        c2_encode_credit
+        ));
+    }
+    for c3_credit in batch_proofs.c3_credit {
+        let c3_bytes = java_safe_string_to_bytes!(_env,
+        result_jobject,
+        c3_credit);
+        let c3_encode_credit = java_safe_bytes_to_pb!(_env,
+        result_jobject,c3_bytes, EncodedConfidentialCredit);
+        c3_credits.push(decode_credit!(_env,
+        result_jobject,
+        c3_encode_credit
+        ));
+    }
+    for proof in batch_proofs.proof {
+        let proof_bytes = java_safe_string_to_bytes!(_env,
+        result_jobject,
+        proof);
+        proofs.push(java_safe_bytes_to_pb!(
+        _env,
+        result_jobject,
+        proof_bytes,
+        BalanceProof
+    ));
+    }
+
+    let result =
+        match wedpr_s_verifiable_confidential_ledger::vcl::verify_batch_sum_balance(
+            &c1_credits, &c2_credits, &c3_credits, &proofs,
+        ) {
+            Ok(v) => v,
+            Err(e) => {
+                return java_set_error_field_and_extract_jobject(
+                    &_env,
+                    &result_jobject,
+                    &format!("verify_sum_balance failed, err = {:?}", e),
+                )
+            },
+        };
+
+    java_safe_set_boolean_field!(
+        _env,
+        result_jobject,
+        result,
+        "verificationResult"
+    );
+    result_jobject.into_inner()
+}
+
 /// Java interface for
 /// 'com.webank.wedpr.vcl.NativeInterface->proveProductBalance'.
 #[no_mangle]
@@ -356,6 +445,94 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_verifyProductBa
             )
         },
     };
+
+    java_safe_set_boolean_field!(
+        _env,
+        result_jobject,
+        result,
+        "verificationResult"
+    );
+    result_jobject.into_inner()
+}
+
+/// Java interface for 'com.webank.wedpr.vcl.NativeInterface->verifyBatchProductBalance'.
+#[no_mangle]
+pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_verifyBatchProductBalance(
+    _env: JNIEnv,
+    _class: JClass,
+    batch_proof_jstring: JString,
+) -> jobject
+{
+    let result_jobject = get_result_jobject(&_env);
+
+    let batch_proofs = java_safe_jstring_to_pb!(
+            _env,
+            result_jobject,
+            batch_proof_jstring,
+            BatchProof
+        );
+    let mut c1_credits: Vec<ConfidentialCredit> = vec![];
+    let mut c2_credits: Vec<ConfidentialCredit> = vec![];
+    let mut c3_credits: Vec<ConfidentialCredit> = vec![];
+    let mut proofs: Vec<BalanceProof> = vec![];
+    for c1_credit in batch_proofs.c1_credit {
+        let c1_bytes = java_safe_string_to_bytes!(_env,
+        result_jobject,
+        c1_credit);
+        let c1_encode_credit = java_safe_bytes_to_pb!(_env,
+        result_jobject,c1_bytes, EncodedConfidentialCredit);
+        c1_credits.push(decode_credit!(_env,
+        result_jobject,
+        c1_encode_credit
+        ));
+    }
+    for c2_credit in batch_proofs.c2_credit {
+        let c2_bytes = java_safe_string_to_bytes!(_env,
+        result_jobject,
+        c2_credit);
+        let c2_encode_credit = java_safe_bytes_to_pb!(_env,
+        result_jobject,c2_bytes, EncodedConfidentialCredit);
+        c2_credits.push(decode_credit!(_env,
+        result_jobject,
+        c2_encode_credit
+        ));
+    }
+    for c3_credit in batch_proofs.c3_credit {
+        let c3_bytes = java_safe_string_to_bytes!(_env,
+        result_jobject,
+        c3_credit);
+        let c3_encode_credit = java_safe_bytes_to_pb!(_env,
+        result_jobject,c3_bytes, EncodedConfidentialCredit);
+        c3_credits.push(decode_credit!(_env,
+        result_jobject,
+        c3_encode_credit
+        ));
+    }
+    for proof in batch_proofs.proof {
+        let proof_bytes = java_safe_string_to_bytes!(_env,
+        result_jobject,
+        proof);
+        proofs.push(java_safe_bytes_to_pb!(
+        _env,
+        result_jobject,
+        proof_bytes,
+        BalanceProof
+    ));
+    }
+
+    let result =
+        match wedpr_s_verifiable_confidential_ledger::vcl::verify_batch_product_balance(
+            &c1_credits, &c2_credits, &c3_credits, &proofs,
+        ) {
+            Ok(v) => v,
+            Err(e) => {
+                return java_set_error_field_and_extract_jobject(
+                    &_env,
+                    &result_jobject,
+                    &format!("verify_batch_product_balance failed, err = {:?}", e),
+                )
+            },
+        };
 
     java_safe_set_boolean_field!(
         _env,
