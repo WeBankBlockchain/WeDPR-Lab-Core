@@ -33,8 +33,7 @@ pub extern "system" fn Java_com_webank_wedpr_scd_NativeInterface_verifierGetReve
     _env: JNIEnv,
     _class: JClass,
     verify_request_jstring: JString,
-) -> jobject
-{
+) -> jobject {
     let result_jobject = get_result_jobject(&_env);
 
     let verify_request_pb = java_safe_jstring_to_pb!(
@@ -77,8 +76,7 @@ pub extern "system" fn Java_com_webank_wedpr_scd_NativeInterface_verifierVerifyS
     _class: JClass,
     rule_set_jstring: JString,
     verify_request_jstring: JString,
-) -> jobject
-{
+) -> jobject {
     let result_jobject = get_result_jobject(&_env);
 
     let rule_set_pb = java_safe_jstring_to_pb!(
@@ -122,8 +120,7 @@ pub extern "system" fn Java_com_webank_wedpr_scd_NativeInterface_verifierVerifyS
 pub extern "system" fn Java_com_webank_wedpr_scd_NativeInterface_verifierGetVerificationNonce(
     _env: JNIEnv,
     _class: JClass,
-) -> jobject
-{
+) -> jobject {
     let result_jobject = get_result_jobject(&_env);
 
     let verification_nonce =

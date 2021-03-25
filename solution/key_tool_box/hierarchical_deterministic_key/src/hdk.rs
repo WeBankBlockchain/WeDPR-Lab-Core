@@ -42,8 +42,7 @@ pub fn create_mnemonic_en(word_count: u8) -> Result<String, WedprError> {
 pub fn create_master_key_en(
     password: &str,
     mnemonic_str: &str,
-) -> Result<Vec<u8>, WedprError>
-{
+) -> Result<Vec<u8>, WedprError> {
     let mnemonic =
         match BitcoinMnemonic::<Mainnet, wordlist::English>::from_phrase(
             mnemonic_str,
@@ -76,8 +75,7 @@ pub fn create_key_derivation_path(
     account: i32,
     change: i32,
     address_index: i32,
-) -> String
-{
+) -> String {
     format!(
         "m/{}'/{}'/{}'/{}/{}",
         protocol_type, asset_type, account, change, address_index
@@ -88,8 +86,7 @@ pub fn create_key_derivation_path(
 pub fn derive_extended_key(
     master_key_bytes: &[u8],
     key_derivation_path: &str,
-) -> Result<ExtendedKeyPair, WedprError>
-{
+) -> Result<ExtendedKeyPair, WedprError> {
     let master_key_str = match str::from_utf8(&master_key_bytes) {
         Ok(v) => v,
         Err(_) => {
@@ -179,17 +176,19 @@ fn decode_hex_string(input: &str) -> Result<Vec<u8>, WedprError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use wedpr_l_common_coder_base64::WedprBase64;
     use wedpr_l_crypto_ecies_secp256k1::WedprSecp256k1Ecies;
     use wedpr_l_crypto_hash_keccak256::WedprKeccak256;
     use wedpr_l_crypto_signature_secp256k1::WedprSecp256k1Recover;
-    use wedpr_l_utils::traits::{Ecies, Hash, Signature, Coder};
-    use wedpr_l_common_coder_base64::WedprBase64;
+    use wedpr_l_utils::traits::{Coder, Ecies, Hash, Signature};
 
     #[test]
     fn test_hdk_usage() {
         // Create a master key.
         // let mnemonic = create_mnemonic_en(24).unwrap();
-        let mnemonic = "engage wagon riot toe odor metal palm donor trumpet slight exercise taste burst sense smile curtain cheese sketch unable token suggest lab rain dolphin";
+        let mnemonic = "engage wagon riot toe odor metal palm donor trumpet \
+                        slight exercise taste burst sense smile curtain \
+                        cheese sketch unable token suggest lab rain dolphin";
         // let password = "DO NOT USE REAL PASSWORD HERE";
         let password = "wi_wallet";
 
@@ -198,13 +197,14 @@ mod tests {
         println!("master_key = {:?}", coder.encode(&master_key));
 
         // Derive an extended key.
-        let key_derivation_path = create_key_derivation_path(44, 513866, 1, 0, 1000);
+        let key_derivation_path =
+            create_key_derivation_path(44, 513866, 1, 0, 1000);
         let extended_key =
             derive_extended_key(&master_key, &key_derivation_path).unwrap();
         let private_key = extended_key.get_extended_private_key();
         let public_key = extended_key.get_extended_public_key();
 
-        println!("private_key = {:?}",  hex::encode(private_key));
+        println!("private_key = {:?}", hex::encode(private_key));
         println!("public_key = {:?}", hex::encode(public_key));
 
         // Test the derived key pair for signature functions.

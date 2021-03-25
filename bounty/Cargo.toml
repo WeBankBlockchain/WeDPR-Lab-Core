@@ -9,7 +9,7 @@ edition = "2018"
 [dependencies]
 colored = "1.8"
 curve25519-dalek = { version = "1", features = [ "serde" ] }
-protobuf = "2.20.0"
+protobuf = "2.22.1"
 sha3 = "0.8"
 rand = "0.3.17"
 wedpr_l_crypto_zkp_discrete_logarithm_proof = "1.0.0"

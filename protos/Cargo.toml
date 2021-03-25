@@ -9,6 +9,6 @@ description = "Library of WeDPR protobuf definitions and their generated code."
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-protobuf = "2.20.0"
-protoc-rust = "2.20.0"
+protobuf = "2.22.1"
+protoc-rust = "2.22.1"
 
