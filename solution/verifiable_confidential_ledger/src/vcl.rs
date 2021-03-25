@@ -129,8 +129,7 @@ pub fn prove_sum_balance(
     c1_secret: &OwnerSecret,
     c2_secret: &OwnerSecret,
     c3_secret: &OwnerSecret,
-) -> BalanceProof
-{
+) -> BalanceProof {
     wedpr_l_crypto_zkp_discrete_logarithm_proof::prove_sum_relationship(
         c1_secret.credit_value,
         c2_secret.credit_value,
@@ -150,8 +149,7 @@ pub fn verify_sum_balance(
     c2_credit: &ConfidentialCredit,
     c3_credit: &ConfidentialCredit,
     proof: &BalanceProof,
-) -> Result<bool, WedprError>
-{
+) -> Result<bool, WedprError> {
     wedpr_l_crypto_zkp_discrete_logarithm_proof::verify_sum_relationship(
         &c1_credit.get_point(),
         &c2_credit.get_point(),
@@ -170,8 +168,7 @@ pub fn verify_batch_sum_balance(
     c2_credit_list: &Vec<ConfidentialCredit>,
     c3_credit_list: &Vec<ConfidentialCredit>,
     proof_list: &Vec<BalanceProof>,
-) -> Result<bool, WedprError>
-{
+) -> Result<bool, WedprError> {
     let mut c1_points: Vec<RistrettoPoint> = vec![];
     let mut c2_points: Vec<RistrettoPoint> = vec![];
     let mut c3_points: Vec<RistrettoPoint> = vec![];
@@ -207,8 +204,7 @@ pub fn prove_product_balance(
     c1_secret: &OwnerSecret,
     c2_secret: &OwnerSecret,
     c3_secret: &OwnerSecret,
-) -> BalanceProof
-{
+) -> BalanceProof {
     wedpr_l_crypto_zkp_discrete_logarithm_proof::prove_product_relationship(
         c1_secret.credit_value,
         c2_secret.credit_value,
@@ -228,8 +224,7 @@ pub fn verify_product_balance(
     c2_credit: &ConfidentialCredit,
     c3_credit: &ConfidentialCredit,
     proof: &BalanceProof,
-) -> Result<bool, WedprError>
-{
+) -> Result<bool, WedprError> {
     wedpr_l_crypto_zkp_discrete_logarithm_proof::verify_product_relationship(
         &c1_credit.get_point(),
         &c2_credit.get_point(),
@@ -248,8 +243,7 @@ pub fn verify_batch_product_balance(
     c2_credit_list: &Vec<ConfidentialCredit>,
     c3_credit_list: &Vec<ConfidentialCredit>,
     proof_list: &Vec<BalanceProof>,
-) -> Result<bool, WedprError>
-{
+) -> Result<bool, WedprError> {
     let mut c1_points: Vec<RistrettoPoint> = vec![];
     let mut c2_points: Vec<RistrettoPoint> = vec![];
     let mut c3_points: Vec<RistrettoPoint> = vec![];
@@ -328,7 +322,7 @@ mod tests {
                     &correct_c3_credit,
                     &correct_proof
                 )
-                    .unwrap()
+                .unwrap()
             );
 
             // Incorrect proof combinations.
@@ -340,7 +334,7 @@ mod tests {
                     &wrong_c3_credit,
                     &wrong_proof
                 )
-                    .unwrap()
+                .unwrap()
             );
             assert_eq!(
                 false,
@@ -350,7 +344,7 @@ mod tests {
                     &correct_c3_credit,
                     &wrong_proof
                 )
-                    .unwrap()
+                .unwrap()
             );
             assert_eq!(
                 false,
@@ -360,7 +354,7 @@ mod tests {
                     &wrong_c3_credit,
                     &correct_proof
                 )
-                    .unwrap()
+                .unwrap()
             );
             proofs.push(correct_proof);
             c1_credits.push(c1_credit);
@@ -375,10 +369,8 @@ mod tests {
                 &c3_credits,
                 &proofs
             )
-                .unwrap()
+            .unwrap()
         );
-
-
     }
 
     #[test]
@@ -393,8 +385,11 @@ mod tests {
             let (correct_c3_credit, correct_c3_secret) = make_credit(200);
             let (wrong_c3_credit, wrong_c3_secret) = make_credit(31);
             // 10 * 20 = 200
-            let correct_proof =
-                prove_product_balance(&c1_secret, &c2_secret, &correct_c3_secret);
+            let correct_proof = prove_product_balance(
+                &c1_secret,
+                &c2_secret,
+                &correct_c3_secret,
+            );
             // 10 * 20 != 31
             let wrong_proof =
                 prove_product_balance(&c1_secret, &c2_secret, &wrong_c3_secret);
@@ -407,7 +402,7 @@ mod tests {
                     &correct_c3_credit,
                     &correct_proof
                 )
-                    .unwrap()
+                .unwrap()
             );
 
             // Incorrect proof combinations.
@@ -419,7 +414,7 @@ mod tests {
                     &wrong_c3_credit,
                     &wrong_proof
                 )
-                    .unwrap()
+                .unwrap()
             );
             assert_eq!(
                 false,
@@ -429,7 +424,7 @@ mod tests {
                     &correct_c3_credit,
                     &wrong_proof
                 )
-                    .unwrap()
+                .unwrap()
             );
             assert_eq!(
                 false,
@@ -439,7 +434,7 @@ mod tests {
                     &wrong_c3_credit,
                     &correct_proof
                 )
-                    .unwrap()
+                .unwrap()
             );
             proofs.push(correct_proof);
             c1_credits.push(c1_credit);
@@ -454,7 +449,7 @@ mod tests {
                 &c3_credits,
                 &proofs
             )
-                .unwrap()
+            .unwrap()
         );
     }
 

@@ -297,8 +297,7 @@ fn generate_predicate_proof(
     template_private_key: TemplatePrivateKey,
     value: u64,
     rule_set: &mut VerificationRuleSet,
-) -> Result<VerifyRequest, WedprError>
-{
+) -> Result<VerifyRequest, WedprError> {
     user_fill_certificate_attribute(certificate_attribute_dict, value);
     let (
         sign_certificate_request,
@@ -353,8 +352,7 @@ fn issuer_make_certificate_template(
 fn user_fill_certificate_attribute(
     certificate_attribute_dict: &mut AttributeDict,
     attribute: u64,
-)
-{
+) {
     let mut attribute_kv = StringToStringPair::new();
     attribute_kv.set_key(TARGET_ATTRIBUTE.to_string());
     attribute_kv.set_value(attribute.to_string());
@@ -367,8 +365,7 @@ fn user_prove_rule_set(
     certificate_template: &CertificateTemplate,
     user_private_key_str: &str,
     rule_set: &mut VerificationRuleSet,
-) -> Result<VerifyRequest, WedprError>
-{
+) -> Result<VerifyRequest, WedprError> {
     // In most cases, this nonce should be provided by the verifier to prevent
     // replaying attacks.
     let verification_nonce_str = verifier::get_verification_nonce().unwrap();
@@ -385,7 +382,6 @@ fn user_prove_rule_set(
 fn verifier_verify_rule_set(
     rule_set: &mut VerificationRuleSet,
     request: &VerifyRequest,
-) -> bool
-{
+) -> bool {
     verifier::verify_selective_disclosure(&rule_set, &request).unwrap()
 }

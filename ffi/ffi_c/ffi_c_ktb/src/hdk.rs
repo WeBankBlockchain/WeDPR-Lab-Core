@@ -42,8 +42,7 @@ pub extern "C" fn wedpr_hdk_create_mnemonic_en(
 pub extern "C" fn wedpr_hdk_create_master_key_en(
     password_cstring: *mut c_char,
     mnemonic_cstring: *mut c_char,
-) -> *mut c_char
-{
+) -> *mut c_char {
     let result = panic::catch_unwind(|| {
         let passwd = c_safe_c_char_pointer_to_string!(password_cstring);
         let mnemonic = c_safe_c_char_pointer_to_string!(mnemonic_cstring);
@@ -71,8 +70,7 @@ pub extern "C" fn wedpr_hdk_derive_extended_key(
     account: c_int,
     change: c_int,
     address_index: c_int,
-) -> *mut c_char
-{
+) -> *mut c_char {
     let result = panic::catch_unwind(|| {
         let master_key = c_safe_c_char_pointer_to_bytes!(master_key_cstring);
 

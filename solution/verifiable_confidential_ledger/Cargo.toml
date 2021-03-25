@@ -19,7 +19,7 @@ wedpr_l_crypto_zkp_discrete_logarithm_proof = { git = "https://github.com/WeBank
 wedpr_l_crypto_zkp_range_proof = { git = "https://github.com/WeBankBlockchain/WeDPR-Lab-Crypto.git", branch = "v1.1.0" }
 wedpr_l_crypto_zkp_utils = { git = "https://github.com/WeBankBlockchain/WeDPR-Lab-Crypto.git", branch = "v1.1.0" }
 
-protobuf = "2.20.0"
+protobuf = "2.22.1"
 #protoc-rust = "2.20.0"
 
 [dev-dependencies]

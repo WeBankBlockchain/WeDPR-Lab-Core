@@ -35,8 +35,7 @@ pub extern "system" fn Java_com_webank_wedpr_ktb_hdk_NativeInterface_createMnemo
     _env: JNIEnv,
     _class: JClass,
     word_count: jint,
-) -> jobject
-{
+) -> jobject {
     let result_jobject = get_result_jobject(&_env);
 
     // TODO: Extract a macro for this type of function call if feasible.
@@ -65,8 +64,7 @@ pub extern "system" fn Java_com_webank_wedpr_ktb_hdk_NativeInterface_createMaste
     _class: JClass,
     password_jstring: JString,
     mnemonic_jstring: JString,
-) -> jobject
-{
+) -> jobject {
     let result_jobject = get_result_jobject(&_env);
 
     let password =
@@ -110,8 +108,7 @@ pub extern "system" fn Java_com_webank_wedpr_ktb_hdk_NativeInterface_deriveExten
     account: jint,
     change: jint,
     address_index: jint,
-) -> jobject
-{
+) -> jobject {
     let result_jobject = get_result_jobject(&_env);
 
     let master_key =
