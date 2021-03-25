@@ -16,10 +16,10 @@ use wedpr_ffi_common::utils::{
 };
 
 // Java FFI: Java interfaces will be generated under
-// package name 'com.webank.wedpr.hdk'.
+// package name 'com.webank.wedpr.ktv.hdk'.
 
-// Result class name is 'com/webank/wedpr/ktb/HdkResult'.
-const RESULT_JAVA_CLASS_NAME: &str = "com/webank/wedpr/ktb/HdkResult";
+// Result class name is 'com/webank/wedpr/ktb/hdk/HdkResult'.
+const RESULT_JAVA_CLASS_NAME: &str = "com/webank/wedpr/ktb/hdk/HdkResult";
 
 fn get_result_jobject<'a>(_env: &'a JNIEnv) -> JObject<'a> {
     java_new_jobject(_env, RESULT_JAVA_CLASS_NAME)
@@ -31,7 +31,7 @@ fn get_result_jobject<'a>(_env: &'a JNIEnv) -> JObject<'a> {
 
 /// Java interface for 'com.webank.wedpr.hdk.NativeInterface->createMnemonicEn'.
 #[no_mangle]
-pub extern "system" fn Java_com_webank_wedpr_hdk_NativeInterface_createMnemonicEn(
+pub extern "system" fn Java_com_webank_wedpr_ktb_hdk_NativeInterface_createMnemonicEn(
     _env: JNIEnv,
     _class: JClass,
     word_count: jint,
@@ -60,7 +60,7 @@ pub extern "system" fn Java_com_webank_wedpr_hdk_NativeInterface_createMnemonicE
 /// Java interface for
 /// 'com.webank.wedpr.hdk.NativeInterface->createMasterKeyEn'.
 #[no_mangle]
-pub extern "system" fn Java_com_webank_wedpr_hdk_NativeInterface_createMasterKeyEn(
+pub extern "system" fn Java_com_webank_wedpr_ktb_hdk_NativeInterface_createMasterKeyEn(
     _env: JNIEnv,
     _class: JClass,
     password_jstring: JString,
@@ -101,7 +101,7 @@ pub extern "system" fn Java_com_webank_wedpr_hdk_NativeInterface_createMasterKey
 /// Java interface for
 /// 'com.webank.wedpr.hdk.NativeInterface->deriveExtendedKey'.
 #[no_mangle]
-pub extern "system" fn Java_com_webank_wedpr_hdk_NativeInterface_deriveExtendedKey(
+pub extern "system" fn Java_com_webank_wedpr_ktb_hdk_NativeInterface_deriveExtendedKey(
     _env: JNIEnv,
     _class: JClass,
     master_key_jstring: JString,
