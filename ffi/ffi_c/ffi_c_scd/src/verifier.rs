@@ -46,8 +46,7 @@ pub extern "C" fn wedpr_scd_get_revealed_attributes(
 pub extern "C" fn wedpr_scd_verify_selective_disclosure(
     rule_set_cstring: *mut c_char,
     verify_request_cstring: *mut c_char,
-) -> *mut c_char
-{
+) -> *mut c_char {
     let result = panic::catch_unwind(|| {
         let verify_request_pb = c_safe_c_char_pointer_to_proto!(
             verify_request_cstring,

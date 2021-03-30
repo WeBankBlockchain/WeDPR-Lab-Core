@@ -36,8 +36,7 @@ pub extern "system" fn Java_com_webank_wedpr_scd_NativeInterface_userFillCertifi
     _class: JClass,
     attribute_dict_jstring: JString,
     certificate_template_jstring: JString,
-) -> jobject
-{
+) -> jobject {
     let result_jobject = get_result_jobject(&_env);
 
     let attribute_dict_pb = java_safe_jstring_to_pb!(
@@ -110,8 +109,7 @@ pub extern "system" fn Java_com_webank_wedpr_scd_NativeInterface_userBlindCertif
     user_private_key_jstring: JString,
     certificate_secrets_blinding_factors_jstring: JString,
     issuer_nonce_jstring: JString,
-) -> jobject
-{
+) -> jobject {
     let result_jobject = get_result_jobject(&_env);
 
     let certificate_signature_pb = java_safe_jstring_to_pb!(
@@ -190,8 +188,7 @@ pub extern "system" fn Java_com_webank_wedpr_scd_NativeInterface_userProveSelect
     certificate_template_jstring: JString,
     user_private_key_jstring: JString,
     verification_nonce_jstring: JString,
-) -> jobject
-{
+) -> jobject {
     let result_jobject = get_result_jobject(&_env);
 
     let rule_set_pb = java_safe_jstring_to_pb!(

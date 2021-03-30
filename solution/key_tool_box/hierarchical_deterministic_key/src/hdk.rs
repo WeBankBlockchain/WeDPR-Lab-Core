@@ -42,8 +42,7 @@ pub fn create_mnemonic_en(word_count: u8) -> Result<String, WedprError> {
 pub fn create_master_key_en(
     password: &str,
     mnemonic_str: &str,
-) -> Result<Vec<u8>, WedprError>
-{
+) -> Result<Vec<u8>, WedprError> {
     let mnemonic =
         match BitcoinMnemonic::<Mainnet, wordlist::English>::from_phrase(
             mnemonic_str,
@@ -76,8 +75,7 @@ pub fn create_key_derivation_path(
     account: i32,
     change: i32,
     address_index: i32,
-) -> String
-{
+) -> String {
     format!(
         "m/{}'/{}'/{}'/{}/{}",
         protocol_type, asset_type, account, change, address_index
@@ -88,8 +86,7 @@ pub fn create_key_derivation_path(
 pub fn derive_extended_key(
     master_key_bytes: &[u8],
     key_derivation_path: &str,
-) -> Result<ExtendedKeyPair, WedprError>
-{
+) -> Result<ExtendedKeyPair, WedprError> {
     let master_key_str = match str::from_utf8(&master_key_bytes) {
         Ok(v) => v,
         Err(_) => {

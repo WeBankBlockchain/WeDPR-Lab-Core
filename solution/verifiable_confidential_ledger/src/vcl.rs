@@ -129,8 +129,7 @@ pub fn prove_sum_balance(
     c1_secret: &OwnerSecret,
     c2_secret: &OwnerSecret,
     c3_secret: &OwnerSecret,
-) -> BalanceProof
-{
+) -> BalanceProof {
     wedpr_l_crypto_zkp_discrete_logarithm_proof::prove_sum_relationship(
         c1_secret.credit_value,
         c2_secret.credit_value,
@@ -150,8 +149,7 @@ pub fn verify_sum_balance(
     c2_credit: &ConfidentialCredit,
     c3_credit: &ConfidentialCredit,
     proof: &BalanceProof,
-) -> Result<bool, WedprError>
-{
+) -> Result<bool, WedprError> {
     wedpr_l_crypto_zkp_discrete_logarithm_proof::verify_sum_relationship(
         &c1_credit.get_point(),
         &c2_credit.get_point(),
@@ -172,8 +170,7 @@ pub fn verify_sum_balance_in_batch(
     c2_credit_list: &Vec<ConfidentialCredit>,
     c3_credit_list: &Vec<ConfidentialCredit>,
     proof_list: &Vec<BalanceProof>,
-) -> Result<bool, WedprError>
-{
+) -> Result<bool, WedprError> {
     let c1_point_list = c1_credit_list
         .iter()
         .map(|x| x.get_point())
@@ -205,8 +202,7 @@ pub fn prove_product_balance(
     c1_secret: &OwnerSecret,
     c2_secret: &OwnerSecret,
     c3_secret: &OwnerSecret,
-) -> BalanceProof
-{
+) -> BalanceProof {
     wedpr_l_crypto_zkp_discrete_logarithm_proof::prove_product_relationship(
         c1_secret.credit_value,
         c2_secret.credit_value,
@@ -226,8 +222,7 @@ pub fn verify_product_balance(
     c2_credit: &ConfidentialCredit,
     c3_credit: &ConfidentialCredit,
     proof: &BalanceProof,
-) -> Result<bool, WedprError>
-{
+) -> Result<bool, WedprError> {
     wedpr_l_crypto_zkp_discrete_logarithm_proof::verify_product_relationship(
         &c1_credit.get_point(),
         &c2_credit.get_point(),
@@ -248,8 +243,7 @@ pub fn verify_product_balance_in_batch(
     c2_credit_list: &Vec<ConfidentialCredit>,
     c3_credit_list: &Vec<ConfidentialCredit>,
     proof_list: &Vec<BalanceProof>,
-) -> Result<bool, WedprError>
-{
+) -> Result<bool, WedprError> {
     let c1_point_list = c1_credit_list
         .iter()
         .map(|x| x.get_point())

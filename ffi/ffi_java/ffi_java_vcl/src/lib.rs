@@ -89,8 +89,7 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_makeCredit(
     _env: JNIEnv,
     _class: JClass,
     value: jlong,
-) -> jobject
-{
+) -> jobject {
     let result_jobject = get_result_jobject(&_env);
 
     let (credit, secret) =
@@ -118,8 +117,7 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_proveSumBalance
     c1_secret_jstring: JString,
     c2_secret_jstring: JString,
     c3_secret_jstring: JString,
-) -> jobject
-{
+) -> jobject {
     let result_jobject = get_result_jobject(&_env);
 
     let c1_secret = decode_secret!(
@@ -173,8 +171,7 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_verifySumBalanc
     c2_credit_jstring: JString,
     c3_credit_jstring: JString,
     proof_jstring: JString,
-) -> jobject
-{
+) -> jobject {
     let result_jobject = get_result_jobject(&_env);
 
     let proof = java_safe_jstring_to_pb!(
@@ -245,8 +242,7 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_verifySumBalanc
     _env: JNIEnv,
     _class: JClass,
     batch_proof_jstring: JString,
-) -> jobject
-{
+) -> jobject {
     let result_jobject = get_result_jobject(&_env);
 
     let batch_proof = java_safe_jstring_to_pb!(
@@ -346,8 +342,7 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_proveProductBal
     c1_secret_jstring: JString,
     c2_secret_jstring: JString,
     c3_secret_jstring: JString,
-) -> jobject
-{
+) -> jobject {
     let result_jobject = get_result_jobject(&_env);
 
     let c1_secret = decode_secret!(
@@ -402,8 +397,7 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_verifyProductBa
     c2_credit_jstring: JString,
     c3_credit_jstring: JString,
     proof_jstring: JString,
-) -> jobject
-{
+) -> jobject {
     let result_jobject = get_result_jobject(&_env);
 
     let proof = java_safe_jstring_to_pb!(
@@ -473,8 +467,7 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_verifyProductBa
     _env: JNIEnv,
     _class: JClass,
     batch_proof_jstring: JString,
-) -> jobject
-{
+) -> jobject {
     let result_jobject = get_result_jobject(&_env);
 
     let batch_proof = java_safe_jstring_to_pb!(
@@ -571,8 +564,7 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_proveRange(
     _env: JNIEnv,
     _class: JClass,
     secret_jstring: JString,
-) -> jobject
-{
+) -> jobject {
     let result_jobject = get_result_jobject(&_env);
 
     let secret = decode_secret!(
@@ -604,8 +596,7 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_verifyRange(
     _class: JClass,
     credit_jstring: JString,
     proof_jstring: JString,
-) -> jobject
-{
+) -> jobject {
     let result_jobject = get_result_jobject(&_env);
 
     let proof_str =

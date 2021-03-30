@@ -1,6 +1,6 @@
 [package]
 name = "ffi_java_ktb"
-version = "1.3.0"
+version = "1.4.0"
 authors = [ "WeDPR <wedpr@webank.com>" ]
 edition = "2018"
 
@@ -14,8 +14,8 @@ crate-type = [ "cdylib", "staticlib" ]
 jni = "0.13.0"
 protobuf = "2.22.1"
 wedpr_s_hierarchical_deterministic_key = "1.3.0"
-wedpr_ffi_common = "1.0.0"
-wedpr_ffi_macros = "1.0.0"
+wedpr_ffi_common = "1.1.0"
+wedpr_ffi_macros = "1.1.0"
 wedpr_s_protos = "1.3.0"
 
 [build-dependencies]
