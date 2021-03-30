@@ -34,7 +34,8 @@ pub fn print_alert5(
     message3: &str,
     message4: &str,
     message5: &str,
-) {
+)
+{
     println!(
         "{}\n{}\n{}\n{}\n{}\n",
         message1.yellow(),

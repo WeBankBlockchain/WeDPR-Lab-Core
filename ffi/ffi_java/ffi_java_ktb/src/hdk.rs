@@ -16,7 +16,7 @@ use wedpr_ffi_common::utils::{
 };
 
 // Java FFI: Java interfaces will be generated under
-// package name 'com.webank.wedpr.ktv.hdk'.
+// package name 'com.webank.wedpr.ktb.hdk'.
 
 // Result class name is 'com/webank/wedpr/ktb/hdk/HdkResult'.
 const RESULT_JAVA_CLASS_NAME: &str = "com/webank/wedpr/ktb/hdk/HdkResult";
@@ -27,15 +27,18 @@ fn get_result_jobject<'a>(_env: &'a JNIEnv) -> JObject<'a> {
 
 // Java interface section.
 
-// All functions are under class name 'com.webank.wedpr.hdk.NativeInterface'.
+// All functions are under class name
+// 'com.webank.wedpr.ktb.hdk.NativeInterface'.
 
-/// Java interface for 'com.webank.wedpr.hdk.NativeInterface->createMnemonicEn'.
+/// Java interface for
+/// 'com.webank.wedpr.ktb.hdk.NativeInterface->createMnemonicEn'.
 #[no_mangle]
 pub extern "system" fn Java_com_webank_wedpr_ktb_hdk_NativeInterface_createMnemonicEn(
     _env: JNIEnv,
     _class: JClass,
     word_count: jint,
-) -> jobject {
+) -> jobject
+{
     let result_jobject = get_result_jobject(&_env);
 
     // TODO: Extract a macro for this type of function call if feasible.
@@ -57,14 +60,15 @@ pub extern "system" fn Java_com_webank_wedpr_ktb_hdk_NativeInterface_createMnemo
 }
 
 /// Java interface for
-/// 'com.webank.wedpr.hdk.NativeInterface->createMasterKeyEn'.
+/// 'com.webank.wedpr.ktb.hdk.NativeInterface->createMasterKeyEn'.
 #[no_mangle]
 pub extern "system" fn Java_com_webank_wedpr_ktb_hdk_NativeInterface_createMasterKeyEn(
     _env: JNIEnv,
     _class: JClass,
     password_jstring: JString,
     mnemonic_jstring: JString,
-) -> jobject {
+) -> jobject
+{
     let result_jobject = get_result_jobject(&_env);
 
     let password =
@@ -97,7 +101,7 @@ pub extern "system" fn Java_com_webank_wedpr_ktb_hdk_NativeInterface_createMaste
 }
 
 /// Java interface for
-/// 'com.webank.wedpr.hdk.NativeInterface->deriveExtendedKey'.
+/// 'com.webank.wedpr.ktb.hdk.NativeInterface->deriveExtendedKey'.
 #[no_mangle]
 pub extern "system" fn Java_com_webank_wedpr_ktb_hdk_NativeInterface_deriveExtendedKey(
     _env: JNIEnv,
@@ -108,7 +112,8 @@ pub extern "system" fn Java_com_webank_wedpr_ktb_hdk_NativeInterface_deriveExten
     account: jint,
     change: jint,
     address_index: jint,
-) -> jobject {
+) -> jobject
+{
     let result_jobject = get_result_jobject(&_env);
 
     let master_key =

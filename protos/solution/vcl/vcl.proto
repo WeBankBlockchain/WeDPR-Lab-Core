@@ -24,10 +24,16 @@ message VclResult {
   string proof = 3;
 }
 
-// Verify Multi proof to FFI interface used by VCL.
-message BatchProof {
-  repeated string c1_credit = 1;
-  repeated string c2_credit = 2;
-  repeated string c3_credit = 3;
-  repeated string proof = 4;
+// ZKP data to verify the balance relationship among confidential credits.
+// TODO: Update string to proto types.
+message CreditBalanceProof {
+  string c1_credit = 1;
+  string c2_credit = 2;
+  string c3_credit = 3;
+  string proof = 4;
+}
+
+// ZKP data to verify a batch of the balance relationship among confidential credits.
+message BatchCreditBalanceProof {
+  repeated CreditBalanceProof credit_balance_proof = 1;
 }

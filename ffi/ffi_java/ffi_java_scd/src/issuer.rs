@@ -35,7 +35,8 @@ pub extern "system" fn Java_com_webank_wedpr_scd_NativeInterface_issuerMakeCerti
     _env: JNIEnv,
     _class: JClass,
     schema_jstring: JString,
-) -> jobject {
+) -> jobject
+{
     let result_jobject = get_result_jobject(&_env);
 
     let schema_pb = java_safe_jstring_to_pb!(
@@ -87,7 +88,8 @@ pub extern "system" fn Java_com_webank_wedpr_scd_NativeInterface_issuerSignCerti
     sign_request_jstring: JString,
     user_id_jstring: JString,
     user_nonce_jstring: JString,
-) -> jobject {
+) -> jobject
+{
     let result_jobject = get_result_jobject(&_env);
 
     let certificate_template_pb = java_safe_jstring_to_pb!(

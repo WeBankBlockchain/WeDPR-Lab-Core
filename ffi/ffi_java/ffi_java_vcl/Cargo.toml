@@ -14,10 +14,10 @@ crate-type = [ "cdylib", "staticlib" ]
 jni = "0.13.0"
 protobuf = "2.22.1"
 wedpr_s_verifiable_confidential_ledger = { path = "../../../solution/verifiable_confidential_ledger"}
-wedpr_ffi_common = { git = "https://github.com/WeBankBlockchain/WeDPR-Lab-Crypto.git", branch = "v1.1.0" }
-wedpr_ffi_macros = { git = "https://github.com/WeBankBlockchain/WeDPR-Lab-Crypto.git", branch = "v1.1.0" }
+wedpr_ffi_common = { git = "https://gitee.com/WeBankBlockchain/WeDPR-Lab-Crypto.git", branch = "v1.1.0" }
+wedpr_ffi_macros = { git = "https://gitee.com/WeBankBlockchain/WeDPR-Lab-Crypto.git", branch = "v1.1.0" }
 wedpr_s_protos = { path = "../../../protos"}
-wedpr_l_protos =  { git = "https://github.com/WeBankBlockchain/WeDPR-Lab-Crypto.git", branch = "v1.1.0" }
+wedpr_l_protos =  { git = "https://gitee.com/WeBankBlockchain/WeDPR-Lab-Crypto.git", branch = "v1.1.0" }
 
 [build-dependencies]
 cbindgen = "0.9.0"
