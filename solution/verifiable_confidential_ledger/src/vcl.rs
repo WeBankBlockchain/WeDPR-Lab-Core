@@ -129,7 +129,8 @@ pub fn prove_sum_balance(
     c1_secret: &OwnerSecret,
     c2_secret: &OwnerSecret,
     c3_secret: &OwnerSecret,
-) -> BalanceProof {
+) -> BalanceProof
+{
     wedpr_l_crypto_zkp_discrete_logarithm_proof::prove_sum_relationship(
         c1_secret.credit_value,
         c2_secret.credit_value,
@@ -141,15 +142,16 @@ pub fn prove_sum_balance(
     )
 }
 
-/// Verifies three commitments satisfying a sum relationship, i.e.
-/// the values embedded in c1_credit, c2_credit, c3_credit satisfying
+/// Verifies three confidential credit records satisfying a sum relationship,
+/// i.e. the values embedded in c1_credit, c2_credit, c3_credit satisfying
 /// c1_value + c2_value = c3_value.
 pub fn verify_sum_balance(
     c1_credit: &ConfidentialCredit,
     c2_credit: &ConfidentialCredit,
     c3_credit: &ConfidentialCredit,
     proof: &BalanceProof,
-) -> Result<bool, WedprError> {
+) -> Result<bool, WedprError>
+{
     wedpr_l_crypto_zkp_discrete_logarithm_proof::verify_sum_relationship(
         &c1_credit.get_point(),
         &c2_credit.get_point(),
@@ -160,37 +162,36 @@ pub fn verify_sum_balance(
     )
 }
 
-/// Verifies multi three commitments pairs satisfying a sum relationship, i.e.
-/// the values embedded in c1_credit, c2_credit, c3_credit satisfying
-/// c1_value + c2_value = c3_value.
-pub fn verify_batch_sum_balance(
+/// Verifies all confidential credit record tuples satisfying sum relationships,
+/// where each commitment tuple contains three commitment points,
+/// c1_credit = c1_credit_list[i], c2_credit = c2_credit_list[i], c3_credit =
+/// c3_credit_list[i], and the values embedded in c1_credit, c2_credit,
+/// c3_credit satisfying c1_value + c2_value = c3_value.
+pub fn verify_sum_balance_in_batch(
     c1_credit_list: &Vec<ConfidentialCredit>,
     c2_credit_list: &Vec<ConfidentialCredit>,
     c3_credit_list: &Vec<ConfidentialCredit>,
     proof_list: &Vec<BalanceProof>,
-) -> Result<bool, WedprError> {
-    let mut c1_points: Vec<RistrettoPoint> = vec![];
-    let mut c2_points: Vec<RistrettoPoint> = vec![];
-    let mut c3_points: Vec<RistrettoPoint> = vec![];
-    let mut proofs: Vec<BalanceProof> = vec![];
-    for c1 in c1_credit_list {
-        c1_points.push(c1.get_point());
-    }
-    for c2 in c2_credit_list {
-        c2_points.push(c2.get_point());
-    }
-    for c3 in c3_credit_list {
-        c3_points.push(c3.get_point());
-    }
-    for proof in proof_list {
-        proofs.push(proof.clone());
-    }
+) -> Result<bool, WedprError>
+{
+    let c1_point_list = c1_credit_list
+        .iter()
+        .map(|x| x.get_point())
+        .collect::<Vec<_>>();
+    let c2_point_list = c2_credit_list
+        .iter()
+        .map(|x| x.get_point())
+        .collect::<Vec<_>>();
+    let c3_point_list = c3_credit_list
+        .iter()
+        .map(|x| x.get_point())
+        .collect::<Vec<_>>();
 
-    wedpr_l_crypto_zkp_discrete_logarithm_proof::verify_batch_sum_relationship(
-        &c1_points,
-        &c2_points,
-        &c3_points,
-        &proofs,
+    wedpr_l_crypto_zkp_discrete_logarithm_proof::verify_sum_relationship_in_batch(
+        &c1_point_list,
+        &c2_point_list,
+        &c3_point_list,
+        proof_list,
         &BASEPOINT_G1,
         &BASEPOINT_G2,
     )
@@ -204,7 +205,8 @@ pub fn prove_product_balance(
     c1_secret: &OwnerSecret,
     c2_secret: &OwnerSecret,
     c3_secret: &OwnerSecret,
-) -> BalanceProof {
+) -> BalanceProof
+{
     wedpr_l_crypto_zkp_discrete_logarithm_proof::prove_product_relationship(
         c1_secret.credit_value,
         c2_secret.credit_value,
@@ -216,15 +218,16 @@ pub fn prove_product_balance(
     )
 }
 
-/// Verifies three commitments satisfying a product relationship, i.e.
-/// the values embedded in c1_credit, c2_credit, c3_credit satisfying
-/// c1_value * c2_value = c3_value.
+/// Verifies three confidential credit records satisfying a product
+/// relationship, i.e. the values embedded in c1_credit, c2_credit, c3_credit
+/// satisfying c1_value * c2_value = c3_value.
 pub fn verify_product_balance(
     c1_credit: &ConfidentialCredit,
     c2_credit: &ConfidentialCredit,
     c3_credit: &ConfidentialCredit,
     proof: &BalanceProof,
-) -> Result<bool, WedprError> {
+) -> Result<bool, WedprError>
+{
     wedpr_l_crypto_zkp_discrete_logarithm_proof::verify_product_relationship(
         &c1_credit.get_point(),
         &c2_credit.get_point(),
@@ -235,37 +238,36 @@ pub fn verify_product_balance(
     )
 }
 
-/// Verifies multi three commitments satisfying a product relationship, i.e.
-/// the values embedded in c1_credit, c2_credit, c3_credit satisfying
-/// c1_value * c2_value = c3_value.
-pub fn verify_batch_product_balance(
+/// Verifies all confidential credit record tuples satisfying product
+/// relationships, where each commitment tuple contains three commitment points,
+/// c1_credit = c1_credit_list[i], c2_credit = c2_credit_list[i], c3_credit =
+/// c3_credit_list[i], and the values embedded in c1_credit, c2_credit,
+/// c3_credit satisfying c1_value * c2_value = c3_value.
+pub fn verify_product_balance_in_batch(
     c1_credit_list: &Vec<ConfidentialCredit>,
     c2_credit_list: &Vec<ConfidentialCredit>,
     c3_credit_list: &Vec<ConfidentialCredit>,
     proof_list: &Vec<BalanceProof>,
-) -> Result<bool, WedprError> {
-    let mut c1_points: Vec<RistrettoPoint> = vec![];
-    let mut c2_points: Vec<RistrettoPoint> = vec![];
-    let mut c3_points: Vec<RistrettoPoint> = vec![];
-    let mut proofs: Vec<BalanceProof> = vec![];
-    for c1 in c1_credit_list {
-        c1_points.push(c1.get_point());
-    }
-    for c2 in c2_credit_list {
-        c2_points.push(c2.get_point());
-    }
-    for c3 in c3_credit_list {
-        c3_points.push(c3.get_point());
-    }
-    for proof in proof_list {
-        proofs.push(proof.clone());
-    }
+) -> Result<bool, WedprError>
+{
+    let c1_point_list = c1_credit_list
+        .iter()
+        .map(|x| x.get_point())
+        .collect::<Vec<_>>();
+    let c2_point_list = c2_credit_list
+        .iter()
+        .map(|x| x.get_point())
+        .collect::<Vec<_>>();
+    let c3_point_list = c3_credit_list
+        .iter()
+        .map(|x| x.get_point())
+        .collect::<Vec<_>>();
 
-    wedpr_l_crypto_zkp_discrete_logarithm_proof::verify_batch_product_relationship(
-        &c1_points,
-        &c2_points,
-        &c3_points,
-        &proofs,
+    wedpr_l_crypto_zkp_discrete_logarithm_proof::verify_product_relationship_in_batch(
+        &c1_point_list,
+        &c2_point_list,
+        &c3_point_list,
+        proof_list,
         &BASEPOINT_G1,
         &BASEPOINT_G2,
     )
@@ -292,8 +294,9 @@ pub fn verify_range(c1: &ConfidentialCredit, proof: &[u8]) -> bool {
 mod tests {
     use super::*;
     extern crate wedpr_l_crypto_zkp_utils;
-
     extern crate wedpr_l_protos;
+
+    const BATCH_SIZE: usize = 10;
 
     #[test]
     fn test_sum_balance_proof() {
@@ -301,7 +304,7 @@ mod tests {
         let mut c2_credits: Vec<ConfidentialCredit> = vec![];
         let mut c3_credits: Vec<ConfidentialCredit> = vec![];
         let mut proofs: Vec<BalanceProof> = vec![];
-        for _ in 0..100 {
+        for _ in 0..BATCH_SIZE {
             let (c1_credit, c1_secret) = make_credit(10);
             let (c2_credit, c2_secret) = make_credit(20);
             // 10 + 20 = 30
@@ -363,7 +366,7 @@ mod tests {
         }
         assert_eq!(
             true,
-            verify_batch_sum_balance(
+            verify_sum_balance_in_batch(
                 &c1_credits,
                 &c2_credits,
                 &c3_credits,
@@ -379,7 +382,7 @@ mod tests {
         let mut c2_credits: Vec<ConfidentialCredit> = vec![];
         let mut c3_credits: Vec<ConfidentialCredit> = vec![];
         let mut proofs: Vec<BalanceProof> = vec![];
-        for _ in 0..100 {
+        for _ in 0..BATCH_SIZE {
             let (c1_credit, c1_secret) = make_credit(10);
             let (c2_credit, c2_secret) = make_credit(20);
             let (correct_c3_credit, correct_c3_secret) = make_credit(200);
@@ -443,7 +446,7 @@ mod tests {
         }
         assert_eq!(
             true,
-            verify_batch_product_balance(
+            verify_product_balance_in_batch(
                 &c1_credits,
                 &c2_credits,
                 &c3_credits,

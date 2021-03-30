@@ -33,7 +33,8 @@ pub fn get_revealed_attributes(
 pub fn verify_selective_disclosure(
     rule_set: &VerificationRuleSet,
     verify_request: &VerifyRequest,
-) -> Result<bool, WedprError> {
+) -> Result<bool, WedprError>
+{
     let (certificate_schema, non_certificate_schema) =
         utils::build_certificate_schema(
             verify_request

@@ -3,7 +3,7 @@
 ## 接口调用Java文件
 
 ```java
-package com.webank.wedpr.hdk;
+package com.webank.wedpr.ktb.hdk;
 
 import com.webank.wedpr.common.WedprResult;
 

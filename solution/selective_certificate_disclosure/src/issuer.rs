@@ -53,7 +53,8 @@ pub fn sign_certificate(
     sign_request: &SignCertificateRequest,
     user_id: &str,
     user_nonce_str: &str,
-) -> Result<(CertificateSignature, String), WedprError> {
+) -> Result<(CertificateSignature, String), WedprError>
+{
     let certificate_attribute_dict =
         sign_request.get_certificate_attribute_dict();
     let blinded_credential_secrets: wedpr_indy_crypto::cl::BlindedCredentialSecrets =

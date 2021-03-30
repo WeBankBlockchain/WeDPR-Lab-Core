@@ -23,7 +23,7 @@ use wedpr_s_verifiable_confidential_ledger;
 
 use wedpr_l_protos::generated::zkp::BalanceProof;
 use wedpr_s_protos::generated::vcl::{
-    BatchProof, EncodedConfidentialCredit, EncodedOwnerSecret,
+    BatchCreditBalanceProof, EncodedConfidentialCredit, EncodedOwnerSecret,
 };
 use wedpr_s_verifiable_confidential_ledger::vcl::ConfidentialCredit;
 
@@ -89,7 +89,8 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_makeCredit(
     _env: JNIEnv,
     _class: JClass,
     value: jlong,
-) -> jobject {
+) -> jobject
+{
     let result_jobject = get_result_jobject(&_env);
 
     let (credit, secret) =
@@ -117,7 +118,8 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_proveSumBalance
     c1_secret_jstring: JString,
     c2_secret_jstring: JString,
     c3_secret_jstring: JString,
-) -> jobject {
+) -> jobject
+{
     let result_jobject = get_result_jobject(&_env);
 
     let c1_secret = decode_secret!(
@@ -171,7 +173,8 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_verifySumBalanc
     c2_credit_jstring: JString,
     c3_credit_jstring: JString,
     proof_jstring: JString,
-) -> jobject {
+) -> jobject
+{
     let result_jobject = get_result_jobject(&_env);
 
     let proof = java_safe_jstring_to_pb!(
@@ -236,71 +239,83 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_verifySumBalanc
 }
 
 /// Java interface for
-/// 'com.webank.wedpr.vcl.NativeInterface->verifyBatchSumBalance'.
+/// 'com.webank.wedpr.vcl.NativeInterface->verifySumBalanceInBatch'.
 #[no_mangle]
-pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_verifyBatchSumBalance(
+pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_verifySumBalanceInBatch(
     _env: JNIEnv,
     _class: JClass,
     batch_proof_jstring: JString,
-) -> jobject {
+) -> jobject
+{
     let result_jobject = get_result_jobject(&_env);
 
-    let batch_proofs = java_safe_jstring_to_pb!(
+    let batch_proof = java_safe_jstring_to_pb!(
         _env,
         result_jobject,
         batch_proof_jstring,
-        BatchProof
+        BatchCreditBalanceProof
     );
     let mut c1_credits: Vec<ConfidentialCredit> = vec![];
     let mut c2_credits: Vec<ConfidentialCredit> = vec![];
     let mut c3_credits: Vec<ConfidentialCredit> = vec![];
     let mut proofs: Vec<BalanceProof> = vec![];
-    for c1_credit in batch_proofs.c1_credit {
-        let c1_bytes =
-            java_safe_string_to_bytes!(_env, result_jobject, c1_credit);
-        let c1_encode_credit = java_safe_bytes_to_pb!(
+    for credit_balance_proof in batch_proof.credit_balance_proof {
+        c1_credits.push(decode_credit!(
             _env,
             result_jobject,
-            c1_bytes,
-            EncodedConfidentialCredit
-        );
-        c1_credits.push(decode_credit!(_env, result_jobject, c1_encode_credit));
-    }
-    for c2_credit in batch_proofs.c2_credit {
-        let c2_bytes =
-            java_safe_string_to_bytes!(_env, result_jobject, c2_credit);
-        let c2_encode_credit = java_safe_bytes_to_pb!(
+            java_safe_bytes_to_pb!(
+                _env,
+                result_jobject,
+                java_safe_string_to_bytes!(
+                    _env,
+                    result_jobject,
+                    credit_balance_proof.c1_credit
+                ),
+                EncodedConfidentialCredit
+            )
+        ));
+        c2_credits.push(decode_credit!(
             _env,
             result_jobject,
-            c2_bytes,
-            EncodedConfidentialCredit
-        );
-        c2_credits.push(decode_credit!(_env, result_jobject, c2_encode_credit));
-    }
-    for c3_credit in batch_proofs.c3_credit {
-        let c3_bytes =
-            java_safe_string_to_bytes!(_env, result_jobject, c3_credit);
-        let c3_encode_credit = java_safe_bytes_to_pb!(
+            java_safe_bytes_to_pb!(
+                _env,
+                result_jobject,
+                java_safe_string_to_bytes!(
+                    _env,
+                    result_jobject,
+                    credit_balance_proof.c2_credit
+                ),
+                EncodedConfidentialCredit
+            )
+        ));
+        c3_credits.push(decode_credit!(
             _env,
             result_jobject,
-            c3_bytes,
-            EncodedConfidentialCredit
-        );
-        c3_credits.push(decode_credit!(_env, result_jobject, c3_encode_credit));
-    }
-    for proof in batch_proofs.proof {
-        let proof_bytes =
-            java_safe_string_to_bytes!(_env, result_jobject, proof);
+            java_safe_bytes_to_pb!(
+                _env,
+                result_jobject,
+                java_safe_string_to_bytes!(
+                    _env,
+                    result_jobject,
+                    credit_balance_proof.c3_credit
+                ),
+                EncodedConfidentialCredit
+            )
+        ));
         proofs.push(java_safe_bytes_to_pb!(
             _env,
             result_jobject,
-            proof_bytes,
+            java_safe_string_to_bytes!(
+                _env,
+                result_jobject,
+                credit_balance_proof.proof
+            ),
             BalanceProof
         ));
     }
 
     let result =
-        match wedpr_s_verifiable_confidential_ledger::vcl::verify_batch_sum_balance(
+        match wedpr_s_verifiable_confidential_ledger::vcl::verify_sum_balance_in_batch(
             &c1_credits, &c2_credits, &c3_credits, &proofs,
         ) {
             Ok(v) => v,
@@ -331,7 +346,8 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_proveProductBal
     c1_secret_jstring: JString,
     c2_secret_jstring: JString,
     c3_secret_jstring: JString,
-) -> jobject {
+) -> jobject
+{
     let result_jobject = get_result_jobject(&_env);
 
     let c1_secret = decode_secret!(
@@ -386,7 +402,8 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_verifyProductBa
     c2_credit_jstring: JString,
     c3_credit_jstring: JString,
     proof_jstring: JString,
-) -> jobject {
+) -> jobject
+{
     let result_jobject = get_result_jobject(&_env);
 
     let proof = java_safe_jstring_to_pb!(
@@ -450,71 +467,83 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_verifyProductBa
 }
 
 /// Java interface for
-/// 'com.webank.wedpr.vcl.NativeInterface->verifyBatchProductBalance'.
+/// 'com.webank.wedpr.vcl.NativeInterface->verifyProductBalanceInBatch'.
 #[no_mangle]
-pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_verifyBatchProductBalance(
+pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_verifyProductBalanceInBatch(
     _env: JNIEnv,
     _class: JClass,
     batch_proof_jstring: JString,
-) -> jobject {
+) -> jobject
+{
     let result_jobject = get_result_jobject(&_env);
 
-    let batch_proofs = java_safe_jstring_to_pb!(
+    let batch_proof = java_safe_jstring_to_pb!(
         _env,
         result_jobject,
         batch_proof_jstring,
-        BatchProof
+        BatchCreditBalanceProof
     );
     let mut c1_credits: Vec<ConfidentialCredit> = vec![];
     let mut c2_credits: Vec<ConfidentialCredit> = vec![];
     let mut c3_credits: Vec<ConfidentialCredit> = vec![];
     let mut proofs: Vec<BalanceProof> = vec![];
-    for c1_credit in batch_proofs.c1_credit {
-        let c1_bytes =
-            java_safe_string_to_bytes!(_env, result_jobject, c1_credit);
-        let c1_encode_credit = java_safe_bytes_to_pb!(
+    for credit_balance_proof in batch_proof.credit_balance_proof {
+        c1_credits.push(decode_credit!(
             _env,
             result_jobject,
-            c1_bytes,
-            EncodedConfidentialCredit
-        );
-        c1_credits.push(decode_credit!(_env, result_jobject, c1_encode_credit));
-    }
-    for c2_credit in batch_proofs.c2_credit {
-        let c2_bytes =
-            java_safe_string_to_bytes!(_env, result_jobject, c2_credit);
-        let c2_encode_credit = java_safe_bytes_to_pb!(
+            java_safe_bytes_to_pb!(
+                _env,
+                result_jobject,
+                java_safe_string_to_bytes!(
+                    _env,
+                    result_jobject,
+                    credit_balance_proof.c1_credit
+                ),
+                EncodedConfidentialCredit
+            )
+        ));
+        c2_credits.push(decode_credit!(
             _env,
             result_jobject,
-            c2_bytes,
-            EncodedConfidentialCredit
-        );
-        c2_credits.push(decode_credit!(_env, result_jobject, c2_encode_credit));
-    }
-    for c3_credit in batch_proofs.c3_credit {
-        let c3_bytes =
-            java_safe_string_to_bytes!(_env, result_jobject, c3_credit);
-        let c3_encode_credit = java_safe_bytes_to_pb!(
+            java_safe_bytes_to_pb!(
+                _env,
+                result_jobject,
+                java_safe_string_to_bytes!(
+                    _env,
+                    result_jobject,
+                    credit_balance_proof.c2_credit
+                ),
+                EncodedConfidentialCredit
+            )
+        ));
+        c3_credits.push(decode_credit!(
             _env,
             result_jobject,
-            c3_bytes,
-            EncodedConfidentialCredit
-        );
-        c3_credits.push(decode_credit!(_env, result_jobject, c3_encode_credit));
-    }
-    for proof in batch_proofs.proof {
-        let proof_bytes =
-            java_safe_string_to_bytes!(_env, result_jobject, proof);
+            java_safe_bytes_to_pb!(
+                _env,
+                result_jobject,
+                java_safe_string_to_bytes!(
+                    _env,
+                    result_jobject,
+                    credit_balance_proof.c3_credit
+                ),
+                EncodedConfidentialCredit
+            )
+        ));
         proofs.push(java_safe_bytes_to_pb!(
             _env,
             result_jobject,
-            proof_bytes,
+            java_safe_string_to_bytes!(
+                _env,
+                result_jobject,
+                credit_balance_proof.proof
+            ),
             BalanceProof
         ));
     }
 
     let result =
-        match wedpr_s_verifiable_confidential_ledger::vcl::verify_batch_product_balance(
+        match wedpr_s_verifiable_confidential_ledger::vcl::verify_product_balance_in_batch(
             &c1_credits, &c2_credits, &c3_credits, &proofs,
         ) {
             Ok(v) => v,
@@ -542,7 +571,8 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_proveRange(
     _env: JNIEnv,
     _class: JClass,
     secret_jstring: JString,
-) -> jobject {
+) -> jobject
+{
     let result_jobject = get_result_jobject(&_env);
 
     let secret = decode_secret!(
@@ -574,7 +604,8 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_verifyRange(
     _class: JClass,
     credit_jstring: JString,
     proof_jstring: JString,
-) -> jobject {
+) -> jobject
+{
     let result_jobject = get_result_jobject(&_env);
 
     let proof_str =

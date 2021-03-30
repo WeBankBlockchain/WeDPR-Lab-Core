@@ -18,9 +18,9 @@ use std::{ffi::CString, panic, ptr};
 
 // Local macros and functions section.
 
-/// C interface for 'wedpr_hdk_create_mnemonic_en'.
+/// C interface for 'wedpr_ktb_hdk_create_mnemonic_en'.
 #[no_mangle]
-pub extern "C" fn wedpr_hdk_create_mnemonic_en(
+pub extern "C" fn wedpr_ktb_hdk_create_mnemonic_en(
     word_count: c_uchar,
 ) -> *mut c_char {
     let result = panic::catch_unwind(|| {
@@ -37,12 +37,13 @@ pub extern "C" fn wedpr_hdk_create_mnemonic_en(
     c_safe_return!(result)
 }
 
-/// C interface for 'wedpr_hdk_create_master_key_en'.
+/// C interface for 'wedpr_ktb_hdk_create_master_key_en'.
 #[no_mangle]
-pub extern "C" fn wedpr_hdk_create_master_key_en(
+pub extern "C" fn wedpr_ktb_hdk_create_master_key_en(
     password_cstring: *mut c_char,
     mnemonic_cstring: *mut c_char,
-) -> *mut c_char {
+) -> *mut c_char
+{
     let result = panic::catch_unwind(|| {
         let passwd = c_safe_c_char_pointer_to_string!(password_cstring);
         let mnemonic = c_safe_c_char_pointer_to_string!(mnemonic_cstring);
@@ -61,16 +62,17 @@ pub extern "C" fn wedpr_hdk_create_master_key_en(
     c_safe_return!(result)
 }
 
-/// C interface for 'wedpr_hdk_derive_extended_key'.
+/// C interface for 'wedpr_ktb_hdk_derive_extended_key'.
 #[no_mangle]
-pub extern "C" fn wedpr_hdk_derive_extended_key(
+pub extern "C" fn wedpr_ktb_hdk_derive_extended_key(
     master_key_cstring: *mut c_char,
     purpose_type: c_int,
     asset_type: c_int,
     account: c_int,
     change: c_int,
     address_index: c_int,
-) -> *mut c_char {
+) -> *mut c_char
+{
     let result = panic::catch_unwind(|| {
         let master_key = c_safe_c_char_pointer_to_bytes!(master_key_cstring);
 
