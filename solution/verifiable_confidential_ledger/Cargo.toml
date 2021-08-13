@@ -16,7 +16,7 @@ wedpr_s_protos = { path = "../../protos"}
 wedpr_l_protos = "1.1.0"
 wedpr_l_utils = "1.1.0"
 wedpr_l_crypto_zkp_discrete_logarithm_proof = "1.1.0"
-wedpr_l_crypto_zkp_range_proof = "1.1.0"
+wedpr_l_crypto_zkp_range_proof =  { git = "https://github.com/WeBankBlockchain/WeDPR-Lab-Crypto", branch = "main" }
 wedpr_l_crypto_zkp_utils = "1.1.0"
 
 protobuf = "2.22.1"
