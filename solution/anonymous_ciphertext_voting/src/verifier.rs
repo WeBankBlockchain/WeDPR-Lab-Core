@@ -1,11 +1,11 @@
 // Copyright 2020 WeDPR Lab Project Authors. Licensed under Apache-2.0.
 
-//! Library of anonymous bounded voting (ABV) solution.
+//! Library of anonymous ciphertext voting (ACV) solution.
 
 use wedpr_l_utils::error::WedprError;
-use wedpr_s_protos::generated::abv::{
+use wedpr_s_protos::generated::acv::{
     Ballot, CandidateBallot, CountingPart, DecryptedResultPartStorage,
-    VoteResultStorage, VoteStorage,
+    VoteResultStorage, VoteStorage,SystemParametersStorage, VoteRequest
 };
 
 use crate::config::{HASH_KECCAK256, SIGNATURE_SECP256K1};
@@ -23,7 +23,6 @@ use wedpr_l_protos::{
     generated::zkp::{BalanceProof, EqualityProof},
 };
 use wedpr_l_utils::traits::{Hash, Signature};
-use wedpr_s_protos::generated::abv::{SystemParametersStorage, VoteRequest};
 
 pub fn verify_bounded_vote_request(
     param: &SystemParametersStorage,
@@ -65,7 +64,7 @@ pub fn verify_bounded_vote_request(
     }
 
     for candidate_ballot in request.get_ballot_proof() {
-        let candidate = candidate_ballot.get_candidate();
+        let candidate = candidate_ballot.get_key();
         let ballot_proof = candidate_ballot.get_value();
         let mut candidate_ballot = Ballot::new();
         for candidate_ballot_pair in request.get_vote().get_voted_ballot() {
@@ -199,7 +198,7 @@ pub fn verify_count_request(
     )?;
     let blank_equality_proof_bytes =
         request.get_blank_part().get_equality_proof();
-    let blank_c2_r = bytes_to_point(&request.get_blank_part().get_c2_r())?;
+    let blank_c2_r = bytes_to_point(&request.get_blank_part().get_blinding_c2())?;
     let blank_equality_proof =
         bytes_to_proto::<EqualityProof>(&blank_equality_proof_bytes)?;
     if !verify_equality_relationship_proof(
@@ -226,7 +225,7 @@ pub fn verify_count_request(
                 counting_part = pair.get_value().clone();
             }
         }
-        let candidate_c2_r = bytes_to_point(&counting_part.get_c2_r())?;
+        let candidate_c2_r = bytes_to_point(&counting_part.get_blinding_c2())?;
         let candidate_equality_proof_bytes = counting_part.get_equality_proof();
         let candidate_equality_proof =
             bytes_to_proto::<EqualityProof>(candidate_equality_proof_bytes)?;
@@ -257,7 +256,7 @@ pub fn verify_vote_result(
     let blank_c1_sum =
         bytes_to_point(&vote_sum.get_blank_ballot().get_ciphertext1())?;
     let blank_c2_r_sum =
-        bytes_to_point(&counting_result_sum.get_blank_part().get_c2_r())?;
+        bytes_to_point(&counting_result_sum.get_blank_part().get_blinding_c2())?;
     let expected_blank_ballot_result = blank_c1_sum - (blank_c2_r_sum);
     let mut get_blank_result: i64 = 0;
     for tmp in vote_result_request.get_result() {
@@ -289,7 +288,7 @@ pub fn verify_vote_result(
         }
 
         let candidate_c2_r_sum =
-            bytes_to_point(&candidate_counting_part.get_c2_r())?;
+            bytes_to_point(&candidate_counting_part.get_blinding_c2())?;
 
         let expected_candidate_ballot_result =
             bytes_to_point(&ballot.get_ciphertext1())? - (candidate_c2_r_sum);

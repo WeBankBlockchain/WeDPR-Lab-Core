@@ -1,6 +1,6 @@
 // Copyright 2020 WeDPR Lab Project Authors. Licensed under Apache-2.0.
 
-//! Library of anonymous bounded voting (ABV) solution.
+//! Library of anonymous ciphertext voting (ACV) solution.
 
 #[macro_use]
 extern crate lazy_static;
@@ -20,7 +20,7 @@ mod tests {
     use crate::config::SIGNATURE_SECP256K1;
     use wedpr_l_crypto_zkp_utils::bytes_to_point;
     use wedpr_l_utils::traits::Signature;
-    use wedpr_s_protos::generated::abv::{
+    use wedpr_s_protos::generated::acv::{
         CandidateList, CounterSecret, CounterSystemParametersStorage,
         DecryptedResultPartStorage, VoteChoice, VoteChoices, VoteStorage,
         VoterSecret,

@@ -1,6 +1,6 @@
 // Copyright 2020 WeDPR Lab Project Authors. Licensed under Apache-2.0.
 
-//! Library of anonymous bounded voting (ABV) solution.
+//! Library of anonymous ciphertext voting (ACV) solution.
 
 use curve25519_dalek::{
     ristretto::RistrettoPoint, scalar::Scalar, traits::MultiscalarMul,
@@ -15,8 +15,8 @@ use wedpr_l_crypto_zkp_utils::{
 };
 use wedpr_l_protos::proto_to_bytes;
 use wedpr_l_utils::error::WedprError;
-use wedpr_s_protos::generated::abv::{
-    Ballot, BallotProof, CandidateBallot, CandidateBallotProofPair,
+use wedpr_s_protos::generated::acv::{
+    Ballot, BallotProof, CandidateBallot, StringToCandidateBallotProofPair,
     RegistrationRequest, RegistrationResponse, SystemParametersStorage,
     VoteChoices, VoteRequest, VoterSecret,
 };
@@ -24,7 +24,7 @@ use wedpr_s_protos::generated::abv::{
 pub fn make_voter_secret() -> VoterSecret {
     let vote_secret = get_random_scalar();
     VoterSecret {
-        vote_secret: scalar_to_bytes(&vote_secret),
+        voter_secret: scalar_to_bytes(&vote_secret),
         unknown_fields: Default::default(),
         cached_size: Default::default(),
     }
@@ -34,10 +34,10 @@ pub fn make_bounded_registration_request(
     secret: &VoterSecret,
     param: &SystemParametersStorage,
 ) -> Result<RegistrationRequest, WedprError> {
-    let vote_secret = bytes_to_scalar(secret.get_vote_secret())?;
-    let blinding_basepoint_g2 = vote_secret * *BASEPOINT_G2;
+    let voter_secret = bytes_to_scalar(secret.get_voter_secret())?;
+    let blinding_basepoint_g2 = voter_secret * *BASEPOINT_G2;
     let poll_point = bytes_to_point(param.get_poll_point())?;
-    let blinding_poll_point = vote_secret * poll_point;
+    let blinding_poll_point = voter_secret * poll_point;
     let mut request = RegistrationRequest::new();
     request
         .mut_weight_point()
@@ -84,7 +84,7 @@ pub fn vote_bounded(
     let mut vote_value: Vec<u64> = Vec::new();
     let mut v_weight_rest = response.get_voter_weight() as i64;
     let poll_point = bytes_to_point(param.get_poll_point())?;
-    let vote_secret = bytes_to_scalar(secret.get_vote_secret())?;
+    let vote_secret = bytes_to_scalar(secret.get_voter_secret())?;
 
     for choice_keypair in choices.get_choice() {
         let candidate_address = choice_keypair.get_candidate();
@@ -112,8 +112,8 @@ pub fn vote_bounded(
         vote_ballot.set_ciphertext2(point_to_bytes(&ciphertext2));
         let mut ballot_proof = BallotProof::new();
         ballot_proof.set_format_proof(proto_to_bytes(&format_proof)?);
-        let mut proof_keypair = CandidateBallotProofPair::new();
-        proof_keypair.set_candidate(candidate_address.to_string());
+        let mut proof_keypair = StringToCandidateBallotProofPair::new();
+        proof_keypair.set_key(candidate_address.to_string());
         proof_keypair.set_value(ballot_proof);
         request.mut_ballot_proof().push(proof_keypair);
 

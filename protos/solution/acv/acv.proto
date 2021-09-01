@@ -2,8 +2,8 @@
 
 syntax = "proto3";
 
-package com.webank.wedpr.abv.proto;
-option java_package = "com.webank.wedpr.abv.proto";
+package com.webank.wedpr.acv.proto;
+option java_package = "com.webank.wedpr.acv.proto";
 option java_multiple_files = true;
 
 // Counter Secret value
@@ -22,7 +22,7 @@ message CounterSystemParametersStorage {
 
 // Voter Secret value
 message VoterSecret {
-  bytes vote_secret = 1;
+  bytes voter_secret = 1;
 }
 
 message RegistrationRequest {
@@ -38,7 +38,6 @@ message RegistrationResponse {
   uint32 voter_weight = 1;
   Ballot ballot = 2;
   bytes signature = 3;
-  Ballot zero_ballot = 4;
 }
 
 message Ballot {
@@ -78,18 +77,17 @@ message SystemParametersStorage {
 
 message BallotProof {
   bytes format_proof = 1;
-  bytes either_equality_proof = 2;
 }
 
-message CandidateBallotProofPair {
-  string candidate = 1;
+message StringToCandidateBallotProofPair {
+  string key = 1;
   BallotProof value = 2;
 }
 
 // Do not use Map, cause unordered in blockchain
 message VoteRequest {
   VoteStorage vote = 1;
-  repeated CandidateBallotProofPair ballot_proof = 2;
+  repeated StringToCandidateBallotProofPair ballot_proof = 2;
   bytes range_proof = 3;
   bytes sum_balance_proof = 4;
 }
@@ -106,7 +104,7 @@ message StringToCountingPartPair {
 
 message CountingPart {
   string counter_id = 1;
-  bytes c2_r = 2;
+  bytes blinding_c2 = 2;
   bytes equality_proof = 3;
 }
 

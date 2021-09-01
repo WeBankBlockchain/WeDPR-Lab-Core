@@ -1,6 +1,6 @@
 // Copyright 2020 WeDPR Lab Project Authors. Licensed under Apache-2.0.
 
-//! Library of anonymous bounded voting (ABV) solution.
+//! Library of anonymous ciphertext voting (ACV) solution.
 
 use curve25519_dalek::scalar::Scalar;
 use wedpr_l_crypto_zkp_discrete_logarithm_proof::prove_equality_relationship_proof;
@@ -10,7 +10,7 @@ use wedpr_l_crypto_zkp_utils::{
 };
 use wedpr_l_protos::proto_to_bytes;
 use wedpr_l_utils::error::WedprError;
-use wedpr_s_protos::generated::abv::{
+use wedpr_s_protos::generated::acv::{
     Ballot, CounterSecret, CounterSystemParametersShareRequest, CountingPart,
     DecryptedResultPartStorage, StringToCountingPartPair, StringToInt64Pair,
     SystemParametersStorage, VoteResultStorage, VoteStorage,
@@ -59,7 +59,7 @@ pub fn count(
             &candidate_part_share,
         );
         let mut counting_part = CountingPart::new();
-        counting_part.set_c2_r(point_to_bytes(
+        counting_part.set_blinding_c2(point_to_bytes(
             &(&candidate_part_share * (secret_share)),
         ));
         counting_part.set_equality_proof(proto_to_bytes(&equity_proof)?);
@@ -81,7 +81,7 @@ pub fn count(
         .set_equality_proof(proto_to_bytes(&equity_proof)?);
     request
         .mut_blank_part()
-        .set_c2_r(point_to_bytes(&blank_part));
+        .set_blinding_c2(point_to_bytes(&blank_part));
     request
         .mut_blank_part()
         .set_counter_id(counter_id.to_string());
@@ -101,7 +101,7 @@ pub fn finalize_vote_result(
     let blank_c1_sum =
         bytes_to_point(vote_sum.get_blank_ballot().get_ciphertext1())?;
     let blank_c2_r_sum =
-        bytes_to_point(counting_result_sum.get_blank_part().get_c2_r())?;
+        bytes_to_point(counting_result_sum.get_blank_part().get_blinding_c2())?;
     let tmp = blank_c1_sum - (blank_c2_r_sum);
     for i in 1..=max_number {
         let try_num = Scalar::from(i as u64);
@@ -128,7 +128,7 @@ pub fn finalize_vote_result(
             }
         }
         let candidate_c2_r_sum =
-            bytes_to_point(candidate_counting_part.get_c2_r())?;
+            bytes_to_point(candidate_counting_part.get_blinding_c2())?;
         let tmp =
             bytes_to_point(ballot.get_ciphertext1())? - (candidate_c2_r_sum);
 

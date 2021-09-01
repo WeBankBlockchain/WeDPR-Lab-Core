@@ -1,6 +1,6 @@
 // Copyright 2020 WeDPR Lab Project Authors. Licensed under Apache-2.0.
 
-//! Library of anonymous bounded voting (ABV) solution.
+//! Library of anonymous ciphertext voting (ACV) solution.
 
 use crate::config::{HASH_KECCAK256, SIGNATURE_SECP256K1};
 use curve25519_dalek::{ristretto::RistrettoPoint, scalar::Scalar};
@@ -9,12 +9,13 @@ use wedpr_l_utils::{
     error::WedprError,
     traits::{Hash, Signature},
 };
-use wedpr_s_protos::generated::abv::{
+use wedpr_s_protos::generated::acv::{
     Ballot, CandidateList, CounterSystemParametersStorage, CountingPart,
     DecryptedResultPartStorage, RegistrationRequest, RegistrationResponse,
     StringToCountingPartPair, SystemParametersStorage,
 };
 
+/// Makes system parameters by candidate list and counter storage messages.
 pub fn make_system_parameters(
     candidates: &CandidateList,
     counter_storage: &CounterSystemParametersStorage,
@@ -29,14 +30,13 @@ pub fn make_system_parameters(
     Ok(storage)
 }
 
+/// Certifies ballot value which voter can vote to all candidates.
 pub fn certify_bounded_voter(
     secret_key: &[u8],
     value: u32,
     registration_request: &RegistrationRequest,
 ) -> Result<RegistrationResponse, WedprError> {
-    // let blinding_basepoint_g2 =
-    // bytes_to_point(registration_request.get_weight_point().
-    // get_blinding_basepoint_g2())?;
+
     let blinding_poll_point = bytes_to_point(
         registration_request
             .get_weight_point()
@@ -64,6 +64,7 @@ pub fn certify_bounded_voter(
     Ok(response)
 }
 
+/// Decrypts counters' .
 pub fn aggregate_decrypted_part_sum(
     param: &SystemParametersStorage,
     decrypted_result_part_storage: &DecryptedResultPartStorage,
@@ -75,10 +76,10 @@ pub fn aggregate_decrypted_part_sum(
             .set_counter_id("default".to_string());
         counting_result_sum
             .mut_blank_part()
-            .set_c2_r(point_to_bytes(&RistrettoPoint::default()));
+            .set_blinding_c2(point_to_bytes(&RistrettoPoint::default()));
         for candidate in param.get_candidates().get_candidate() {
             let mut counting_part = CountingPart::new();
-            counting_part.set_c2_r(point_to_bytes(&RistrettoPoint::default()));
+            counting_part.set_blinding_c2(point_to_bytes(&RistrettoPoint::default()));
             let mut tmp_pair = StringToCountingPartPair::new();
             tmp_pair.set_key(candidate.to_string());
             tmp_pair.set_value(counting_part);
@@ -86,15 +87,15 @@ pub fn aggregate_decrypted_part_sum(
         }
     }
     let mut blank_c2_r_sum =
-        bytes_to_point(&counting_result_sum.get_blank_part().get_c2_r())?;
+        bytes_to_point(&counting_result_sum.get_blank_part().get_blinding_c2())?;
     let blank_part_share = bytes_to_point(
-        &decrypted_result_part_storage.get_blank_part().get_c2_r(),
+        &decrypted_result_part_storage.get_blank_part().get_blinding_c2(),
     )?;
 
     blank_c2_r_sum += blank_part_share;
     counting_result_sum
         .mut_blank_part()
-        .set_c2_r(point_to_bytes(&blank_c2_r_sum));
+        .set_blinding_c2(point_to_bytes(&blank_c2_r_sum));
     for candidate in param.get_candidates().get_candidate() {
         let mut candidate_counting_part = CountingPart::new();
         for tmp_pair in counting_result_sum.get_candidate_part() {
@@ -104,7 +105,7 @@ pub fn aggregate_decrypted_part_sum(
         }
 
         let mut candidate_c2_r_sum =
-            bytes_to_point(&candidate_counting_part.get_c2_r())?;
+            bytes_to_point(&candidate_counting_part.get_blinding_c2())?;
 
         let mut counting_part = CountingPart::new();
         for tmp_pair in decrypted_result_part_storage.get_candidate_part() {
@@ -113,10 +114,10 @@ pub fn aggregate_decrypted_part_sum(
             }
         }
 
-        let candidate_c2_r = bytes_to_point(&counting_part.get_c2_r())?;
+        let candidate_c2_r = bytes_to_point(&counting_part.get_blinding_c2())?;
         candidate_c2_r_sum += candidate_c2_r;
         let mut candidate_part = CountingPart::new();
-        candidate_part.set_c2_r(point_to_bytes(&candidate_c2_r_sum));
+        candidate_part.set_blinding_c2(point_to_bytes(&candidate_c2_r_sum));
         let mut tmp_pair = StringToCountingPartPair::new();
         tmp_pair.set_key(candidate.to_string());
         tmp_pair.set_value(candidate_part);

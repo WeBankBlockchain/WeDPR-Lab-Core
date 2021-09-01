@@ -17,7 +17,7 @@
 #![allow(trivial_casts)]
 #![allow(unused_imports)]
 #![allow(unused_results)]
-//! Generated file from `solution/abv/abv.proto`
+//! Generated file from `solution/acv/acv.proto`
 
 /// Generated files are compatible only with the same version
 /// of protobuf runtime.
@@ -403,7 +403,7 @@ impl CounterSystemParametersStorage {
         ::std::default::Default::default()
     }
 
-    // repeated .com.webank.wedpr.abv.proto.CounterSystemParametersShareRequest counter_parameters_request = 1;
+    // repeated .com.webank.wedpr.acv.proto.CounterSystemParametersShareRequest counter_parameters_request = 1;
 
 
     pub fn get_counter_parameters_request(&self) -> &[CounterSystemParametersShareRequest] {
@@ -552,7 +552,7 @@ impl ::protobuf::reflect::ProtobufValue for CounterSystemParametersStorage {
 #[derive(PartialEq,Clone,Default)]
 pub struct VoterSecret {
     // message fields
-    pub vote_secret: ::std::vec::Vec<u8>,
+    pub voter_secret: ::std::vec::Vec<u8>,
     // special fields
     pub unknown_fields: ::protobuf::UnknownFields,
     pub cached_size: ::protobuf::CachedSize,
@@ -569,30 +569,30 @@ impl VoterSecret {
         ::std::default::Default::default()
     }
 
-    // bytes vote_secret = 1;
+    // bytes voter_secret = 1;
 
 
-    pub fn get_vote_secret(&self) -> &[u8] {
-        &self.vote_secret
+    pub fn get_voter_secret(&self) -> &[u8] {
+        &self.voter_secret
     }
-    pub fn clear_vote_secret(&mut self) {
-        self.vote_secret.clear();
+    pub fn clear_voter_secret(&mut self) {
+        self.voter_secret.clear();
     }
 
     // Param is passed by value, moved
-    pub fn set_vote_secret(&mut self, v: ::std::vec::Vec<u8>) {
-        self.vote_secret = v;
+    pub fn set_voter_secret(&mut self, v: ::std::vec::Vec<u8>) {
+        self.voter_secret = v;
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_vote_secret(&mut self) -> &mut ::std::vec::Vec<u8> {
-        &mut self.vote_secret
+    pub fn mut_voter_secret(&mut self) -> &mut ::std::vec::Vec<u8> {
+        &mut self.voter_secret
     }
 
     // Take field
-    pub fn take_vote_secret(&mut self) -> ::std::vec::Vec<u8> {
-        ::std::mem::replace(&mut self.vote_secret, ::std::vec::Vec::new())
+    pub fn take_voter_secret(&mut self) -> ::std::vec::Vec<u8> {
+        ::std::mem::replace(&mut self.voter_secret, ::std::vec::Vec::new())
     }
 }
 
@@ -606,7 +606,7 @@ impl ::protobuf::Message for VoterSecret {
             let (field_number, wire_type) = is.read_tag_unpack()?;
             match field_number {
                 1 => {
-                    ::protobuf::rt::read_singular_proto3_bytes_into(wire_type, is, &mut self.vote_secret)?;
+                    ::protobuf::rt::read_singular_proto3_bytes_into(wire_type, is, &mut self.voter_secret)?;
                 },
                 _ => {
                     ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
@@ -620,8 +620,8 @@ impl ::protobuf::Message for VoterSecret {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u32 {
         let mut my_size = 0;
-        if !self.vote_secret.is_empty() {
-            my_size += ::protobuf::rt::bytes_size(1, &self.vote_secret);
+        if !self.voter_secret.is_empty() {
+            my_size += ::protobuf::rt::bytes_size(1, &self.voter_secret);
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
         self.cached_size.set(my_size);
@@ -629,8 +629,8 @@ impl ::protobuf::Message for VoterSecret {
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::ProtobufResult<()> {
-        if !self.vote_secret.is_empty() {
-            os.write_bytes(1, &self.vote_secret)?;
+        if !self.voter_secret.is_empty() {
+            os.write_bytes(1, &self.voter_secret)?;
         }
         os.write_unknown_fields(self.get_unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -671,9 +671,9 @@ impl ::protobuf::Message for VoterSecret {
         descriptor.get(|| {
             let mut fields = ::std::vec::Vec::new();
             fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeBytes>(
-                "vote_secret",
-                |m: &VoterSecret| { &m.vote_secret },
-                |m: &mut VoterSecret| { &mut m.vote_secret },
+                "voter_secret",
+                |m: &VoterSecret| { &m.voter_secret },
+                |m: &mut VoterSecret| { &mut m.voter_secret },
             ));
             ::protobuf::reflect::MessageDescriptor::new_pb_name::<VoterSecret>(
                 "VoterSecret",
@@ -691,7 +691,7 @@ impl ::protobuf::Message for VoterSecret {
 
 impl ::protobuf::Clear for VoterSecret {
     fn clear(&mut self) {
-        self.vote_secret.clear();
+        self.voter_secret.clear();
         self.unknown_fields.clear();
     }
 }
@@ -728,7 +728,7 @@ impl RegistrationRequest {
         ::std::default::Default::default()
     }
 
-    // .com.webank.wedpr.abv.proto.RegistrationBlindingPoint weight_point = 1;
+    // .com.webank.wedpr.acv.proto.RegistrationBlindingPoint weight_point = 1;
 
 
     pub fn get_weight_point(&self) -> &RegistrationBlindingPoint {
@@ -1089,7 +1089,6 @@ pub struct RegistrationResponse {
     pub voter_weight: u32,
     pub ballot: ::protobuf::SingularPtrField<Ballot>,
     pub signature: ::std::vec::Vec<u8>,
-    pub zero_ballot: ::protobuf::SingularPtrField<Ballot>,
     // special fields
     pub unknown_fields: ::protobuf::UnknownFields,
     pub cached_size: ::protobuf::CachedSize,
@@ -1121,7 +1120,7 @@ impl RegistrationResponse {
         self.voter_weight = v;
     }
 
-    // .com.webank.wedpr.abv.proto.Ballot ballot = 2;
+    // .com.webank.wedpr.acv.proto.Ballot ballot = 2;
 
 
     pub fn get_ballot(&self) -> &Ballot {
@@ -1179,49 +1178,11 @@ impl RegistrationResponse {
     pub fn take_signature(&mut self) -> ::std::vec::Vec<u8> {
         ::std::mem::replace(&mut self.signature, ::std::vec::Vec::new())
     }
-
-    // .com.webank.wedpr.abv.proto.Ballot zero_ballot = 4;
-
-
-    pub fn get_zero_ballot(&self) -> &Ballot {
-        self.zero_ballot.as_ref().unwrap_or_else(|| <Ballot as ::protobuf::Message>::default_instance())
-    }
-    pub fn clear_zero_ballot(&mut self) {
-        self.zero_ballot.clear();
-    }
-
-    pub fn has_zero_ballot(&self) -> bool {
-        self.zero_ballot.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_zero_ballot(&mut self, v: Ballot) {
-        self.zero_ballot = ::protobuf::SingularPtrField::some(v);
-    }
-
-    // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
-    pub fn mut_zero_ballot(&mut self) -> &mut Ballot {
-        if self.zero_ballot.is_none() {
-            self.zero_ballot.set_default();
-        }
-        self.zero_ballot.as_mut().unwrap()
-    }
-
-    // Take field
-    pub fn take_zero_ballot(&mut self) -> Ballot {
-        self.zero_ballot.take().unwrap_or_else(|| Ballot::new())
-    }
 }
 
 impl ::protobuf::Message for RegistrationResponse {
     fn is_initialized(&self) -> bool {
         for v in &self.ballot {
-            if !v.is_initialized() {
-                return false;
-            }
-        };
-        for v in &self.zero_ballot {
             if !v.is_initialized() {
                 return false;
             }
@@ -1246,9 +1207,6 @@ impl ::protobuf::Message for RegistrationResponse {
                 3 => {
                     ::protobuf::rt::read_singular_proto3_bytes_into(wire_type, is, &mut self.signature)?;
                 },
-                4 => {
-                    ::protobuf::rt::read_singular_message_into(wire_type, is, &mut self.zero_ballot)?;
-                },
                 _ => {
                     ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
                 },
@@ -1271,10 +1229,6 @@ impl ::protobuf::Message for RegistrationResponse {
         if !self.signature.is_empty() {
             my_size += ::protobuf::rt::bytes_size(3, &self.signature);
         }
-        if let Some(ref v) = self.zero_ballot.as_ref() {
-            let len = v.compute_size();
-            my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
-        }
         my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
         self.cached_size.set(my_size);
         my_size
@@ -1291,11 +1245,6 @@ impl ::protobuf::Message for RegistrationResponse {
         }
         if !self.signature.is_empty() {
             os.write_bytes(3, &self.signature)?;
-        }
-        if let Some(ref v) = self.zero_ballot.as_ref() {
-            os.write_tag(4, ::protobuf::wire_format::WireTypeLengthDelimited)?;
-            os.write_raw_varint32(v.get_cached_size())?;
-            v.write_to_with_cached_sizes(os)?;
         }
         os.write_unknown_fields(self.get_unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -1350,11 +1299,6 @@ impl ::protobuf::Message for RegistrationResponse {
                 |m: &RegistrationResponse| { &m.signature },
                 |m: &mut RegistrationResponse| { &mut m.signature },
             ));
-            fields.push(::protobuf::reflect::accessor::make_singular_ptr_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<Ballot>>(
-                "zero_ballot",
-                |m: &RegistrationResponse| { &m.zero_ballot },
-                |m: &mut RegistrationResponse| { &mut m.zero_ballot },
-            ));
             ::protobuf::reflect::MessageDescriptor::new_pb_name::<RegistrationResponse>(
                 "RegistrationResponse",
                 fields,
@@ -1374,7 +1318,6 @@ impl ::protobuf::Clear for RegistrationResponse {
         self.voter_weight = 0;
         self.ballot.clear();
         self.signature.clear();
-        self.zero_ballot.clear();
         self.unknown_fields.clear();
     }
 }
@@ -1806,7 +1749,7 @@ impl VoteChoices {
         ::std::default::Default::default()
     }
 
-    // repeated .com.webank.wedpr.abv.proto.VoteChoice choice = 1;
+    // repeated .com.webank.wedpr.acv.proto.VoteChoice choice = 1;
 
 
     pub fn get_choice(&self) -> &[VoteChoice] {
@@ -1999,7 +1942,7 @@ impl CandidateBallot {
         ::std::mem::replace(&mut self.candidate, ::std::string::String::new())
     }
 
-    // .com.webank.wedpr.abv.proto.Ballot ballot = 2;
+    // .com.webank.wedpr.acv.proto.Ballot ballot = 2;
 
 
     pub fn get_ballot(&self) -> &Ballot {
@@ -2217,7 +2160,7 @@ impl VoteStorage {
         ::std::mem::replace(&mut self.signature, ::std::vec::Vec::new())
     }
 
-    // .com.webank.wedpr.abv.proto.Ballot blank_ballot = 2;
+    // .com.webank.wedpr.acv.proto.Ballot blank_ballot = 2;
 
 
     pub fn get_blank_ballot(&self) -> &Ballot {
@@ -2250,7 +2193,7 @@ impl VoteStorage {
         self.blank_ballot.take().unwrap_or_else(|| Ballot::new())
     }
 
-    // .com.webank.wedpr.abv.proto.Ballot rest_ballot = 3;
+    // .com.webank.wedpr.acv.proto.Ballot rest_ballot = 3;
 
 
     pub fn get_rest_ballot(&self) -> &Ballot {
@@ -2283,7 +2226,7 @@ impl VoteStorage {
         self.rest_ballot.take().unwrap_or_else(|| Ballot::new())
     }
 
-    // repeated .com.webank.wedpr.abv.proto.CandidateBallot voted_ballot = 4;
+    // repeated .com.webank.wedpr.acv.proto.CandidateBallot voted_ballot = 4;
 
 
     pub fn get_voted_ballot(&self) -> &[CandidateBallot] {
@@ -2695,7 +2638,7 @@ impl SystemParametersStorage {
         ::std::mem::replace(&mut self.poll_point, ::std::vec::Vec::new())
     }
 
-    // .com.webank.wedpr.abv.proto.CandidateList candidates = 2;
+    // .com.webank.wedpr.acv.proto.CandidateList candidates = 2;
 
 
     pub fn get_candidates(&self) -> &CandidateList {
@@ -2868,7 +2811,6 @@ impl ::protobuf::reflect::ProtobufValue for SystemParametersStorage {
 pub struct BallotProof {
     // message fields
     pub format_proof: ::std::vec::Vec<u8>,
-    pub either_equality_proof: ::std::vec::Vec<u8>,
     // special fields
     pub unknown_fields: ::protobuf::UnknownFields,
     pub cached_size: ::protobuf::CachedSize,
@@ -2910,32 +2852,6 @@ impl BallotProof {
     pub fn take_format_proof(&mut self) -> ::std::vec::Vec<u8> {
         ::std::mem::replace(&mut self.format_proof, ::std::vec::Vec::new())
     }
-
-    // bytes either_equality_proof = 2;
-
-
-    pub fn get_either_equality_proof(&self) -> &[u8] {
-        &self.either_equality_proof
-    }
-    pub fn clear_either_equality_proof(&mut self) {
-        self.either_equality_proof.clear();
-    }
-
-    // Param is passed by value, moved
-    pub fn set_either_equality_proof(&mut self, v: ::std::vec::Vec<u8>) {
-        self.either_equality_proof = v;
-    }
-
-    // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
-    pub fn mut_either_equality_proof(&mut self) -> &mut ::std::vec::Vec<u8> {
-        &mut self.either_equality_proof
-    }
-
-    // Take field
-    pub fn take_either_equality_proof(&mut self) -> ::std::vec::Vec<u8> {
-        ::std::mem::replace(&mut self.either_equality_proof, ::std::vec::Vec::new())
-    }
 }
 
 impl ::protobuf::Message for BallotProof {
@@ -2949,9 +2865,6 @@ impl ::protobuf::Message for BallotProof {
             match field_number {
                 1 => {
                     ::protobuf::rt::read_singular_proto3_bytes_into(wire_type, is, &mut self.format_proof)?;
-                },
-                2 => {
-                    ::protobuf::rt::read_singular_proto3_bytes_into(wire_type, is, &mut self.either_equality_proof)?;
                 },
                 _ => {
                     ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
@@ -2968,9 +2881,6 @@ impl ::protobuf::Message for BallotProof {
         if !self.format_proof.is_empty() {
             my_size += ::protobuf::rt::bytes_size(1, &self.format_proof);
         }
-        if !self.either_equality_proof.is_empty() {
-            my_size += ::protobuf::rt::bytes_size(2, &self.either_equality_proof);
-        }
         my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
         self.cached_size.set(my_size);
         my_size
@@ -2979,9 +2889,6 @@ impl ::protobuf::Message for BallotProof {
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::ProtobufResult<()> {
         if !self.format_proof.is_empty() {
             os.write_bytes(1, &self.format_proof)?;
-        }
-        if !self.either_equality_proof.is_empty() {
-            os.write_bytes(2, &self.either_equality_proof)?;
         }
         os.write_unknown_fields(self.get_unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -3026,11 +2933,6 @@ impl ::protobuf::Message for BallotProof {
                 |m: &BallotProof| { &m.format_proof },
                 |m: &mut BallotProof| { &mut m.format_proof },
             ));
-            fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeBytes>(
-                "either_equality_proof",
-                |m: &BallotProof| { &m.either_equality_proof },
-                |m: &mut BallotProof| { &mut m.either_equality_proof },
-            ));
             ::protobuf::reflect::MessageDescriptor::new_pb_name::<BallotProof>(
                 "BallotProof",
                 fields,
@@ -3048,7 +2950,6 @@ impl ::protobuf::Message for BallotProof {
 impl ::protobuf::Clear for BallotProof {
     fn clear(&mut self) {
         self.format_proof.clear();
-        self.either_equality_proof.clear();
         self.unknown_fields.clear();
     }
 }
@@ -3066,53 +2967,53 @@ impl ::protobuf::reflect::ProtobufValue for BallotProof {
 }
 
 #[derive(PartialEq,Clone,Default)]
-pub struct CandidateBallotProofPair {
+pub struct StringToCandidateBallotProofPair {
     // message fields
-    pub candidate: ::std::string::String,
+    pub key: ::std::string::String,
     pub value: ::protobuf::SingularPtrField<BallotProof>,
     // special fields
     pub unknown_fields: ::protobuf::UnknownFields,
     pub cached_size: ::protobuf::CachedSize,
 }
 
-impl<'a> ::std::default::Default for &'a CandidateBallotProofPair {
-    fn default() -> &'a CandidateBallotProofPair {
-        <CandidateBallotProofPair as ::protobuf::Message>::default_instance()
+impl<'a> ::std::default::Default for &'a StringToCandidateBallotProofPair {
+    fn default() -> &'a StringToCandidateBallotProofPair {
+        <StringToCandidateBallotProofPair as ::protobuf::Message>::default_instance()
     }
 }
 
-impl CandidateBallotProofPair {
-    pub fn new() -> CandidateBallotProofPair {
+impl StringToCandidateBallotProofPair {
+    pub fn new() -> StringToCandidateBallotProofPair {
         ::std::default::Default::default()
     }
 
-    // string candidate = 1;
+    // string key = 1;
 
 
-    pub fn get_candidate(&self) -> &str {
-        &self.candidate
+    pub fn get_key(&self) -> &str {
+        &self.key
     }
-    pub fn clear_candidate(&mut self) {
-        self.candidate.clear();
+    pub fn clear_key(&mut self) {
+        self.key.clear();
     }
 
     // Param is passed by value, moved
-    pub fn set_candidate(&mut self, v: ::std::string::String) {
-        self.candidate = v;
+    pub fn set_key(&mut self, v: ::std::string::String) {
+        self.key = v;
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_candidate(&mut self) -> &mut ::std::string::String {
-        &mut self.candidate
+    pub fn mut_key(&mut self) -> &mut ::std::string::String {
+        &mut self.key
     }
 
     // Take field
-    pub fn take_candidate(&mut self) -> ::std::string::String {
-        ::std::mem::replace(&mut self.candidate, ::std::string::String::new())
+    pub fn take_key(&mut self) -> ::std::string::String {
+        ::std::mem::replace(&mut self.key, ::std::string::String::new())
     }
 
-    // .com.webank.wedpr.abv.proto.BallotProof value = 2;
+    // .com.webank.wedpr.acv.proto.BallotProof value = 2;
 
 
     pub fn get_value(&self) -> &BallotProof {
@@ -3146,7 +3047,7 @@ impl CandidateBallotProofPair {
     }
 }
 
-impl ::protobuf::Message for CandidateBallotProofPair {
+impl ::protobuf::Message for StringToCandidateBallotProofPair {
     fn is_initialized(&self) -> bool {
         for v in &self.value {
             if !v.is_initialized() {
@@ -3161,7 +3062,7 @@ impl ::protobuf::Message for CandidateBallotProofPair {
             let (field_number, wire_type) = is.read_tag_unpack()?;
             match field_number {
                 1 => {
-                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.candidate)?;
+                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.key)?;
                 },
                 2 => {
                     ::protobuf::rt::read_singular_message_into(wire_type, is, &mut self.value)?;
@@ -3178,8 +3079,8 @@ impl ::protobuf::Message for CandidateBallotProofPair {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u32 {
         let mut my_size = 0;
-        if !self.candidate.is_empty() {
-            my_size += ::protobuf::rt::string_size(1, &self.candidate);
+        if !self.key.is_empty() {
+            my_size += ::protobuf::rt::string_size(1, &self.key);
         }
         if let Some(ref v) = self.value.as_ref() {
             let len = v.compute_size();
@@ -3191,8 +3092,8 @@ impl ::protobuf::Message for CandidateBallotProofPair {
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::ProtobufResult<()> {
-        if !self.candidate.is_empty() {
-            os.write_string(1, &self.candidate)?;
+        if !self.key.is_empty() {
+            os.write_string(1, &self.key)?;
         }
         if let Some(ref v) = self.value.as_ref() {
             os.write_tag(2, ::protobuf::wire_format::WireTypeLengthDelimited)?;
@@ -3229,8 +3130,8 @@ impl ::protobuf::Message for CandidateBallotProofPair {
         Self::descriptor_static()
     }
 
-    fn new() -> CandidateBallotProofPair {
-        CandidateBallotProofPair::new()
+    fn new() -> StringToCandidateBallotProofPair {
+        StringToCandidateBallotProofPair::new()
     }
 
     fn descriptor_static() -> &'static ::protobuf::reflect::MessageDescriptor {
@@ -3238,44 +3139,44 @@ impl ::protobuf::Message for CandidateBallotProofPair {
         descriptor.get(|| {
             let mut fields = ::std::vec::Vec::new();
             fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
-                "candidate",
-                |m: &CandidateBallotProofPair| { &m.candidate },
-                |m: &mut CandidateBallotProofPair| { &mut m.candidate },
+                "key",
+                |m: &StringToCandidateBallotProofPair| { &m.key },
+                |m: &mut StringToCandidateBallotProofPair| { &mut m.key },
             ));
             fields.push(::protobuf::reflect::accessor::make_singular_ptr_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<BallotProof>>(
                 "value",
-                |m: &CandidateBallotProofPair| { &m.value },
-                |m: &mut CandidateBallotProofPair| { &mut m.value },
+                |m: &StringToCandidateBallotProofPair| { &m.value },
+                |m: &mut StringToCandidateBallotProofPair| { &mut m.value },
             ));
-            ::protobuf::reflect::MessageDescriptor::new_pb_name::<CandidateBallotProofPair>(
-                "CandidateBallotProofPair",
+            ::protobuf::reflect::MessageDescriptor::new_pb_name::<StringToCandidateBallotProofPair>(
+                "StringToCandidateBallotProofPair",
                 fields,
                 file_descriptor_proto()
             )
         })
     }
 
-    fn default_instance() -> &'static CandidateBallotProofPair {
-        static instance: ::protobuf::rt::LazyV2<CandidateBallotProofPair> = ::protobuf::rt::LazyV2::INIT;
-        instance.get(CandidateBallotProofPair::new)
+    fn default_instance() -> &'static StringToCandidateBallotProofPair {
+        static instance: ::protobuf::rt::LazyV2<StringToCandidateBallotProofPair> = ::protobuf::rt::LazyV2::INIT;
+        instance.get(StringToCandidateBallotProofPair::new)
     }
 }
 
-impl ::protobuf::Clear for CandidateBallotProofPair {
+impl ::protobuf::Clear for StringToCandidateBallotProofPair {
     fn clear(&mut self) {
-        self.candidate.clear();
+        self.key.clear();
         self.value.clear();
         self.unknown_fields.clear();
     }
 }
 
-impl ::std::fmt::Debug for CandidateBallotProofPair {
+impl ::std::fmt::Debug for StringToCandidateBallotProofPair {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::protobuf::text_format::fmt(self, f)
     }
 }
 
-impl ::protobuf::reflect::ProtobufValue for CandidateBallotProofPair {
+impl ::protobuf::reflect::ProtobufValue for StringToCandidateBallotProofPair {
     fn as_ref(&self) -> ::protobuf::reflect::ReflectValueRef {
         ::protobuf::reflect::ReflectValueRef::Message(self)
     }
@@ -3285,7 +3186,7 @@ impl ::protobuf::reflect::ProtobufValue for CandidateBallotProofPair {
 pub struct VoteRequest {
     // message fields
     pub vote: ::protobuf::SingularPtrField<VoteStorage>,
-    pub ballot_proof: ::protobuf::RepeatedField<CandidateBallotProofPair>,
+    pub ballot_proof: ::protobuf::RepeatedField<StringToCandidateBallotProofPair>,
     pub range_proof: ::std::vec::Vec<u8>,
     pub sum_balance_proof: ::std::vec::Vec<u8>,
     // special fields
@@ -3304,7 +3205,7 @@ impl VoteRequest {
         ::std::default::Default::default()
     }
 
-    // .com.webank.wedpr.abv.proto.VoteStorage vote = 1;
+    // .com.webank.wedpr.acv.proto.VoteStorage vote = 1;
 
 
     pub fn get_vote(&self) -> &VoteStorage {
@@ -3337,10 +3238,10 @@ impl VoteRequest {
         self.vote.take().unwrap_or_else(|| VoteStorage::new())
     }
 
-    // repeated .com.webank.wedpr.abv.proto.CandidateBallotProofPair ballot_proof = 2;
+    // repeated .com.webank.wedpr.acv.proto.StringToCandidateBallotProofPair ballot_proof = 2;
 
 
-    pub fn get_ballot_proof(&self) -> &[CandidateBallotProofPair] {
+    pub fn get_ballot_proof(&self) -> &[StringToCandidateBallotProofPair] {
         &self.ballot_proof
     }
     pub fn clear_ballot_proof(&mut self) {
@@ -3348,17 +3249,17 @@ impl VoteRequest {
     }
 
     // Param is passed by value, moved
-    pub fn set_ballot_proof(&mut self, v: ::protobuf::RepeatedField<CandidateBallotProofPair>) {
+    pub fn set_ballot_proof(&mut self, v: ::protobuf::RepeatedField<StringToCandidateBallotProofPair>) {
         self.ballot_proof = v;
     }
 
     // Mutable pointer to the field.
-    pub fn mut_ballot_proof(&mut self) -> &mut ::protobuf::RepeatedField<CandidateBallotProofPair> {
+    pub fn mut_ballot_proof(&mut self) -> &mut ::protobuf::RepeatedField<StringToCandidateBallotProofPair> {
         &mut self.ballot_proof
     }
 
     // Take field
-    pub fn take_ballot_proof(&mut self) -> ::protobuf::RepeatedField<CandidateBallotProofPair> {
+    pub fn take_ballot_proof(&mut self) -> ::protobuf::RepeatedField<StringToCandidateBallotProofPair> {
         ::std::mem::replace(&mut self.ballot_proof, ::protobuf::RepeatedField::new())
     }
 
@@ -3537,7 +3438,7 @@ impl ::protobuf::Message for VoteRequest {
                 |m: &VoteRequest| { &m.vote },
                 |m: &mut VoteRequest| { &mut m.vote },
             ));
-            fields.push(::protobuf::reflect::accessor::make_repeated_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<CandidateBallotProofPair>>(
+            fields.push(::protobuf::reflect::accessor::make_repeated_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<StringToCandidateBallotProofPair>>(
                 "ballot_proof",
                 |m: &VoteRequest| { &m.ballot_proof },
                 |m: &mut VoteRequest| { &mut m.ballot_proof },
@@ -3609,7 +3510,7 @@ impl DecryptedResultPartStorage {
         ::std::default::Default::default()
     }
 
-    // .com.webank.wedpr.abv.proto.CountingPart blank_part = 1;
+    // .com.webank.wedpr.acv.proto.CountingPart blank_part = 1;
 
 
     pub fn get_blank_part(&self) -> &CountingPart {
@@ -3642,7 +3543,7 @@ impl DecryptedResultPartStorage {
         self.blank_part.take().unwrap_or_else(|| CountingPart::new())
     }
 
-    // repeated .com.webank.wedpr.abv.proto.StringToCountingPartPair candidate_part = 2;
+    // repeated .com.webank.wedpr.acv.proto.StringToCountingPartPair candidate_part = 2;
 
 
     pub fn get_candidate_part(&self) -> &[StringToCountingPartPair] {
@@ -3858,7 +3759,7 @@ impl StringToCountingPartPair {
         ::std::mem::replace(&mut self.key, ::std::string::String::new())
     }
 
-    // .com.webank.wedpr.abv.proto.CountingPart value = 2;
+    // .com.webank.wedpr.acv.proto.CountingPart value = 2;
 
 
     pub fn get_value(&self) -> &CountingPart {
@@ -4031,7 +3932,7 @@ impl ::protobuf::reflect::ProtobufValue for StringToCountingPartPair {
 pub struct CountingPart {
     // message fields
     pub counter_id: ::std::string::String,
-    pub c2_r: ::std::vec::Vec<u8>,
+    pub blinding_c2: ::std::vec::Vec<u8>,
     pub equality_proof: ::std::vec::Vec<u8>,
     // special fields
     pub unknown_fields: ::protobuf::UnknownFields,
@@ -4075,30 +3976,30 @@ impl CountingPart {
         ::std::mem::replace(&mut self.counter_id, ::std::string::String::new())
     }
 
-    // bytes c2_r = 2;
+    // bytes blinding_c2 = 2;
 
 
-    pub fn get_c2_r(&self) -> &[u8] {
-        &self.c2_r
+    pub fn get_blinding_c2(&self) -> &[u8] {
+        &self.blinding_c2
     }
-    pub fn clear_c2_r(&mut self) {
-        self.c2_r.clear();
+    pub fn clear_blinding_c2(&mut self) {
+        self.blinding_c2.clear();
     }
 
     // Param is passed by value, moved
-    pub fn set_c2_r(&mut self, v: ::std::vec::Vec<u8>) {
-        self.c2_r = v;
+    pub fn set_blinding_c2(&mut self, v: ::std::vec::Vec<u8>) {
+        self.blinding_c2 = v;
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_c2_r(&mut self) -> &mut ::std::vec::Vec<u8> {
-        &mut self.c2_r
+    pub fn mut_blinding_c2(&mut self) -> &mut ::std::vec::Vec<u8> {
+        &mut self.blinding_c2
     }
 
     // Take field
-    pub fn take_c2_r(&mut self) -> ::std::vec::Vec<u8> {
-        ::std::mem::replace(&mut self.c2_r, ::std::vec::Vec::new())
+    pub fn take_blinding_c2(&mut self) -> ::std::vec::Vec<u8> {
+        ::std::mem::replace(&mut self.blinding_c2, ::std::vec::Vec::new())
     }
 
     // bytes equality_proof = 3;
@@ -4141,7 +4042,7 @@ impl ::protobuf::Message for CountingPart {
                     ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.counter_id)?;
                 },
                 2 => {
-                    ::protobuf::rt::read_singular_proto3_bytes_into(wire_type, is, &mut self.c2_r)?;
+                    ::protobuf::rt::read_singular_proto3_bytes_into(wire_type, is, &mut self.blinding_c2)?;
                 },
                 3 => {
                     ::protobuf::rt::read_singular_proto3_bytes_into(wire_type, is, &mut self.equality_proof)?;
@@ -4161,8 +4062,8 @@ impl ::protobuf::Message for CountingPart {
         if !self.counter_id.is_empty() {
             my_size += ::protobuf::rt::string_size(1, &self.counter_id);
         }
-        if !self.c2_r.is_empty() {
-            my_size += ::protobuf::rt::bytes_size(2, &self.c2_r);
+        if !self.blinding_c2.is_empty() {
+            my_size += ::protobuf::rt::bytes_size(2, &self.blinding_c2);
         }
         if !self.equality_proof.is_empty() {
             my_size += ::protobuf::rt::bytes_size(3, &self.equality_proof);
@@ -4176,8 +4077,8 @@ impl ::protobuf::Message for CountingPart {
         if !self.counter_id.is_empty() {
             os.write_string(1, &self.counter_id)?;
         }
-        if !self.c2_r.is_empty() {
-            os.write_bytes(2, &self.c2_r)?;
+        if !self.blinding_c2.is_empty() {
+            os.write_bytes(2, &self.blinding_c2)?;
         }
         if !self.equality_proof.is_empty() {
             os.write_bytes(3, &self.equality_proof)?;
@@ -4226,9 +4127,9 @@ impl ::protobuf::Message for CountingPart {
                 |m: &mut CountingPart| { &mut m.counter_id },
             ));
             fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeBytes>(
-                "c2_r",
-                |m: &CountingPart| { &m.c2_r },
-                |m: &mut CountingPart| { &mut m.c2_r },
+                "blinding_c2",
+                |m: &CountingPart| { &m.blinding_c2 },
+                |m: &mut CountingPart| { &mut m.blinding_c2 },
             ));
             fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeBytes>(
                 "equality_proof",
@@ -4252,7 +4153,7 @@ impl ::protobuf::Message for CountingPart {
 impl ::protobuf::Clear for CountingPart {
     fn clear(&mut self) {
         self.counter_id.clear();
-        self.c2_r.clear();
+        self.blinding_c2.clear();
         self.equality_proof.clear();
         self.unknown_fields.clear();
     }
@@ -4290,7 +4191,7 @@ impl VoteResultStorage {
         ::std::default::Default::default()
     }
 
-    // repeated .com.webank.wedpr.abv.proto.StringToInt64Pair result = 1;
+    // repeated .com.webank.wedpr.acv.proto.StringToInt64Pair result = 1;
 
 
     pub fn get_result(&self) -> &[StringToInt64Pair] {
@@ -4631,62 +4532,60 @@ impl ::protobuf::reflect::ProtobufValue for StringToInt64Pair {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x16solution/abv/abv.proto\x12\x1acom.webank.wedpr.abv.proto\";\n\rCou\
+    \n\x16solution/acv/acv.proto\x12\x1acom.webank.wedpr.acv.proto\";\n\rCou\
     nterSecret\x12*\n\x11poll_secret_share\x18\x01\x20\x01(\x0cR\x0fpollSecr\
     etShare\"n\n#CounterSystemParametersShareRequest\x12\x1d\n\ncounter_id\
     \x18\x01\x20\x01(\tR\tcounterId\x12(\n\x10poll_point_share\x18\x02\x20\
     \x01(\x0cR\x0epollPointShare\"\x9f\x01\n\x1eCounterSystemParametersStora\
     ge\x12}\n\x1acounter_parameters_request\x18\x01\x20\x03(\x0b2?.com.weban\
-    k.wedpr.abv.proto.CounterSystemParametersShareRequestR\x18counterParamet\
-    ersRequest\".\n\x0bVoterSecret\x12\x1f\n\x0bvote_secret\x18\x01\x20\x01(\
-    \x0cR\nvoteSecret\"o\n\x13RegistrationRequest\x12X\n\x0cweight_point\x18\
-    \x01\x20\x01(\x0b25.com.webank.wedpr.abv.proto.RegistrationBlindingPoint\
-    R\x0bweightPoint\"\x7f\n\x19RegistrationBlindingPoint\x12.\n\x13blinding\
-    _poll_point\x18\x01\x20\x01(\x0cR\x11blindingPollPoint\x122\n\x15blindin\
-    g_basepoint_g2\x18\x02\x20\x01(\x0cR\x13blindingBasepointG2\"\xd8\x01\n\
-    \x14RegistrationResponse\x12!\n\x0cvoter_weight\x18\x01\x20\x01(\rR\x0bv\
-    oterWeight\x12:\n\x06ballot\x18\x02\x20\x01(\x0b2\".com.webank.wedpr.abv\
-    .proto.BallotR\x06ballot\x12\x1c\n\tsignature\x18\x03\x20\x01(\x0cR\tsig\
-    nature\x12C\n\x0bzero_ballot\x18\x04\x20\x01(\x0b2\".com.webank.wedpr.ab\
-    v.proto.BallotR\nzeroBallot\"L\n\x06Ballot\x12\x20\n\x0bciphertext1\x18\
-    \x01\x20\x01(\x0cR\x0bciphertext1\x12\x20\n\x0bciphertext2\x18\x02\x20\
-    \x01(\x0cR\x0bciphertext2\"@\n\nVoteChoice\x12\x1c\n\tcandidate\x18\x01\
-    \x20\x01(\tR\tcandidate\x12\x14\n\x05value\x18\x02\x20\x01(\rR\x05value\
-    \"M\n\x0bVoteChoices\x12>\n\x06choice\x18\x01\x20\x03(\x0b2&.com.webank.\
-    wedpr.abv.proto.VoteChoiceR\x06choice\"k\n\x0fCandidateBallot\x12\x1c\n\
-    \tcandidate\x18\x01\x20\x01(\tR\tcandidate\x12:\n\x06ballot\x18\x02\x20\
-    \x01(\x0b2\".com.webank.wedpr.abv.proto.BallotR\x06ballot\"\x87\x02\n\
-    \x0bVoteStorage\x12\x1c\n\tsignature\x18\x01\x20\x01(\x0cR\tsignature\
-    \x12E\n\x0cblank_ballot\x18\x02\x20\x01(\x0b2\".com.webank.wedpr.abv.pro\
-    to.BallotR\x0bblankBallot\x12C\n\x0brest_ballot\x18\x03\x20\x01(\x0b2\".\
-    com.webank.wedpr.abv.proto.BallotR\nrestBallot\x12N\n\x0cvoted_ballot\
-    \x18\x04\x20\x03(\x0b2+.com.webank.wedpr.abv.proto.CandidateBallotR\x0bv\
-    otedBallot\"-\n\rCandidateList\x12\x1c\n\tcandidate\x18\x01\x20\x03(\tR\
-    \tcandidate\"\x83\x01\n\x17SystemParametersStorage\x12\x1d\n\npoll_point\
-    \x18\x01\x20\x01(\x0cR\tpollPoint\x12I\n\ncandidates\x18\x02\x20\x01(\
-    \x0b2).com.webank.wedpr.abv.proto.CandidateListR\ncandidates\"d\n\x0bBal\
-    lotProof\x12!\n\x0cformat_proof\x18\x01\x20\x01(\x0cR\x0bformatProof\x12\
-    2\n\x15either_equality_proof\x18\x02\x20\x01(\x0cR\x13eitherEqualityProo\
-    f\"w\n\x18CandidateBallotProofPair\x12\x1c\n\tcandidate\x18\x01\x20\x01(\
-    \tR\tcandidate\x12=\n\x05value\x18\x02\x20\x01(\x0b2'.com.webank.wedpr.a\
-    bv.proto.BallotProofR\x05value\"\xf0\x01\n\x0bVoteRequest\x12;\n\x04vote\
-    \x18\x01\x20\x01(\x0b2'.com.webank.wedpr.abv.proto.VoteStorageR\x04vote\
-    \x12W\n\x0cballot_proof\x18\x02\x20\x03(\x0b24.com.webank.wedpr.abv.prot\
-    o.CandidateBallotProofPairR\x0bballotProof\x12\x1f\n\x0brange_proof\x18\
-    \x03\x20\x01(\x0cR\nrangeProof\x12*\n\x11sum_balance_proof\x18\x04\x20\
-    \x01(\x0cR\x0fsumBalanceProof\"\xc2\x01\n\x1aDecryptedResultPartStorage\
-    \x12G\n\nblank_part\x18\x01\x20\x01(\x0b2(.com.webank.wedpr.abv.proto.Co\
-    untingPartR\tblankPart\x12[\n\x0ecandidate_part\x18\x02\x20\x03(\x0b24.c\
-    om.webank.wedpr.abv.proto.StringToCountingPartPairR\rcandidatePart\"l\n\
-    \x18StringToCountingPartPair\x12\x10\n\x03key\x18\x01\x20\x01(\tR\x03key\
-    \x12>\n\x05value\x18\x02\x20\x01(\x0b2(.com.webank.wedpr.abv.proto.Count\
-    ingPartR\x05value\"g\n\x0cCountingPart\x12\x1d\n\ncounter_id\x18\x01\x20\
-    \x01(\tR\tcounterId\x12\x11\n\x04c2_r\x18\x02\x20\x01(\x0cR\x03c2R\x12%\
-    \n\x0eequality_proof\x18\x03\x20\x01(\x0cR\requalityProof\"Z\n\x11VoteRe\
-    sultStorage\x12E\n\x06result\x18\x01\x20\x03(\x0b2-.com.webank.wedpr.abv\
-    .proto.StringToInt64PairR\x06result\";\n\x11StringToInt64Pair\x12\x10\n\
-    \x03key\x18\x01\x20\x01(\tR\x03key\x12\x14\n\x05value\x18\x02\x20\x01(\
-    \x03R\x05valueB\x1e\n\x1acom.webank.wedpr.abv.protoP\x01b\x06proto3\
+    k.wedpr.acv.proto.CounterSystemParametersShareRequestR\x18counterParamet\
+    ersRequest\"0\n\x0bVoterSecret\x12!\n\x0cvoter_secret\x18\x01\x20\x01(\
+    \x0cR\x0bvoterSecret\"o\n\x13RegistrationRequest\x12X\n\x0cweight_point\
+    \x18\x01\x20\x01(\x0b25.com.webank.wedpr.acv.proto.RegistrationBlindingP\
+    ointR\x0bweightPoint\"\x7f\n\x19RegistrationBlindingPoint\x12.\n\x13blin\
+    ding_poll_point\x18\x01\x20\x01(\x0cR\x11blindingPollPoint\x122\n\x15bli\
+    nding_basepoint_g2\x18\x02\x20\x01(\x0cR\x13blindingBasepointG2\"\x93\
+    \x01\n\x14RegistrationResponse\x12!\n\x0cvoter_weight\x18\x01\x20\x01(\r\
+    R\x0bvoterWeight\x12:\n\x06ballot\x18\x02\x20\x01(\x0b2\".com.webank.wed\
+    pr.acv.proto.BallotR\x06ballot\x12\x1c\n\tsignature\x18\x03\x20\x01(\x0c\
+    R\tsignature\"L\n\x06Ballot\x12\x20\n\x0bciphertext1\x18\x01\x20\x01(\
+    \x0cR\x0bciphertext1\x12\x20\n\x0bciphertext2\x18\x02\x20\x01(\x0cR\x0bc\
+    iphertext2\"@\n\nVoteChoice\x12\x1c\n\tcandidate\x18\x01\x20\x01(\tR\tca\
+    ndidate\x12\x14\n\x05value\x18\x02\x20\x01(\rR\x05value\"M\n\x0bVoteChoi\
+    ces\x12>\n\x06choice\x18\x01\x20\x03(\x0b2&.com.webank.wedpr.acv.proto.V\
+    oteChoiceR\x06choice\"k\n\x0fCandidateBallot\x12\x1c\n\tcandidate\x18\
+    \x01\x20\x01(\tR\tcandidate\x12:\n\x06ballot\x18\x02\x20\x01(\x0b2\".com\
+    .webank.wedpr.acv.proto.BallotR\x06ballot\"\x87\x02\n\x0bVoteStorage\x12\
+    \x1c\n\tsignature\x18\x01\x20\x01(\x0cR\tsignature\x12E\n\x0cblank_ballo\
+    t\x18\x02\x20\x01(\x0b2\".com.webank.wedpr.acv.proto.BallotR\x0bblankBal\
+    lot\x12C\n\x0brest_ballot\x18\x03\x20\x01(\x0b2\".com.webank.wedpr.acv.p\
+    roto.BallotR\nrestBallot\x12N\n\x0cvoted_ballot\x18\x04\x20\x03(\x0b2+.c\
+    om.webank.wedpr.acv.proto.CandidateBallotR\x0bvotedBallot\"-\n\rCandidat\
+    eList\x12\x1c\n\tcandidate\x18\x01\x20\x03(\tR\tcandidate\"\x83\x01\n\
+    \x17SystemParametersStorage\x12\x1d\n\npoll_point\x18\x01\x20\x01(\x0cR\
+    \tpollPoint\x12I\n\ncandidates\x18\x02\x20\x01(\x0b2).com.webank.wedpr.a\
+    cv.proto.CandidateListR\ncandidates\"0\n\x0bBallotProof\x12!\n\x0cformat\
+    _proof\x18\x01\x20\x01(\x0cR\x0bformatProof\"s\n\x20StringToCandidateBal\
+    lotProofPair\x12\x10\n\x03key\x18\x01\x20\x01(\tR\x03key\x12=\n\x05value\
+    \x18\x02\x20\x01(\x0b2'.com.webank.wedpr.acv.proto.BallotProofR\x05value\
+    \"\xf8\x01\n\x0bVoteRequest\x12;\n\x04vote\x18\x01\x20\x01(\x0b2'.com.we\
+    bank.wedpr.acv.proto.VoteStorageR\x04vote\x12_\n\x0cballot_proof\x18\x02\
+    \x20\x03(\x0b2<.com.webank.wedpr.acv.proto.StringToCandidateBallotProofP\
+    airR\x0bballotProof\x12\x1f\n\x0brange_proof\x18\x03\x20\x01(\x0cR\nrang\
+    eProof\x12*\n\x11sum_balance_proof\x18\x04\x20\x01(\x0cR\x0fsumBalancePr\
+    oof\"\xc2\x01\n\x1aDecryptedResultPartStorage\x12G\n\nblank_part\x18\x01\
+    \x20\x01(\x0b2(.com.webank.wedpr.acv.proto.CountingPartR\tblankPart\x12[\
+    \n\x0ecandidate_part\x18\x02\x20\x03(\x0b24.com.webank.wedpr.acv.proto.S\
+    tringToCountingPartPairR\rcandidatePart\"l\n\x18StringToCountingPartPair\
+    \x12\x10\n\x03key\x18\x01\x20\x01(\tR\x03key\x12>\n\x05value\x18\x02\x20\
+    \x01(\x0b2(.com.webank.wedpr.acv.proto.CountingPartR\x05value\"u\n\x0cCo\
+    untingPart\x12\x1d\n\ncounter_id\x18\x01\x20\x01(\tR\tcounterId\x12\x1f\
+    \n\x0bblinding_c2\x18\x02\x20\x01(\x0cR\nblindingC2\x12%\n\x0eequality_p\
+    roof\x18\x03\x20\x01(\x0cR\requalityProof\"Z\n\x11VoteResultStorage\x12E\
+    \n\x06result\x18\x01\x20\x03(\x0b2-.com.webank.wedpr.acv.proto.StringToI\
+    nt64PairR\x06result\";\n\x11StringToInt64Pair\x12\x10\n\x03key\x18\x01\
+    \x20\x01(\tR\x03key\x12\x14\n\x05value\x18\x02\x20\x01(\x03R\x05valueB\
+    \x1e\n\x1acom.webank.wedpr.acv.protoP\x01b\x06proto3\
 ";
 
 static file_descriptor_proto_lazy: ::protobuf::rt::LazyV2<::protobuf::descriptor::FileDescriptorProto> = ::protobuf::rt::LazyV2::INIT;
