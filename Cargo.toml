@@ -2,7 +2,6 @@
 
 members = [
     "bounty",
-#    "ffi/ffi_c/ffi_c_acv",
     "ffi/ffi_c/ffi_c_ktb",
     "ffi/ffi_c/ffi_c_scd",
     "ffi/ffi_c/ffi_c_vcl",
