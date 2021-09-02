@@ -15,7 +15,7 @@ use wedpr_s_protos::generated::acv::{
     StringToCountingPartPair, SystemParametersStorage,
 };
 
-/// Makes system parameters by candidate list and counter storage messages.
+/// Makes system parameters containing public key and candidates list using counter storage messages.
 pub fn make_system_parameters(
     candidates: &CandidateList,
     counter_storage: &CounterSystemParametersStorage,
@@ -30,7 +30,7 @@ pub fn make_system_parameters(
     Ok(storage)
 }
 
-/// Certifies ballot value which voter can vote to all candidates.
+/// Certifies voter's weight which indicates the maximum value that the voter can vote totally.
 pub fn certify_bounded_voter(
     secret_key: &[u8],
     value: u32,
@@ -64,7 +64,7 @@ pub fn certify_bounded_voter(
     Ok(response)
 }
 
-/// Decrypts counters' .
+/// Aggregates the decrypted results of all counters, ?
 pub fn aggregate_decrypted_part_sum(
     param: &SystemParametersStorage,
     decrypted_result_part_storage: &DecryptedResultPartStorage,

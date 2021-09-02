@@ -24,6 +24,8 @@ use wedpr_l_protos::{
 };
 use wedpr_l_utils::traits::{Hash, Signature};
 
+/// Verifies whether each ballot of voters is correct,
+/// specifically refers to the format, the accounting balance and the numerical range of each ballot.
 pub fn verify_bounded_vote_request(
     param: &SystemParametersStorage,
     request: &VoteRequest,
@@ -105,6 +107,7 @@ pub fn verify_bounded_vote_request(
     Ok(true)
 }
 
+/// ? 
 pub fn aggregate_vote_sum_response(
     param: &SystemParametersStorage,
     vote_storage_part: &VoteStorage,
@@ -187,6 +190,8 @@ pub fn aggregate_vote_sum_response(
     Ok(true)
 }
 
+/// Verifies whether the counting process is correct,
+/// specifically refers to that whether each counter used correct secret key when counting.
 pub fn verify_count_request(
     param: &SystemParametersStorage,
     encrypted_vote_sum: &VoteStorage,
@@ -244,9 +249,7 @@ pub fn verify_count_request(
     Ok(true)
 }
 
-// In this function, everyone can check anonymousvoting result by c1 - c2r_sum,
-// because we already know v and candidates, by using c1 - c2r_sum, we can check
-// whether vG_1 =? c1 - c2r_sum. pub fn verify_counter(result_pb:
+/// Verifies whether the final score of each candidate is correct.
 pub fn verify_vote_result(
     param: &SystemParametersStorage,
     vote_sum: &VoteStorage,

@@ -21,6 +21,7 @@ use wedpr_s_protos::generated::acv::{
     VoteChoices, VoteRequest, VoterSecret,
 };
 
+/// Generates a random number as secret number for applying blank ballot.
 pub fn make_voter_secret() -> VoterSecret {
     let vote_secret = get_random_scalar();
     VoterSecret {
@@ -30,6 +31,7 @@ pub fn make_voter_secret() -> VoterSecret {
     }
 }
 
+/// Applys to the coordinator for blank ballot using own weight and secret number.
 pub fn make_bounded_registration_request(
     secret: &VoterSecret,
     param: &SystemParametersStorage,
@@ -48,6 +50,8 @@ pub fn make_bounded_registration_request(
     Ok(request)
 }
 
+/// Verifies blank ballot issued by coordinator
+/// by recalculating and comparing whether it is consistent.
 pub fn verify_blank_ballot(
     request: &RegistrationRequest,
     response: &RegistrationResponse,
@@ -72,6 +76,13 @@ pub fn verify_blank_ballot(
         && request_ciphertext2 == response_ciphertext2)
 }
 
+/// Generate a vote request containing ballots for selected candidates, rest ballot
+/// and a group of zero-knowledge proofs to prove that ballots is correct,
+/// where zero-knowledge proofs contains format proof, balance proof and range proof.
+/// The format proof is used to prove that the format of ballots is correct
+/// so that it can be counted in the total number of votes when counting,
+/// the balance proof is used to prove that poll ballots + the rest ballot = the blank ballot,
+/// the range proof is used to prove that the value of ballot is non-negative.
 pub fn vote_bounded(
     secret: &VoterSecret,
     choices: &VoteChoices,

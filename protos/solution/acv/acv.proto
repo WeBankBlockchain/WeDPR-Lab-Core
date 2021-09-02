@@ -66,6 +66,7 @@ message VoteStorage {
   repeated CandidateBallot voted_ballot = 4;
 }
 
+// system parameters
 message CandidateList {
   repeated string candidate = 1;
 }
@@ -75,6 +76,8 @@ message SystemParametersStorage {
   CandidateList candidates = 2;
 }
 
+
+// proofs
 message BallotProof {
   bytes format_proof = 1;
 }

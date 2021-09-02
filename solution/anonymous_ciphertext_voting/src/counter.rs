@@ -16,6 +16,7 @@ use wedpr_s_protos::generated::acv::{
     SystemParametersStorage, VoteResultStorage, VoteStorage,
 };
 
+/// Generates a random number as secret key used for making system parameter and counting.
 pub fn make_counter_secret() -> CounterSecret {
     let secret_share = get_random_scalar();
     CounterSecret {
@@ -25,6 +26,8 @@ pub fn make_counter_secret() -> CounterSecret {
     }
 }
 
+/// Makes share of system parameter using secret key,
+/// where system parameter here means global public key.
 pub fn make_system_parameters_share(
     counter_id: &str,
     counter_secret: &CounterSecret,
@@ -40,6 +43,13 @@ pub fn make_system_parameters_share(
     })
 }
 
+
+/// Generates intermediate values and zero-knowledge proof for final count,
+/// where the intermediate values is the share of ballots received by each candidate,
+/// the zero-knowledge proof is equality relationship proof used to prove that
+/// counter's count process is correct, specifically refers to that
+/// the secret key counter used in counting is equal to the secret key generated
+/// for making system parameter.
 pub fn count(
     counter_id: &str,
     secret: &CounterSecret,
@@ -88,9 +98,7 @@ pub fn count(
     Ok(request)
 }
 
-// In this function, everyone can check anonymousvoting result by c1 - c2r_sum,
-// because we already know v and candidates, by using c1 - c2r_sum, we can check
-// whether vG_1 =? c1 - c2r_sum. pub fn verify_counter(result_pb:
+/// Count the value of ballots received by each candidate.
 pub fn finalize_vote_result(
     param: &SystemParametersStorage,
     vote_sum: &VoteStorage,
