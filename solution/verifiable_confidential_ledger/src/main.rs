@@ -6,6 +6,7 @@ use colored::*;
 use std;
 use wedpr_l_crypto_zkp_utils::point_to_bytes;
 use wedpr_s_verifiable_confidential_ledger::vcl;
+use protobuf::Message;
 
 fn main() {
     print_highlight2(
