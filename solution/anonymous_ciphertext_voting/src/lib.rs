@@ -16,15 +16,19 @@ pub mod voter;
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::config::SIGNATURE_SECP256K1;
     use wedpr_l_crypto_zkp_utils::bytes_to_point;
     use wedpr_l_utils::traits::Signature;
+
     use wedpr_s_protos::generated::acv::{
         CandidateList, CounterSecret, CounterSystemParametersStorage,
-        DecryptedResultPartStorage, VoteChoice, VoteChoices, VoteStorage,
-        VoterSecret,
+        DecryptedResultPartStorage, VoteChoice, VoteChoices, VoterSecret,
+        VoteStorage,
     };
+
+    use crate::config::SIGNATURE_SECP256K1;
+    use crate::coordinator;
+
+    use super::*;
 
     #[test]
     fn test_bounded_voting() {
@@ -125,7 +129,7 @@ mod tests {
             );
             assert_eq!(
                 true,
-                verifier::aggregate_vote_sum_response(
+                coordinator::aggregate_vote_sum_response(
                     &system_parameters,
                     &vote_request.get_vote(),
                     &mut encrypted_vote_sum
@@ -169,7 +173,7 @@ mod tests {
                 .unwrap()
             );
         }
-        let final_result_request = counter::finalize_vote_result(
+        let final_result_request = coordinator::finalize_vote_result(
             &system_parameters,
             &encrypted_vote_sum,
             &vote_sum_total,

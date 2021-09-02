@@ -2,13 +2,6 @@
 
 //! Library of anonymous ciphertext voting (ACV) solution.
 
-use wedpr_l_utils::error::WedprError;
-use wedpr_s_protos::generated::acv::{
-    Ballot, CandidateBallot, CountingPart, DecryptedResultPartStorage,
-    VoteResultStorage, VoteStorage,SystemParametersStorage, VoteRequest
-};
-
-use crate::config::{HASH_KECCAK256, SIGNATURE_SECP256K1};
 use curve25519_dalek::{ristretto::RistrettoPoint, scalar::Scalar};
 use wedpr_l_crypto_zkp_discrete_logarithm_proof::{
     verify_equality_relationship_proof, verify_format_proof,
@@ -16,13 +9,21 @@ use wedpr_l_crypto_zkp_discrete_logarithm_proof::{
 };
 use wedpr_l_crypto_zkp_range_proof::verify_value_range_in_batch;
 use wedpr_l_crypto_zkp_utils::{
-    bytes_to_point, point_to_bytes, BASEPOINT_G1, BASEPOINT_G2,
+    BASEPOINT_G1, BASEPOINT_G2, bytes_to_point,
 };
 use wedpr_l_protos::{
     bytes_to_proto,
     generated::zkp::{BalanceProof, EqualityProof},
 };
+use wedpr_l_utils::error::WedprError;
 use wedpr_l_utils::traits::{Hash, Signature};
+
+use wedpr_s_protos::generated::acv::{
+    Ballot, CountingPart, DecryptedResultPartStorage,
+    SystemParametersStorage, VoteRequest, VoteResultStorage, VoteStorage
+};
+
+use crate::config::{HASH_KECCAK256, SIGNATURE_SECP256K1};
 
 /// Verifies whether each ballot of voters is correct,
 /// specifically refers to the format, the accounting balance and the numerical range of each ballot.
@@ -104,89 +105,6 @@ pub fn verify_bounded_vote_request(
         wedpr_println!("verify_balance failed!");
         return Err(WedprError::VerificationError);
     }
-    Ok(true)
-}
-
-/// ? 
-pub fn aggregate_vote_sum_response(
-    param: &SystemParametersStorage,
-    vote_storage_part: &VoteStorage,
-    vote_sum: &mut VoteStorage,
-) -> Result<bool, WedprError> {
-    if !vote_sum.has_blank_ballot() {
-        vote_sum
-            .mut_blank_ballot()
-            .set_ciphertext1(point_to_bytes(&RistrettoPoint::default()));
-        vote_sum
-            .mut_blank_ballot()
-            .set_ciphertext2(point_to_bytes(&RistrettoPoint::default()));
-        for candidate in param.get_candidates().get_candidate() {
-            let mut ballot = Ballot::new();
-            ballot.set_ciphertext1(point_to_bytes(&RistrettoPoint::default()));
-            ballot.set_ciphertext2(point_to_bytes(&RistrettoPoint::default()));
-            let mut ballot_pair = CandidateBallot::new();
-            ballot_pair.set_candidate(candidate.to_string());
-            ballot_pair.set_ballot(ballot);
-            vote_sum.mut_voted_ballot().push(ballot_pair);
-        }
-    }
-
-    let mut tmp_vote_storage_sum = VoteStorage::new();
-    let mut blank_c1_sum =
-        bytes_to_point(&vote_sum.get_blank_ballot().get_ciphertext1())?;
-    let mut blank_c2_sum =
-        bytes_to_point(&vote_sum.get_blank_ballot().get_ciphertext2())?;
-    let c1_tmp_point = bytes_to_point(
-        &vote_storage_part
-            .get_blank_ballot()
-            .get_ciphertext1()
-            .clone(),
-    )?;
-    let c2_tmp_point = bytes_to_point(
-        &vote_storage_part
-            .get_blank_ballot()
-            .get_ciphertext2()
-            .clone(),
-    )?;
-    blank_c1_sum += c1_tmp_point;
-    blank_c2_sum += c2_tmp_point;
-
-    for candidate in param.get_candidates().get_candidate() {
-        let mut candidate_ballot = Ballot::new();
-        for tmp_pair in vote_sum.get_voted_ballot() {
-            if tmp_pair.get_candidate() == candidate {
-                candidate_ballot = tmp_pair.get_ballot().clone();
-            }
-        }
-        let mut candidate_voted_c1_sum =
-            bytes_to_point(&candidate_ballot.get_ciphertext1())?;
-        let mut candidate_voted_c2_sum =
-            bytes_to_point(&candidate_ballot.get_ciphertext2())?;
-        let mut candidates_ballot = Ballot::new();
-        for ballot_pair in vote_storage_part.get_voted_ballot() {
-            if candidate == ballot_pair.get_candidate() {
-                candidates_ballot = ballot_pair.get_ballot().clone();
-            }
-        }
-        candidate_voted_c1_sum +=
-            bytes_to_point(&candidates_ballot.get_ciphertext1())?;
-        candidate_voted_c2_sum +=
-            bytes_to_point(&candidates_ballot.get_ciphertext2())?;
-        let mut vote_ballot = Ballot::new();
-        vote_ballot.set_ciphertext1(point_to_bytes(&candidate_voted_c1_sum));
-        vote_ballot.set_ciphertext2(point_to_bytes(&candidate_voted_c2_sum));
-        let mut tmp_pair = CandidateBallot::new();
-        tmp_pair.set_candidate(candidate.to_string());
-        tmp_pair.set_ballot(vote_ballot);
-        tmp_vote_storage_sum.mut_voted_ballot().push(tmp_pair);
-    }
-    tmp_vote_storage_sum
-        .mut_blank_ballot()
-        .set_ciphertext1(point_to_bytes(&blank_c1_sum));
-    tmp_vote_storage_sum
-        .mut_blank_ballot()
-        .set_ciphertext2(point_to_bytes(&blank_c2_sum));
-    *vote_sum = tmp_vote_storage_sum.clone();
     Ok(true)
 }
 
