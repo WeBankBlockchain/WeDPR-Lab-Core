@@ -4,19 +4,19 @@
 
 use wedpr_l_crypto_zkp_discrete_logarithm_proof::prove_equality_relationship_proof;
 use wedpr_l_crypto_zkp_utils::{
-    BASEPOINT_G2, bytes_to_point, bytes_to_scalar,
-    get_random_scalar, point_to_bytes, scalar_to_bytes,
+    bytes_to_point, bytes_to_scalar, get_random_scalar, point_to_bytes,
+    scalar_to_bytes, BASEPOINT_G2,
 };
 use wedpr_l_protos::proto_to_bytes;
 use wedpr_l_utils::error::WedprError;
 
 use wedpr_s_protos::generated::acv::{
     CounterSecret, CounterSystemParametersShareRequest, CountingPart,
-    DecryptedResultPartStorage, StringToCountingPartPair,
-    VoteStorage,
+    DecryptedResultPartStorage, StringToCountingPartPair, VoteStorage,
 };
 
-/// Generates a random number as secret key used for making system parameter and counting.
+/// Generates a random number as secret key for making system parameter and
+/// counting.
 pub fn make_counter_secret() -> CounterSecret {
     let secret_share = get_random_scalar();
     CounterSecret {
@@ -43,11 +43,10 @@ pub fn make_system_parameters_share(
     })
 }
 
-
-/// Generates intermediate values and zero-knowledge proof for final count,
-/// where the intermediate values is the share of ballots received by each candidate,
-/// the zero-knowledge proof is equality relationship proof used to prove that
-/// counter's count process is correct, specifically refers to that
+/// Generates decrypted ballot and zero-knowledge proof for final count,
+/// where the decrypted ballot is the share of ballots received by each
+/// candidate, the zero-knowledge proof is equality relationship proof used to
+/// prove that counter's count process is correct, specifically refers to that
 /// the secret key counter used in counting is equal to the secret key generated
 /// for making system parameter.
 pub fn count(

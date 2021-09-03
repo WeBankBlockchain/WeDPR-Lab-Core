@@ -21,12 +21,11 @@ mod tests {
 
     use wedpr_s_protos::generated::acv::{
         CandidateList, CounterSecret, CounterSystemParametersStorage,
-        DecryptedResultPartStorage, VoteChoice, VoteChoices, VoterSecret,
-        VoteStorage,
+        DecryptedResultPartStorage, VoteChoice, VoteChoices, VoteStorage,
+        VoterSecret,
     };
 
-    use crate::config::SIGNATURE_SECP256K1;
-    use crate::coordinator;
+    use crate::{config::SIGNATURE_SECP256K1, coordinator};
 
     use super::*;
 

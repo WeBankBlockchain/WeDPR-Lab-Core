@@ -8,25 +8,27 @@ use wedpr_l_crypto_zkp_discrete_logarithm_proof::{
     verify_sum_relationship,
 };
 use wedpr_l_crypto_zkp_range_proof::verify_value_range_in_batch;
-use wedpr_l_crypto_zkp_utils::{
-    BASEPOINT_G1, BASEPOINT_G2, bytes_to_point,
-};
+use wedpr_l_crypto_zkp_utils::{bytes_to_point, BASEPOINT_G1, BASEPOINT_G2};
 use wedpr_l_protos::{
     bytes_to_proto,
     generated::zkp::{BalanceProof, EqualityProof},
 };
-use wedpr_l_utils::error::WedprError;
-use wedpr_l_utils::traits::{Hash, Signature};
+use wedpr_l_utils::{
+    error::WedprError,
+    traits::{Hash, Signature},
+};
 
 use wedpr_s_protos::generated::acv::{
-    Ballot, CountingPart, DecryptedResultPartStorage,
-    SystemParametersStorage, VoteRequest, VoteResultStorage, VoteStorage
+    Ballot, CountingPart, DecryptedResultPartStorage, SystemParametersStorage,
+    VoteRequest, VoteResultStorage, VoteStorage,
 };
 
 use crate::config::{HASH_KECCAK256, SIGNATURE_SECP256K1};
 
-/// Verifies whether each ballot of voters is correct,
-/// specifically refers to the format, the accounting balance and the numerical range of each ballot.
+/// Verifies a group of zero-knowledge proofs in the vote request from each
+/// voter to confirm whether each ballot of voter is correct, specifically
+/// refers to the format, the accounting balance and the numerical range of each
+/// ciphertext ballot.
 pub fn verify_bounded_vote_request(
     param: &SystemParametersStorage,
     request: &VoteRequest,
@@ -108,8 +110,9 @@ pub fn verify_bounded_vote_request(
     Ok(true)
 }
 
-/// Verifies whether the counting process is correct,
-/// specifically refers to that whether each counter used correct secret key when counting.
+/// Verifies zero-knowledge proof in the count request from each counter to
+/// confirm whether the counting process is correct, specifically refers to that
+/// whether each counter used correct secret key when counting.
 pub fn verify_count_request(
     param: &SystemParametersStorage,
     encrypted_vote_sum: &VoteStorage,
@@ -121,7 +124,8 @@ pub fn verify_count_request(
     )?;
     let blank_equality_proof_bytes =
         request.get_blank_part().get_equality_proof();
-    let blank_c2_r = bytes_to_point(&request.get_blank_part().get_blinding_c2())?;
+    let blank_c2_r =
+        bytes_to_point(&request.get_blank_part().get_blinding_c2())?;
     let blank_equality_proof =
         bytes_to_proto::<EqualityProof>(&blank_equality_proof_bytes)?;
     if !verify_equality_relationship_proof(
@@ -176,8 +180,9 @@ pub fn verify_vote_result(
 ) -> Result<bool, WedprError> {
     let blank_c1_sum =
         bytes_to_point(&vote_sum.get_blank_ballot().get_ciphertext1())?;
-    let blank_c2_r_sum =
-        bytes_to_point(&counting_result_sum.get_blank_part().get_blinding_c2())?;
+    let blank_c2_r_sum = bytes_to_point(
+        &counting_result_sum.get_blank_part().get_blinding_c2(),
+    )?;
     let expected_blank_ballot_result = blank_c1_sum - (blank_c2_r_sum);
     let mut get_blank_result: i64 = 0;
     for tmp in vote_result_request.get_result() {
@@ -230,7 +235,7 @@ pub fn verify_vote_result(
     Ok(true)
 }
 
-pub fn pending_commitment_vec(v: &mut Vec<RistrettoPoint>) {
+fn pending_commitment_vec(v: &mut Vec<RistrettoPoint>) {
     let length = v.len() as i32;
     let log_length = (length as f64).log2().ceil() as u32;
     let expected_len = 2_i32.pow(log_length);
