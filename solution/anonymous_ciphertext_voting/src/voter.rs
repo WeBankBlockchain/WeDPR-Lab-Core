@@ -16,12 +16,12 @@ use wedpr_l_crypto_zkp_utils::{
 use wedpr_l_protos::proto_to_bytes;
 use wedpr_l_utils::error::WedprError;
 use wedpr_s_protos::generated::acv::{
-    Ballot, BallotProof, CandidateBallot, StringToCandidateBallotProofPair,
-    RegistrationRequest, RegistrationResponse, SystemParametersStorage,
-    VoteChoices, VoteRequest, VoterSecret,
+    Ballot, BallotProof, CandidateBallot, RegistrationRequest,
+    RegistrationResponse, StringToCandidateBallotProofPair,
+    SystemParametersStorage, VoteChoices, VoteRequest, VoterSecret,
 };
 
-/// Generates a random number as secret number for applying blank ballot.
+/// Generates a random number as secret number for applying for blank ballot.
 pub fn make_voter_secret() -> VoterSecret {
     let vote_secret = get_random_scalar();
     VoterSecret {
@@ -31,7 +31,7 @@ pub fn make_voter_secret() -> VoterSecret {
     }
 }
 
-/// Applys to the coordinator for blank ballot using own weight and secret number.
+/// Applys to the coordinator for blank ballot using own secret number and system parameters.
 pub fn make_bounded_registration_request(
     secret: &VoterSecret,
     param: &SystemParametersStorage,
@@ -76,13 +76,14 @@ pub fn verify_blank_ballot(
         && request_ciphertext2 == response_ciphertext2)
 }
 
-/// Generate a vote request containing ballots for selected candidates, rest ballot
-/// and a group of zero-knowledge proofs to prove that ballots is correct,
-/// where zero-knowledge proofs contains format proof, balance proof and range proof.
-/// The format proof is used to prove that the format of ballots is correct
-/// so that it can be counted in the total number of votes when counting,
-/// the balance proof is used to prove that poll ballots + the rest ballot = the blank ballot,
-/// the range proof is used to prove that the value of ballot is non-negative.
+/// Generate a vote request containing ballots for selected candidates, rest
+/// ballot and a group of zero-knowledge proofs to prove that ballots is
+/// correct, where zero-knowledge proofs contains format proof, balance proof
+/// and range proof. The format proof is used to prove that the format of
+/// ballots is correct so that it can be counted in the total number of votes
+/// when counting, the balance proof is used to prove that poll ballots + the
+/// rest ballot = the blank ballot, the range proof is used to prove that the
+/// value of each ballot is non-negative.
 pub fn vote_bounded(
     secret: &VoterSecret,
     choices: &VoteChoices,
