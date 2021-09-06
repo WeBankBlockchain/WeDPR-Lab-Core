@@ -20,3 +20,4 @@ wedpr_l_macros = "1.0.0"
 wedpr_l_protos = { git = "https://github.com/WeBankBlockchain/WeDPR-Lab-Crypto.git", branch = "release-1.2.0" }
 wedpr_l_utils = "1.1.0"
 wedpr_s_protos = { path = "../../protos" }
+colored = "1.8"

@@ -36,7 +36,7 @@ pub fn make_system_parameters(
 
 /// Certifies voter's weight which indicates the maximum value that the voter
 /// can vote in total.
-pub fn certify_bounded_voter(
+pub fn certify_voter(
     secret_key: &[u8],
     value: u32,
     registration_request: &RegistrationRequest,
@@ -74,6 +74,7 @@ pub fn aggregate_vote_sum_response(
     vote_storage_part: &VoteStorage,
     vote_sum: &mut VoteStorage,
 ) -> Result<bool, WedprError> {
+    // Init storage when first part upload
     if !vote_sum.has_blank_ballot() {
         vote_sum
             .mut_blank_ballot()
@@ -91,7 +92,6 @@ pub fn aggregate_vote_sum_response(
             vote_sum.mut_voted_ballot().push(ballot_pair);
         }
     }
-
     let mut tmp_vote_storage_sum = VoteStorage::new();
     let mut blank_c1_sum =
         bytes_to_point(&vote_sum.get_blank_ballot().get_ciphertext1())?;
@@ -157,6 +157,7 @@ pub fn aggregate_decrypted_part_sum(
     decrypted_result_part_storage: &DecryptedResultPartStorage,
     counting_result_sum: &mut DecryptedResultPartStorage,
 ) -> Result<bool, WedprError> {
+    // Init storage when first part upload
     if !counting_result_sum.has_blank_part() {
         counting_result_sum
             .mut_blank_part()

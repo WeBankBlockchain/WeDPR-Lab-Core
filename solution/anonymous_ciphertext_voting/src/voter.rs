@@ -31,8 +31,9 @@ pub fn make_voter_secret() -> VoterSecret {
     }
 }
 
-/// Applys to the coordinator for blank ballot using own secret number and system parameters.
-pub fn make_bounded_registration_request(
+/// Applys to the coordinator for blank ballot using own secret number and
+/// system parameters.
+pub fn make_registration_request(
     secret: &VoterSecret,
     param: &SystemParametersStorage,
 ) -> Result<RegistrationRequest, WedprError> {
@@ -58,9 +59,6 @@ pub fn verify_blank_ballot(
 ) -> Result<bool, WedprError> {
     let blinding_poll_point =
         bytes_to_point(request.get_weight_point().get_blinding_poll_point())?;
-    // let blinding_basepoint_g2 = bytes_to_point(
-    //     request.get_weight_point().get_blinding_basepoint_g2(),
-    // )?;
     let voter_weight = response.get_voter_weight();
     let computed_ciphertext1 = point_to_bytes(
         &(blinding_poll_point + *BASEPOINT_G1 * Scalar::from(voter_weight)),
@@ -84,7 +82,7 @@ pub fn verify_blank_ballot(
 /// when counting, the balance proof is used to prove that poll ballots + the
 /// rest ballot = the blank ballot, the range proof is used to prove that the
 /// value of each ballot is non-negative.
-pub fn vote_bounded(
+pub fn vote(
     secret: &VoterSecret,
     choices: &VoteChoices,
     response: &RegistrationResponse,

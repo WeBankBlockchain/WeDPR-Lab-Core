@@ -29,7 +29,7 @@ use crate::config::{HASH_KECCAK256, SIGNATURE_SECP256K1};
 /// voter to confirm whether each ballot of voter is correct, specifically
 /// refers to the format, the accounting balance and the numerical range of each
 /// ciphertext ballot.
-pub fn verify_bounded_vote_request(
+pub fn verify_vote_request(
     param: &SystemParametersStorage,
     request: &VoteRequest,
     public_key: &[u8],

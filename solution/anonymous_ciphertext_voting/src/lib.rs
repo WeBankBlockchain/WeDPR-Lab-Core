@@ -8,7 +8,7 @@ extern crate lazy_static;
 #[macro_use]
 extern crate wedpr_l_macros;
 
-mod config;
+pub mod config;
 pub mod coordinator;
 pub mod counter;
 pub mod verifier;
@@ -30,7 +30,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_bounded_voting() {
+    fn test_anonymous_ciphertext_voting() {
         // Generate coordinator's key pair
         let max_vote_number = 20000;
         let (public_key, secret_key) = SIGNATURE_SECP256K1.generate_keypair();
@@ -72,12 +72,12 @@ mod tests {
             voter_secret_list.push(vote_secret.clone());
 
             // voter -> coordinator generate blank ballot
-            let vote_request = voter::make_bounded_registration_request(
+            let vote_request = voter::make_registration_request(
                 &vote_secret,
                 &system_parameters,
             )
             .unwrap();
-            let response = coordinator::certify_bounded_voter(
+            let response = coordinator::certify_voter(
                 &secret_key,
                 blank_ballot,
                 &vote_request,
@@ -110,7 +110,7 @@ mod tests {
         let mut encrypted_vote_sum = VoteStorage::new();
         for index in 0..voting_ballot_count.len() {
             let ballot_choice = make_choice(&voting_ballot_count[index]);
-            let vote_request = voter::vote_bounded(
+            let vote_request = voter::vote(
                 &voter_secret_list[index],
                 &ballot_choice,
                 &response_list[index],
@@ -119,7 +119,7 @@ mod tests {
             .unwrap();
             assert_eq!(
                 true,
-                verifier::verify_bounded_vote_request(
+                verifier::verify_vote_request(
                     &system_parameters,
                     &vote_request,
                     &public_key
