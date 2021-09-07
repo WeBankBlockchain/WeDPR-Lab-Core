@@ -11,8 +11,8 @@ description = "Library of Hierarchical Deterministic Key (HDK) solution."
 [dependencies]
 hex = "0.3"
 rand = "0.7"
-wagyu-model = "0.6.3"
-wagyu_lib = { package = "wagyu-bitcoin", version = "0.6.3" }
+wagyu-model = { package = "h-wagyu-model", version = "0.6.3" }
+wagyu_lib = { package = "wagyu-hdk", version = "0.6.4" }
 wedpr_l_macros = "1.0.0"
 wedpr_l_utils = "1.0.0"
 
