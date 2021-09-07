@@ -52,31 +52,48 @@ fn main() {
     }
 }
 
-fn flow_en() {
-    // TODO: en flow
-}
-
 fn flow_cn() {
     print_wide(
-        "投票demo流程中，你将体验如何通过明文数据生成投票密文， \
-         并了解投票密文如何解密获取最终结果的过程",
+        "投票demo流程中，你将体验隐匿密文投票的全过程，具体包括：\n
+        1. 投票者如何使用密文选票进行匿名投票；\n
+        2. 计票者如何联合解密得到计票结果；\n
+        3. 任意验证者如何借助零知识证明来验证整个过程中投票者与计票者行为的正确性。",
     );
+    print_wide("为了更容易理解其效果，我们设定了如下示例场景。");
 
-    print_wide("本示例中，您将与三个投票者，共同为三位候选人进行投票");
+    println!(
+        "{}\n{}\n{}\n",
+        "【场景介绍】".yellow(),
+        "4个投票者为3个候选人进行投票，\
+         每个投票者都可向其中任意一个或多个候选人投出包含一定数值的密文选票，",
+        "3个计票者需合作才能统计出每个候选人的最终得票。",
+    );
+    println!(
+        "{}\n{}\n{}\n{}\n{}\n{}\n",
+        "【流程介绍】".yellow(),
+        "1. 投票者获得初始选票；",
+        "2. 投票者决定为各候选人分别投出多少数额，\
+         生成并公布对应的密文选票和零知识证明；",
+        "3. 任意验证者验证投票者公布的密文选票是否正确有效；",
+        "4. 计票者联合计算每个候选人的得票，公布统计结果和零知识证明；",
+        "5. 任意验证者验证计票者的计票过程及计票结果是否正确有效。"
+    );
+    pause_cn();
 
     println!(
         "{} {} {}\n",
         "【演示进度】",
-        "<<申请空白选票>>".yellow(),
-        "↦ 生成密文选票 ↦ 聚合密文选票 ↦ 联合解密选票 ↦ 公布计票结果",
+        "<<生成并公布初始密文选票>>".yellow(),
+        "↦ 生成并公布对各候选人的密文选票 ↦ 验证密文选票 ↦ \
+         联合计票并公布计票信息↦ 验证计票过程 ↦ 公布计票结果 ↦ 验证计票结果",
     );
 
     print_alert(
-        "现在请输入空白选票的投票数额：\
-         ▼▼（空白选票为投票者可以为所有候选人分配的票数总和））",
+        "现在请输入初始选票的数额：▼▼（初始选票的数额表示：\
+         该投票者可以投出的密文选票总额上限）",
     );
     print_highlight(
-        "在这个demo中，我们暂定投票上限为100（真实业务可按需扩展），\
+        "在这个demo中，我们暂定初始选票数额上限为100（真实业务可按需扩展），\
          请输入0到100之间的整数",
     );
     let value1 = wait_for_number_cn();
@@ -85,13 +102,12 @@ fn flow_cn() {
     let (public_key, secret_key) = SIGNATURE_SECP256K1.generate_keypair();
     let mut candidate_list = CandidateList::new();
     // Init candidate list
-    for candidate in vec!["小明", "小王", "小张"] {
+    for candidate in vec!["候选人1", "候选人2", "候选人3"] {
         candidate_list.mut_candidate().push(candidate.to_string());
     }
     let counter_id_list = vec!["1001", "1002", "1003"];
     let mut blank_ballot_count = vec![100, 100, 100];
     blank_ballot_count.push(value1 as u32);
-    println!("候选人分别为：{:?}", vec!["小明", "小王", "小张"]);
 
     let mut counter_secret_list: Vec<CounterSecret> = vec![];
     let mut counter_parameters_storage =
@@ -137,23 +153,34 @@ fn flow_cn() {
             voter::verify_blank_ballot(&vote_request, &response).unwrap();
         assert_eq!(true, result);
     }
-    println!("您的空白选票为：{:?}", response_list[3].get_ballot());
+    println!(
+        "您的初始密文选票为：\n{:?}\n",
+        response_list[3].get_ballot()
+    );
+    print_alert(
+        "可以看到，投票者公布的初始密文选票中不包含投票者的身份及其初始数额。",
+    );
+    pause_cn();
 
     println!(
-        "{} {} {}\n",
-        "【演示进度】申请空白选票 ↦ ",
-        "<<生成密文选票>> ".yellow(),
-        "↦ 聚合密文选票 ↦ 联合解密选票 ↦ 公布计票结果",
+        "{} {} {} \n",
+        "【演示进度】生成并公布初始密文选票 ↦",
+        "<<生成并公布对各候选人的密文选票>>".yellow(),
+        "↦ 验证密文选票 ↦ 联合计票并公布计票信息↦ 验证计票过程 ↦ 公布计票结果 \
+         ↦ 验证计票结果",
     );
-    print_alert("现在请输入您对候选人：【小明】的投票数额：▼▼");
-    let value2 = wait_for_number_cn();
-    print_alert("现在请输入您对候选人：【小王】的投票数额：▼▼");
-    let value3 = wait_for_number_cn();
-    print_alert("现在请输入您对候选人：【小张】的投票数额：▼▼");
-    let value4 = wait_for_number_cn();
-    print_alert("注：当总数额大于空白选票数额时将会导致投票失败");
 
-    // voter vote
+    print_alert("现在请输入您对候选人1的投票数额：▼▼");
+    let value2 = wait_for_number_cn();
+    print_alert("现在请输入您对候选人2的投票数额：▼▼");
+    let value3 = wait_for_number_cn();
+    print_alert("现在请输入您对候选人3的投票数额：▼▼");
+    print_highlight(
+        "（注：当投出的总数额大于初始选票数值时，会导致投票失败）。",
+    );
+    let value4 = wait_for_number_cn();
+
+    // Voter votes.
     let make_choice = |x: &Vec<u32>| {
         let mut choices = VoteChoices::new();
         for i in 0..candidate_list.get_candidate().len() {
@@ -164,11 +191,15 @@ fn flow_cn() {
         }
         choices
     };
-
-    let voting_ballot_count: Vec<Vec<u32>> =
-        vec![vec![10, 20, 30], vec![10, 20, 30], vec![10, 20, 30], vec![
-            value2, value3, value4,
-        ]];
+    let candidate1_default = 10;
+    let candidate2_default = 20;
+    let candidate3_default = 30;
+    let voting_ballot_count: Vec<Vec<u32>> = vec![
+        vec![candidate1_default, candidate2_default, candidate3_default],
+        vec![candidate1_default, candidate2_default, candidate3_default],
+        vec![candidate1_default, candidate2_default, candidate3_default],
+        vec![value2, value3, value4],
+    ];
 
     let mut vote_request_list = vec![];
     let mut encrypted_vote_sum = VoteStorage::new();
@@ -181,47 +212,67 @@ fn flow_cn() {
             &system_parameters,
         )
         .unwrap();
-        assert_eq!(
-            true,
-            verifier::verify_vote_request(
-                &system_parameters,
-                &vote_request,
-                &public_key
-            )
-            .unwrap()
-        );
-        assert_eq!(
-            true,
-            coordinator::aggregate_vote_sum_response(
-                &system_parameters,
-                &vote_request.get_vote(),
-                &mut encrypted_vote_sum
-            )
-            .unwrap()
-        );
+        coordinator::aggregate_vote_sum_response(
+            &system_parameters,
+            &vote_request.get_vote(),
+            &mut encrypted_vote_sum,
+        )
+        .unwrap();
         vote_request_list.push(vote_request);
     }
-    println!("您的密文选票为：{:?}", vote_request_list[3].get_vote());
+    println!(
+        "\n您公布的密文选票为：\n{:?}\n",
+        vote_request_list[3].get_vote()
+    );
+    print_alert(
+        "可以看到：投票者公布的密文选票中不包含投票者身份、候选人身份、\
+         投票数额等信息。",
+    );
+    println!("假定其他投票者对三位候选人的投票均为[10，20，30]。");
     pause_cn();
 
     println!(
-        "{} {} {}\n",
-        "【演示进度】申请空白选票 ↦ 生成密文选票 ↦ ",
-        "<<聚合密文选票>> ".yellow(),
-        "↦ 联合解密选票 ↦ 公布计票结果",
+        "{} {} {} \n",
+        "【演示进度】 生成并公布初始密文选票 ↦ 生成并公布对各候选人的密文选票 \
+         ↦",
+        "验证密文选票".yellow(),
+        "↦ 联合计票并公布计票信息↦ 验证计票过程 ↦ 公布计票结果 ↦ 验证计票结果",
     );
 
-    println!("所有投票者聚合后的密文选票为：{:?}", encrypted_vote_sum);
+    println!(
+        "验证内容包括：\n1. 投给每个候选人的密文选票数额非负；\n2. \
+         每个密文选票格式正确（否则会导致后续计票失败）；\n3. \
+         投票者投出的密文选票数额之和小于等于其初始选票数额。"
+    );
+
+    print_alert("\n只有通过验证的密文选票，才会进入后续计票流程。");
+    pause_cn();
+
+    // Verifier verifies voters.
+    let length = vote_request_list.len().clone();
+    for index in 0..length {
+        let verify_voter = verifier::verify_vote_request(
+            &system_parameters,
+            &vote_request_list[index],
+            &public_key,
+        )
+        .unwrap();
+        println!("\n对投票者{}的验证结果为：{:?}", index, verify_voter);
+    }
     pause_cn();
 
     println!(
-        "{} {} {}\n",
-        "【演示进度】申请空白选票 ↦ 生成密文选票 ↦ 聚合密文选票 ↦ ",
-        "<<联合解密选票>> ".yellow(),
-        "↦ 公布计票结果",
+        "{} {} {} \n",
+        "【演示进度】 生成并公布初始密文选票 ↦ 生成并公布对各候选人的密文选票 \
+         ↦ 验证密文选票 ↦",
+        "联合计票并公布计票信息".yellow(),
+        "↦ 验证计票过程 ↦ 公布计票结果 ↦ 验证计票结果",
     );
 
+    // Counters count.
     let mut vote_sum_total = DecryptedResultPartStorage::new();
+    let mut decrypt_request_list = vec![];
+    let mut share_list = vec![];
     let length = counter_secret_list.len().clone();
     for index in 0..length {
         let decrypt_request = counter::count(
@@ -237,16 +288,6 @@ fn flow_cn() {
         .unwrap();
         assert_eq!(
             true,
-            verifier::verify_count_request(
-                &system_parameters,
-                &encrypted_vote_sum,
-                &share,
-                &decrypt_request
-            )
-            .unwrap()
-        );
-        assert_eq!(
-            true,
             coordinator::aggregate_decrypted_part_sum(
                 &system_parameters,
                 &decrypt_request,
@@ -254,16 +295,48 @@ fn flow_cn() {
             )
             .unwrap()
         );
+        decrypt_request_list.push(decrypt_request);
+        share_list.push(share);
     }
-    println!("所有计票者联合解密投票结果为：{:?}", vote_sum_total);
+    println!("所有计票者联合计票的计票信息为：\n{:?}", vote_sum_total);
+    print_alert(
+        "可以看到：计票者公布的计票信息中不包含计票者身份等计票者隐私信息。",
+    );
     pause_cn();
 
     println!(
-        "{} {} {}\n",
-        "【演示进度】申请空白选票 ↦ 生成密文选票 ↦ 聚合密文选票 ↦ \
-         联合解密选票 ↦ ",
-        "<<公布计票结果>> ".yellow(),
-        "",
+        "{} {} {} \n",
+        "【演示进度】 生成并公布初始密文选票 ↦ 生成并公布对各候选人的密文选票 \
+         ↦ 验证密文选票 ↦ 联合计票并公布计票信息 ↦",
+        "验证计票过程".yellow(),
+        "↦ 公布计票结果 ↦ 验证计票结果",
+    );
+
+    println!(
+        "验证计票过程，是指：\n
+         验证计票者公布的计票信息是使用正确的计票者密钥计算而得，\
+         而不是随意构造而得。"
+    );
+    let length = counter_secret_list.len().clone();
+    for index in 0..length {
+        let verify_counter = verifier::verify_count_request(
+            &system_parameters,
+            &encrypted_vote_sum,
+            &share_list[index],
+            &decrypt_request_list[index],
+        )
+        .unwrap();
+        println!("\n对计票者{}的验证结果为：{:?}", index, verify_counter);
+    }
+
+    pause_cn();
+
+    println!(
+        "{} {} {} \n",
+        "【演示进度】 生成并公布初始密文选票 ↦ 生成并公布对各候选人的密文选票 \
+         ↦ 验证密文选票 ↦ 联合计票并公布计票信息 ↦ 验证计票过程 ↦",
+        "公布计票结果".yellow(),
+        "↦ 验证计票结果",
     );
 
     let final_result_request = coordinator::finalize_vote_result(
@@ -273,23 +346,80 @@ fn flow_cn() {
         max_vote_number,
     )
     .unwrap();
-    println!("另外三位投票者对候选人的投票分别均为10，20，30");
-    for f_result in final_result_request.get_result() {
-        println!(
-            "候选人：{}, 最终得票{}",
-            f_result.get_key(),
-            f_result.get_value()
-        )
+
+    println!(
+        "{}： 最终得票为{}。",
+        final_result_request.get_result()[1].get_key(),
+        final_result_request.get_result()[1].get_value()
+    );
+    println!(
+        "{}： 最终得票为{}。",
+        final_result_request.get_result()[2].get_key(),
+        final_result_request.get_result()[2].get_value()
+    );
+    println!(
+        "{}： 最终得票为{}。",
+        final_result_request.get_result()[3].get_key(),
+        final_result_request.get_result()[3].get_value()
+    );
+
+    print_alert("\n对比明文统计结果：");
+    let plaintext_result1 =
+        (candidate1_default + candidate1_default + candidate1_default + value2).into();
+    let plaintext_result2 =
+        (candidate2_default + candidate2_default + candidate2_default + value3).into();
+    let plaintext_result3 =
+        (candidate3_default + candidate3_default + candidate3_default + value4).into();
+    println!(
+        "候选人1得票：{} + {} + {} + {} = {}",
+        candidate1_default,
+        candidate1_default,
+        candidate1_default,
+        value2,
+        plaintext_result1
+    );
+    println!(
+        "候选人2得票：{} + {} + {} + {} = {}",
+        candidate2_default,
+        candidate2_default,
+        candidate2_default,
+        value3,
+        plaintext_result2
+    );
+    println!(
+        "候选人3得票：{} + {} + {} + {} = {}",
+        candidate3_default,
+        candidate3_default,
+        candidate3_default,
+        value4,
+        plaintext_result3
+    );
+    if final_result_request.get_result()[1].get_value() == plaintext_result1
+        && final_result_request.get_result()[2].get_value() == plaintext_result2
+        && final_result_request.get_result()[3].get_value() == plaintext_result3
+    {
+        print_alert("\n可以看到，密文选票的计票结果与明文计算结果一致。");
     }
-    let result = verifier::verify_vote_result(
+
+    pause_cn();
+
+    println!(
+        "{} {} \n",
+        "【演示进度】 生成并公布初始密文选票 ↦ 生成并公布对各候选人的密文选票 \
+         ↦ 验证密文选票 ↦ 联合计票并公布计票信息 ↦ 验证计票过程 ↦ \
+         公布计票结果 ↦",
+        "验证计票结果".yellow(),
+    );
+
+    let verify_result = verifier::verify_vote_result(
         &system_parameters,
         &encrypted_vote_sum,
         &vote_sum_total,
         &final_result_request,
     )
     .unwrap();
-    assert!(result);
 
+    println!("\n验证结果为：{:?}", verify_result);
     pause_cn();
 
     print_alert("十分感谢您的试用！");
@@ -300,6 +430,10 @@ fn flow_cn() {
         "2. 官方邮箱【wedpr@webank.com】"
     );
     println!();
+}
+
+fn flow_en() {
+    // TODO: en flow
 }
 
 // Utility functions
