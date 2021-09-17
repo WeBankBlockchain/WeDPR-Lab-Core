@@ -3,7 +3,6 @@
 //! Minimalist demo of verifiable confidential ledger.
 
 use colored::*;
-use protobuf::Message;
 use std;
 use wedpr_l_crypto_zkp_utils::point_to_bytes;
 use wedpr_s_verifiable_confidential_ledger::vcl;
@@ -46,7 +45,7 @@ fn main() {
 }
 
 fn flow_cn() {
-    print_wide("账本demo流程中，你将体验如何通过账本金额的明文数据生成对应的密文凭证， \
+    print_wide("账本demo流程中，您将体验如何通过账本金额的明文数据生成对应的密文凭证， \
         并了解密文凭证配套零知识证明的基础用法");
 
     println!(

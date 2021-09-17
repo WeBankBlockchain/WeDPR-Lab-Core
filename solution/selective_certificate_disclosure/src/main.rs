@@ -63,7 +63,7 @@ fn flow_cn() {
     let (certificate_template, template_private_key) =
         issuer_init_certificate_template();
     print_wide(
-        "本demo中，你将体验如何申请并使用具备选择性认证披露功能的新一代数字凭证。\
+        "本demo中，您将体验如何申请并使用具备选择性认证披露功能的新一代数字凭证。\
         为了更容易理解其效果，我们设定了如下示例应用场景。",
     );
     println!(

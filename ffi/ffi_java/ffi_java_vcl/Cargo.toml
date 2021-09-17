@@ -20,6 +20,7 @@ wedpr_l_protos = "1.1.0"
 wedpr_s_protos = { path = "../../../protos" }
 wedpr_s_verifiable_confidential_ledger = { path = "../../../solution/verifiable_confidential_ledger" }
 
+# This is required to generate C/C++ header files.
 [build-dependencies]
 cbindgen = "0.9.0"
 

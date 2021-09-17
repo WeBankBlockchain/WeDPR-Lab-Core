@@ -1,4 +1,4 @@
-// Copyright 2020 WeDPR Lab Project Authors. Licensed under Apache-2.0.
+// Copyright 2021 WeDPR Lab Project Authors. Licensed under Apache-2.0.
 
 syntax = "proto3";
 
@@ -11,34 +11,34 @@ message CandidateList {
   repeated string candidate = 1;
 }
 
-// System parameters.
-message SystemParametersStorage {
+// Shared system parameters to initialize a poll.
+message PollParametersStorage {
   bytes poll_point = 1;
   CandidateList candidates = 2;
 }
 
-// Counter's secret value.
+// Secret of a counter.
 message CounterSecret {
   bytes poll_secret_share = 1;
 }
 
-// Voter's secret value.
+// Secret of a voter.
 message VoterSecret {
   bytes voter_secret = 1;
 }
 
-// Request of voter's registration.
+// Request of registering a voter.
 message RegistrationRequest {
   RegistrationBlindingPoint weight_point = 1;
 }
 
-// delete?
+// Blinding points for a voter registration.
 message RegistrationBlindingPoint {
   bytes blinding_poll_point = 1;
   bytes blinding_basepoint_g2 = 2;
 }
 
-// Response of coordinator for voter's registration.
+// Response of voter registration.
 message RegistrationResponse {
   uint32 voter_weight = 1;
   Ballot ballot = 2;
@@ -51,30 +51,29 @@ message Ballot {
   bytes ciphertext2 = 2;
 }
 
-
-// Request of generating system parameter from a counter.
-message CounterSystemParametersShareRequest {
+// Request of aggregating a part of system parameters from a counter.
+message CounterParametersShareRequest {
   string counter_id = 1;
   bytes poll_point_share = 2;
 }
 
-// Requests of generating system parameter from all counters.
-message CounterSystemParametersStorage {
-  repeated CounterSystemParametersShareRequest counter_parameters_request = 1;
+// Shared system parameters to initialize a group of counters.
+message CounterParametersStorage {
+  repeated CounterParametersShareRequest counter_parameters_share = 1;
 }
 
-// Choice of ballot casting for each candidate.
+// Vote choice for a candidate.
 message VoteChoice {
   string candidate = 1;
   uint32 value = 2;
 }
 
-// Choices for all candidate.
+// Choice list for all candidates.
 message VoteChoices {
   repeated VoteChoice choice = 1;
 }
 
-// Ciphertext ballot for each candidate.
+// Ciphertext ballot for a candidate.
 message CandidateBallot {
   string candidate = 1;
   Ballot ballot = 2;
@@ -85,22 +84,21 @@ message BallotProof {
   bytes format_proof = 1;
 }
 
-// Pair of candidate index and the ballot proof he received.
-message StringToCandidateBallotProofPair {
+// Pair of string (candidate id) and BallotProof.
+message StringToBallotProofPair {
   string key = 1;
   BallotProof value = 2;
 }
 
-// Do not use Map, cause unordered in blockchain
-// Request of polling for all candidates.
+// Request of voting for all candidates.
 message VoteRequest {
   VoteStorage vote = 1;
-  repeated StringToCandidateBallotProofPair ballot_proof = 2;
+  repeated StringToBallotProofPair ballot_proof = 2;
   bytes range_proof = 3;
   bytes sum_balance_proof = 4;
 }
 
-// Polling for each candidates.
+// Ciphertext ballot for all candidates.
 message VoteStorage {
   bytes signature = 1;
   Ballot blank_ballot = 2;
@@ -108,31 +106,31 @@ message VoteStorage {
   repeated CandidateBallot voted_ballot = 4;
 }
 
-// Decrypted ballot and ZKP data to verify the process of counting of each counter.
+// Partially decrypted ballot and associated ZKP data for a candidate.
 message CountingPart {
   string counter_id = 1;
   bytes blinding_c2 = 2;
   bytes equality_proof = 3;
 }
 
-// Pair of candidate index and the decrypted ballot he received.
+// Pair of string (candidate id) and CountingPart.
 message StringToCountingPartPair {
   string key = 1;
   CountingPart value = 2;
 }
 
-// Decrypted ballot and ZKP data to verify the process of counting of all counters.
+// Partially decrypted ballots and associated ZKP data for a poll.
 message DecryptedResultPartStorage {
   CountingPart blank_part = 1;
   repeated StringToCountingPartPair candidate_part = 2;
 }
 
-// Final result of all candidates.
+// Fully decrypted result of a poll.
 message VoteResultStorage {
   repeated StringToInt64Pair result = 1;
 }
 
-// Final result of each candidate.
+// Pair of string (candidate id) and number.
 message StringToInt64Pair {
   string key = 1;
   int64 value = 2;

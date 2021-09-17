@@ -2,11 +2,10 @@
 
 //! Core functions of hierarchical deterministic key (HDK)
 
-use wagyu_lib::{
-    wordlist, HdkDerivationPath, HdkExtendedPrivateKey,
-    HdkMnemonic, Mainnet,
+use hdk_ext_lib::{
+    wordlist, HdkDerivationPath, HdkExtendedPrivateKey, HdkMnemonic, Mainnet,
 };
-use wagyu_model::{
+use hdk_ext_model::{
     mnemonic::Mnemonic, ExtendedPrivateKey, MnemonicCount, MnemonicExtended,
 };
 
@@ -43,21 +42,20 @@ pub fn create_master_key_en(
     password: &str,
     mnemonic_str: &str,
 ) -> Result<Vec<u8>, WedprError> {
-    let mnemonic =
-        match HdkMnemonic::<Mainnet, wordlist::English>::from_phrase(
-            mnemonic_str,
-        ) {
-            Ok(v) => v,
-            Err(_) => {
-                wedpr_println!(
-                    "mnemonic check failed!, mnemonic = {}",
-                    mnemonic_str
-                );
-                return Err(WedprError::ArgumentError);
-            },
-        };
+    let mnemonic = match HdkMnemonic::<Mainnet, wordlist::English>::from_phrase(
+        mnemonic_str,
+    ) {
+        Ok(v) => v,
+        Err(_) => {
+            wedpr_println!(
+                "mnemonic check failed!, mnemonic = {}",
+                mnemonic_str
+            );
+            return Err(WedprError::ArgumentError);
+        },
+    };
     let master_extended_private_key = match mnemonic
-        .to_extended_private_key(Some(password).clone())
+        .to_extended_private_key(Some(password))
     {
         Ok(v) => v,
         Err(_) => {
@@ -132,9 +130,12 @@ pub fn derive_extended_key(
             return Err(WedprError::FormatError);
         },
     };
-    let private_key_hex = hex::encode(extended_private_key
-        .to_private_key()
-        .to_secp256k1_secret_key().serialize());
+    let private_key_hex = hex::encode(
+        extended_private_key
+            .to_private_key()
+            .to_secp256k1_secret_key()
+            .serialize(),
+    );
 
     let extended_private_key_bytes = match decode_hex_string(&private_key_hex) {
         Ok(v) => v,
@@ -151,7 +152,7 @@ pub fn derive_extended_key(
         .to_public_key()
         .to_secp256k1_public_key()
         .serialize();
-        // .serialize_uncompressed();
+    // .serialize_uncompressed();
 
     // TODO: Replace with a better way to initialize PB if available.
     Ok(ExtendedKeyPair {

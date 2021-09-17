@@ -6,9 +6,12 @@ use wedpr_l_crypto_hash_keccak256::WedprKeccak256;
 use wedpr_l_crypto_signature_secp256k1::WedprSecp256k1Recover;
 
 lazy_static! {
-    /// Shared hash algorithm reference for quick implementation replacement.
-    /// Other code should use this reference, and not directly use a specific implementation.
-    pub static ref SIGNATURE_SECP256K1: WedprSecp256k1Recover =
+    /// Shared signature algorithm reference for quick implementation replacement.
+    pub static ref SIGNATURE: WedprSecp256k1Recover =
         WedprSecp256k1Recover::default();
-    pub static ref HASH_KECCAK256: WedprKeccak256 = WedprKeccak256::default();
+    /// Shared hash algorithm reference for quick implementation replacement.
+    pub static ref HASH: WedprKeccak256 = WedprKeccak256::default();
 }
+
+/// Poll result key for total ballots.
+pub const POLL_RESULT_KEY_TOTAL_BALLOTS: &str = "Wedpr_voting_total_ballots";
