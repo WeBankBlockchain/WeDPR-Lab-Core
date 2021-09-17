@@ -6,21 +6,21 @@ use wedpr_l_crypto_zkp_utils::bytes_to_point;
 use wedpr_l_utils::traits::Signature;
 
 use wedpr_s_protos::generated::acv::{
-    CandidateList, CounterSecret, CounterSystemParametersStorage,
-    DecryptedResultPartStorage, VoteChoice, VoteChoices, VoteStorage,
-    VoterSecret,
+    CandidateList, CounterParametersStorage, CounterSecret,
+    DecryptedResultPartStorage, VoteStorage, VoterSecret,
 };
 
 extern crate wedpr_s_anonymous_ciphertext_voting;
 use colored::Colorize;
 use wedpr_s_anonymous_ciphertext_voting::{
-    config::SIGNATURE_SECP256K1, coordinator, counter, verifier, voter,
+    config::{POLL_RESULT_KEY_TOTAL_BALLOTS, SIGNATURE},
+    coordinator, counter, verifier, voter,
 };
 
 fn main() {
     print_highlight2(
         "#\n# Welcome to anonymous ciphertext voting (ACV) demo!",
-        "# 欢迎来到匿名密文投票demo演示!\n#",
+        "# 欢迎来到多方密文决策demo演示!\n#",
     );
     println!();
     print_alert2(
@@ -54,8 +54,8 @@ fn main() {
 
 fn flow_cn() {
     print_wide(
-        "投票demo流程中，你将体验隐匿密文投票的全过程，具体包括：\n
-        1. 投票者如何使用密文选票进行匿名投票；\n
+        "投票demo流程中，您将体验多方密文决策的全过程，具体包括：\n
+        1. 投票者如何使用密文选票进行隐匿投票；\n
         2. 计票者如何联合解密得到计票结果；\n
         3. 任意验证者如何借助零知识证明来验证整个过程中投票者与计票者行为的正确性。",
     );
@@ -71,10 +71,10 @@ fn flow_cn() {
     println!(
         "{}\n{}\n{}\n{}\n{}\n{}\n",
         "【流程介绍】".yellow(),
-        "1. 投票者获得初始选票；",
-        "2. 投票者决定为各候选人分别投出多少数额，\
-         生成并公布对应的密文选票和零知识证明；",
-        "3. 任意验证者验证投票者公布的密文选票是否正确有效；",
+        "1. 投票者申请密文空白选票；",
+        "2. 投票者决定为各候选人分别投出多少票数，\
+         生成并投出对应的密文选票和零知识证明；",
+        "3. 任意验证者验证投票者投出的密文选票是否正确有效；",
         "4. 计票者联合计算每个候选人的得票，公布统计结果和零知识证明；",
         "5. 任意验证者验证计票者的计票过程及计票结果是否正确有效。"
     );
@@ -83,114 +83,102 @@ fn flow_cn() {
     println!(
         "{} {} {}\n",
         "【演示进度】",
-        "<<生成并公布初始密文选票>>".yellow(),
-        "↦ 生成并公布对各候选人的密文选票 ↦ 验证密文选票 ↦ \
-         联合计票并公布计票信息↦ 验证计票过程 ↦ 公布计票结果 ↦ 验证计票结果",
+        "<<申请密文空白选票>>".yellow(),
+        "↦ 投出对各候选人的密文选票 ↦ 验证密文选票 ↦ 联合计票并公布计票信息↦ \
+         验证计票过程 ↦ 公布计票结果 ↦ 验证计票结果",
     );
 
     print_alert(
-        "现在请输入初始选票的数额：▼▼（初始选票的数额表示：\
-         该投票者可以投出的密文选票总额上限）",
+        "现在请输入当前投票者的密文空白选票的权重：\
+         ▼▼（密文空白选票的权重表示：该投票者可以投出的密文选票最大总票数）",
     );
     print_highlight(
-        "在这个demo中，我们暂定初始选票数额上限为100（真实业务可按需扩展），\
+        "这里，我们暂定密文空白选票权重上限为100（真实业务可按需扩展），\
          请输入0到100之间的整数",
     );
-    let value1 = wait_for_number_cn();
+    let last_voter_weight = wait_for_number_cn();
+    let mut voter_weight_list = vec![100, 100, 100];
+    voter_weight_list.push(last_voter_weight as u32);
+    let last_voter_id = voter_weight_list.len() - 1;
 
-    let max_vote_number = 20000;
-    let (public_key, secret_key) = SIGNATURE_SECP256K1.generate_keypair();
+    // Initialize a group of counters.
+    let counter_id_list = vec!["1001", "1002", "1003"];
+    let mut counter_secret_list: Vec<CounterSecret> = vec![];
+    let mut counter_parameters = CounterParametersStorage::default();
+    for id in counter_id_list.clone() {
+        let counter_secret = counter::make_counter_secret();
+        let counter_parameters_share =
+            counter::make_parameters_share(id, &counter_secret).unwrap();
+        counter_parameters
+            .mut_counter_parameters_share()
+            .push(counter_parameters_share);
+        counter_secret_list.push(counter_secret);
+    }
+
+    // Initialize the coordinator.
+    let (public_key, secret_key) = SIGNATURE.generate_keypair();
+
+    // Coordinator initializes a new poll.
     let mut candidate_list = CandidateList::new();
-    // Init candidate list
-    for candidate in vec!["候选人1", "候选人2", "候选人3"] {
+    for candidate in ["张三", "李四", "王五"] {
         candidate_list.mut_candidate().push(candidate.to_string());
     }
-    let counter_id_list = vec!["1001", "1002", "1003"];
-    let mut blank_ballot_count = vec![100, 100, 100];
-    blank_ballot_count.push(value1 as u32);
+    let poll_parameters =
+        coordinator::make_poll_parameters(&candidate_list, &counter_parameters)
+            .unwrap();
 
-    let mut counter_secret_list: Vec<CounterSecret> = vec![];
-    let mut counter_parameters_storage =
-        CounterSystemParametersStorage::default();
-    // Counter init
-    for id in counter_id_list.clone() {
-        let share_secret = counter::make_counter_secret();
-        counter_secret_list.push(share_secret.clone());
-        let counter_parameters_request =
-            counter::make_system_parameters_share(id, &share_secret).unwrap();
-        counter_parameters_storage
-            .mut_counter_parameters_request()
-            .push(counter_parameters_request.clone());
-    }
-    // coordinator make system parameters
-    let system_parameters = coordinator::make_system_parameters(
-        &candidate_list,
-        &counter_parameters_storage,
-    )
-    .unwrap();
-
-    // voter init
+    // Initialize all voters.
     let mut voter_secret_list: Vec<VoterSecret> = vec![];
-    let mut response_list = vec![];
-
-    for blank_ballot in blank_ballot_count {
+    let mut voter_registration_list = vec![];
+    // Voter weight is the max voting power of each voter assigned by
+    // coordinator.
+    for blank_ballot in voter_weight_list {
         let vote_secret = voter::make_voter_secret();
-        voter_secret_list.push(vote_secret.clone());
-
-        // voter -> coordinator generate blank ballot
-        let vote_request =
-            voter::make_registration_request(&vote_secret, &system_parameters)
+        // Register a voter with coordinator.
+        let registration_request =
+            voter::make_registration_request(&vote_secret, &poll_parameters)
                 .unwrap();
-        let response = coordinator::certify_voter(
+        let registration_response = coordinator::certify_voter(
             &secret_key,
+            &registration_request,
             blank_ballot,
-            &vote_request,
         )
         .unwrap();
-        response_list.push(response.clone());
-        // verify blank ballot
-        let result =
-            voter::verify_blank_ballot(&vote_request, &response).unwrap();
-        assert_eq!(true, result);
+        // Verify the blank ballot contained in registration_response.
+        assert!(voter::verify_blank_ballot(
+            &registration_request,
+            &registration_response
+        )
+        .unwrap());
+        voter_registration_list.push(registration_response);
+        voter_secret_list.push(vote_secret);
     }
     println!(
-        "您的初始密文选票为：\n{:?}\n",
-        response_list[3].get_ballot()
+        "您的密文空白选票为：\n{:?}\n",
+        voter_registration_list[last_voter_id].get_ballot()
     );
-    print_alert(
-        "可以看到，投票者公布的初始密文选票中不包含投票者的身份及其初始数额。",
-    );
+    print_alert("注：投票者申请的密文空白选票中不包含投票者的身份及其权重。");
     pause_cn();
 
     println!(
         "{} {} {} \n",
-        "【演示进度】生成并公布初始密文选票 ↦",
-        "<<生成并公布对各候选人的密文选票>>".yellow(),
+        "【演示进度】 申请密文空白选票 ↦",
+        "<<投出对各候选人的密文选票>>".yellow(),
         "↦ 验证密文选票 ↦ 联合计票并公布计票信息↦ 验证计票过程 ↦ 公布计票结果 \
          ↦ 验证计票结果",
     );
 
-    print_alert("现在请输入您对候选人1的投票数额：▼▼");
-    let value2 = wait_for_number_cn();
-    print_alert("现在请输入您对候选人2的投票数额：▼▼");
-    let value3 = wait_for_number_cn();
-    print_alert("现在请输入您对候选人3的投票数额：▼▼");
+    print_alert("现在请输入您对 张三 投票的票数：▼▼");
+    let candidate1_votes = wait_for_number_cn();
+    print_alert("现在请输入您对 李四 投票的票数：▼▼");
+    let candidate2_votes = wait_for_number_cn();
+    print_alert("现在请输入您对 王五 投票的票数：▼▼");
     print_highlight(
-        "（注：当投出的总数额大于初始选票数值时，会导致投票失败）。",
+        "注：当投出的总票数大于密文空白选票权重时，会导致投票失败。",
     );
-    let value4 = wait_for_number_cn();
+    let candidate3_votes = wait_for_number_cn();
 
-    // Voter votes.
-    let make_choice = |x: &Vec<u32>| {
-        let mut choices = VoteChoices::new();
-        for i in 0..candidate_list.get_candidate().len() {
-            let mut pair = VoteChoice::new();
-            pair.set_candidate(candidate_list.get_candidate()[i].clone());
-            pair.set_value(x[i]);
-            choices.mut_choice().push(pair);
-        }
-        choices
-    };
+    // All voters vote.
     let candidate1_default = 10;
     let candidate2_default = 20;
     let candidate3_default = 30;
@@ -198,22 +186,39 @@ fn flow_cn() {
         vec![candidate1_default, candidate2_default, candidate3_default],
         vec![candidate1_default, candidate2_default, candidate3_default],
         vec![candidate1_default, candidate2_default, candidate3_default],
-        vec![value2, value3, value4],
+        vec![candidate1_votes, candidate2_votes, candidate3_votes],
     ];
 
     let mut vote_request_list = vec![];
     let mut encrypted_vote_sum = VoteStorage::new();
     for index in 0..voting_ballot_count.len() {
-        let ballot_choice = make_choice(&voting_ballot_count[index]);
-        let vote_request = voter::vote(
+        let vote_choices = voter::make_vote_choices(
+            &voting_ballot_count[index],
+            &candidate_list,
+        );
+        let vote_request = match voter::vote(
             &voter_secret_list[index],
-            &ballot_choice,
-            &response_list[index],
-            &system_parameters,
-        )
-        .unwrap();
+            &vote_choices,
+            &voter_registration_list[index],
+            &poll_parameters,
+        ) {
+            Ok(v) => v,
+            Err(_) => {
+                println!(
+                    "\n投票失败：您投出的总票数超出您的权重限制：{} + {} + {} \
+                     > {}\n",
+                    candidate2_votes,
+                    candidate2_votes,
+                    candidate3_votes,
+                    last_voter_weight
+                );
+                return;
+            },
+        };
+
+        // Coordinator aggregates individual ciphertext ballots.
         coordinator::aggregate_vote_sum_response(
-            &system_parameters,
+            &poll_parameters,
             &vote_request.get_vote(),
             &mut encrypted_vote_sum,
         )
@@ -221,205 +226,221 @@ fn flow_cn() {
         vote_request_list.push(vote_request);
     }
     println!(
-        "\n您公布的密文选票为：\n{:?}\n",
-        vote_request_list[3].get_vote()
+        "\n您投出的密文选票为：\n{:?}\n",
+        vote_request_list[last_voter_id].get_vote()
     );
     print_alert(
-        "可以看到：投票者公布的密文选票中不包含投票者身份、候选人身份、\
-         投票数额等信息。",
+        "注：投票者投出的密文选票中不包含投票者身份、候选人获得票数等信息。",
     );
     println!("假定其他投票者对三位候选人的投票均为[10，20，30]。");
     pause_cn();
 
     println!(
         "{} {} {} \n",
-        "【演示进度】 生成并公布初始密文选票 ↦ 生成并公布对各候选人的密文选票 \
-         ↦",
-        "验证密文选票".yellow(),
+        "【演示进度】 申请密文空白选票 ↦ 投出对各候选人的密文选票 ↦",
+        "<<验证密文选票>>".yellow(),
         "↦ 联合计票并公布计票信息↦ 验证计票过程 ↦ 公布计票结果 ↦ 验证计票结果",
     );
 
     println!(
-        "验证内容包括：\n1. 投给每个候选人的密文选票数额非负；\n2. \
+        "验证内容包括：\n1. 投给每个候选人的密文选票票数非负；\n2. \
          每个密文选票格式正确（否则会导致后续计票失败）；\n3. \
-         投票者投出的密文选票数额之和小于等于其初始选票数额。"
+         投票者投出的密文选票票数之和小于等于其密文空白选票权重。"
     );
-
-    print_alert("\n只有通过验证的密文选票，才会进入后续计票流程。");
+    print_alert("\n注：只有通过验证的密文选票，才会进入后续计票流程。");
     pause_cn();
 
-    // Verifier verifies voters.
-    let length = vote_request_list.len().clone();
-    for index in 0..length {
-        let verify_voter = verifier::verify_vote_request(
-            &system_parameters,
-            &vote_request_list[index],
-            &public_key,
-        )
-        .unwrap();
-        println!("\n对投票者{}的验证结果为：{:?}", index, verify_voter);
+    // Verifier verifies all ciphertext ballots.
+    for index in 0..vote_request_list.len() {
+        println!(
+            "对投票者{}的验证结果为：{}",
+            index,
+            if verifier::verify_vote_request(
+                &poll_parameters,
+                &vote_request_list[index],
+                &public_key,
+            )
+            .unwrap()
+            {
+                "✓"
+            } else {
+                "✗"
+            }
+        );
     }
     pause_cn();
 
     println!(
         "{} {} {} \n",
-        "【演示进度】 生成并公布初始密文选票 ↦ 生成并公布对各候选人的密文选票 \
-         ↦ 验证密文选票 ↦",
-        "联合计票并公布计票信息".yellow(),
+        "【演示进度】 申请密文空白选票 ↦ 投出对各候选人的密文选票 ↦ \
+         验证密文选票 ↦",
+        "<<联合计票并公布计票信息>>".yellow(),
         "↦ 验证计票过程 ↦ 公布计票结果 ↦ 验证计票结果",
     );
 
-    // Counters count.
-    let mut vote_sum_total = DecryptedResultPartStorage::new();
-    let mut decrypt_request_list = vec![];
-    let mut share_list = vec![];
-    let length = counter_secret_list.len().clone();
-    for index in 0..length {
-        let decrypt_request = counter::count(
+    // All counters decrypt the poll result in a distributed manner.
+    let mut aggregated_decrypted_result = DecryptedResultPartStorage::new();
+    let mut partially_decrypted_result_list = vec![];
+    let mut counter_share_list = vec![];
+    for index in 0..counter_secret_list.len() {
+        let partially_decrypted_result = counter::count(
             &counter_id_list[index],
             &counter_secret_list[index],
             &encrypted_vote_sum,
         )
         .unwrap();
-        let share = bytes_to_point(
-            counter_parameters_storage.get_counter_parameters_request()[index]
+        let counter_share = bytes_to_point(
+            counter_parameters.get_counter_parameters_share()[index]
                 .get_poll_point_share(),
         )
         .unwrap();
+
+        // Coordinator aggregates parts of decrypted poll result.
         assert_eq!(
             true,
             coordinator::aggregate_decrypted_part_sum(
-                &system_parameters,
-                &decrypt_request,
-                &mut vote_sum_total
+                &poll_parameters,
+                &partially_decrypted_result,
+                &mut aggregated_decrypted_result
             )
             .unwrap()
         );
-        decrypt_request_list.push(decrypt_request);
-        share_list.push(share);
+        partially_decrypted_result_list.push(partially_decrypted_result);
+        counter_share_list.push(counter_share);
     }
-    println!("所有计票者联合计票的计票信息为：\n{:?}", vote_sum_total);
+    println!(
+        "所有计票者联合计票的聚合计票信息为：\n{:?}",
+        aggregated_decrypted_result
+    );
     print_alert(
-        "可以看到：计票者公布的计票信息中不包含计票者身份等计票者隐私信息。",
+        "注：计票者公布的聚合计票信息中无法反推出个人投票数等隐私信息。",
     );
     pause_cn();
 
     println!(
         "{} {} {} \n",
-        "【演示进度】 生成并公布初始密文选票 ↦ 生成并公布对各候选人的密文选票 \
-         ↦ 验证密文选票 ↦ 联合计票并公布计票信息 ↦",
-        "验证计票过程".yellow(),
+        "【演示进度】 申请密文空白选票 ↦ 投出对各候选人的密文选票 ↦ \
+         验证密文选票 ↦ 联合计票并公布计票信息 ↦",
+        "<<验证计票过程>>".yellow(),
         "↦ 公布计票结果 ↦ 验证计票结果",
     );
 
     println!(
-        "验证计票过程，是指：\n
+        "验证内容包括：\n1. \
          验证计票者公布的计票信息是使用正确的计票者密钥计算而得，\
-         而不是随意构造而得。"
+         而不是随意构造而得。\n"
     );
-    let length = counter_secret_list.len().clone();
-    for index in 0..length {
-        let verify_counter = verifier::verify_count_request(
-            &system_parameters,
-            &encrypted_vote_sum,
-            &share_list[index],
-            &decrypt_request_list[index],
-        )
-        .unwrap();
-        println!("\n对计票者{}的验证结果为：{:?}", index, verify_counter);
+    for index in 0..counter_secret_list.len() {
+        println!(
+            "对计票者{}的验证结果为：{}",
+            index,
+            if verifier::verify_count_request(
+                &poll_parameters,
+                &encrypted_vote_sum,
+                &counter_share_list[index],
+                &partially_decrypted_result_list[index],
+            )
+            .unwrap()
+            {
+                "✓"
+            } else {
+                "✗"
+            }
+        );
     }
 
     pause_cn();
 
     println!(
         "{} {} {} \n",
-        "【演示进度】 生成并公布初始密文选票 ↦ 生成并公布对各候选人的密文选票 \
-         ↦ 验证密文选票 ↦ 联合计票并公布计票信息 ↦ 验证计票过程 ↦",
-        "公布计票结果".yellow(),
+        "【演示进度】 申请密文空白选票 ↦ 投出对各候选人的密文选票 ↦ \
+         验证密文选票 ↦ 联合计票并公布计票信息 ↦ 验证计票过程 ↦",
+        "<<公布计票结果>>".yellow(),
         "↦ 验证计票结果",
     );
 
-    let final_result_request = coordinator::finalize_vote_result(
-        &system_parameters,
+    let max_vote_limit = 20000;
+    let vote_result = coordinator::finalize_vote_result(
+        &poll_parameters,
         &encrypted_vote_sum,
-        &vote_sum_total,
-        max_vote_number,
+        &aggregated_decrypted_result,
+        max_vote_limit,
     )
     .unwrap();
+    for result in vote_result.get_result() {
+        if result.get_key() == POLL_RESULT_KEY_TOTAL_BALLOTS {
+            continue;
+        }
+        println!("{} 最终得票为 {}", result.get_key(), result.get_value());
+    }
 
+    // TODO: Refactor to use a more elegant way for the following code.
+    print_alert("\n对比传统明文计票结果：");
+    let plaintext_result1 = (candidate1_default
+        + candidate1_default
+        + candidate1_default
+        + candidate1_votes) as i64;
+    let plaintext_result2 = (candidate2_default
+        + candidate2_default
+        + candidate2_default
+        + candidate2_votes) as i64;
+    let plaintext_result3 = (candidate3_default
+        + candidate3_default
+        + candidate3_default
+        + candidate3_votes) as i64;
     println!(
-        "{}： 最终得票为{}。",
-        final_result_request.get_result()[1].get_key(),
-        final_result_request.get_result()[1].get_value()
-    );
-    println!(
-        "{}： 最终得票为{}。",
-        final_result_request.get_result()[2].get_key(),
-        final_result_request.get_result()[2].get_value()
-    );
-    println!(
-        "{}： 最终得票为{}。",
-        final_result_request.get_result()[3].get_key(),
-        final_result_request.get_result()[3].get_value()
-    );
-
-    print_alert("\n对比明文统计结果：");
-    let plaintext_result1 =
-        (candidate1_default + candidate1_default + candidate1_default + value2).into();
-    let plaintext_result2 =
-        (candidate2_default + candidate2_default + candidate2_default + value3).into();
-    let plaintext_result3 =
-        (candidate3_default + candidate3_default + candidate3_default + value4).into();
-    println!(
-        "候选人1得票：{} + {} + {} + {} = {}",
+        "张三得票：{} + {} + {} + {} = {}",
         candidate1_default,
         candidate1_default,
         candidate1_default,
-        value2,
+        candidate1_votes,
         plaintext_result1
     );
     println!(
-        "候选人2得票：{} + {} + {} + {} = {}",
+        "李四得票：{} + {} + {} + {} = {}",
         candidate2_default,
         candidate2_default,
         candidate2_default,
-        value3,
+        candidate2_votes,
         plaintext_result2
     );
     println!(
-        "候选人3得票：{} + {} + {} + {} = {}",
+        "王五得票：{} + {} + {} + {} = {}",
         candidate3_default,
         candidate3_default,
         candidate3_default,
-        value4,
+        candidate3_votes,
         plaintext_result3
     );
-    if final_result_request.get_result()[1].get_value() == plaintext_result1
-        && final_result_request.get_result()[2].get_value() == plaintext_result2
-        && final_result_request.get_result()[3].get_value() == plaintext_result3
-    {
-        print_alert("\n可以看到，密文选票的计票结果与明文计算结果一致。");
-    }
-
+    assert!(
+        vote_result.get_result()[1].get_value() == plaintext_result1
+            && vote_result.get_result()[2].get_value() == plaintext_result2
+            && vote_result.get_result()[3].get_value() == plaintext_result3
+    );
+    print_alert("\n注：密文选票的计票结果与传统明文计票结果一致。");
     pause_cn();
 
     println!(
         "{} {} \n",
-        "【演示进度】 生成并公布初始密文选票 ↦ 生成并公布对各候选人的密文选票 \
-         ↦ 验证密文选票 ↦ 联合计票并公布计票信息 ↦ 验证计票过程 ↦ \
-         公布计票结果 ↦",
-        "验证计票结果".yellow(),
+        "【演示进度】 申请密文空白选票 ↦ 投出对各候选人的密文选票 ↦ \
+         验证密文选票 ↦ 联合计票并公布计票信息 ↦ 验证计票过程 ↦ 公布计票结果 ↦",
+        "<<验证计票结果>>".yellow(),
     );
-
-    let verify_result = verifier::verify_vote_result(
-        &system_parameters,
-        &encrypted_vote_sum,
-        &vote_sum_total,
-        &final_result_request,
-    )
-    .unwrap();
-
-    println!("\n验证结果为：{:?}", verify_result);
+    println!(
+        "\n最终计票结果的有效性：{}",
+        if verifier::verify_vote_result(
+            &poll_parameters,
+            &encrypted_vote_sum,
+            &aggregated_decrypted_result,
+            &vote_result,
+        )
+        .unwrap()
+        {
+            "✓"
+        } else {
+            "✗"
+        }
+    );
     pause_cn();
 
     print_alert("十分感谢您的试用！");
@@ -433,10 +454,426 @@ fn flow_cn() {
 }
 
 fn flow_en() {
-    // TODO: en flow
+    print_wide(
+        "In this demo, you will experience how to use anonymous ciphertext \
+         voting, including: \n
+        1. A certified voter generates ciphertext ballots to protect real \
+         opinion. \n
+        2. A group of counters jointly decrypt and count the voting results. \n
+        3. A public verifier verifies the validity of the whole voting process \
+         via advance zero-knowledge proof (ZKP).",
+    );
+    print_wide(
+        "We use the following application scenario for easy demonstration of \
+         this new capability.",
+    );
+
+    println!(
+        "{}\n{}\n",
+        "[Background]".yellow(),
+        "4 voters vote for 3 candidates, where each voter can vote for \
+         multiple candidates as long as the total number of voted ballots are \
+         no more than its preassigned weight.",
+    );
+    println!(
+        "{}\n{}\n{}\n{}\n{}\n{}\n",
+        "[Story]".yellow(),
+        "1. A voter apply for certified blank ciphertext ballots.",
+        "2. A voter votes for chosen candidates and generates ZKP proofs.",
+        "3. A public verifier verifies the validity of voting via ZKP.",
+        "4. A group of counters jointly decrypt and count the voting results \
+         and generates ZKP proofs.",
+        "5. A public verifier verifies the validity of counting via ZKP."
+    );
+    pause_en();
+
+    println!(
+        "{} {} {}\n",
+        "[Demo progress]",
+        "<<Apply for certified blank ballots>>".yellow(),
+        "↦ Vote ↦ Verify voting ↦ Count jointly ↦ Verify counting ↦ Publish \
+         result ↦ Verify result",
+    );
+
+    print_alert(
+        "Please enter your voter weight: ▼▼ The voter weight specifies the \
+         max votes you can vote.",
+    );
+    print_highlight(
+        "In this demo, we use 100 as the weight limit, which could be \
+         extended for a higher limit in real applications. Please enter a \
+         integer number between 0 and 100.",
+    );
+    let last_voter_weight = wait_for_number_en();
+    let mut voter_weight_list = vec![100, 100, 100];
+    voter_weight_list.push(last_voter_weight as u32);
+    let last_voter_id = voter_weight_list.len() - 1;
+
+    // Initialize a group of counters.
+    let counter_id_list = vec!["1001", "1002", "1003"];
+    let mut counter_secret_list: Vec<CounterSecret> = vec![];
+    let mut counter_parameters = CounterParametersStorage::default();
+    for id in counter_id_list.clone() {
+        let counter_secret = counter::make_counter_secret();
+        let counter_parameters_share =
+            counter::make_parameters_share(id, &counter_secret).unwrap();
+        counter_parameters
+            .mut_counter_parameters_share()
+            .push(counter_parameters_share);
+        counter_secret_list.push(counter_secret);
+    }
+
+    // Initialize the coordinator.
+    let (public_key, secret_key) = SIGNATURE.generate_keypair();
+
+    // Coordinator initializes a new poll.
+    let mut candidate_list = CandidateList::new();
+    for candidate in ["Kitten", "Doge", "Bunny"] {
+        candidate_list.mut_candidate().push(candidate.to_string());
+    }
+    let poll_parameters =
+        coordinator::make_poll_parameters(&candidate_list, &counter_parameters)
+            .unwrap();
+
+    // Initialize all voters.
+    let mut voter_secret_list: Vec<VoterSecret> = vec![];
+    let mut voter_registration_list = vec![];
+    // Voter weight is the max voting power of each voter assigned by
+    // coordinator.
+    for blank_ballot in voter_weight_list {
+        let vote_secret = voter::make_voter_secret();
+        // Register a voter with coordinator.
+        let registration_request =
+            voter::make_registration_request(&vote_secret, &poll_parameters)
+                .unwrap();
+        let registration_response = coordinator::certify_voter(
+            &secret_key,
+            &registration_request,
+            blank_ballot,
+        )
+        .unwrap();
+        // Verify the blank ballot contained in registration_response.
+        assert!(voter::verify_blank_ballot(
+            &registration_request,
+            &registration_response
+        )
+        .unwrap());
+        voter_registration_list.push(registration_response);
+        voter_secret_list.push(vote_secret);
+    }
+    println!(
+        "You will receive the following certified blank ballots: \n{:?}\n",
+        voter_registration_list[last_voter_id].get_ballot()
+    );
+    print_alert(
+        "Notice: No voter id or weight in certified blank ciphertext ballots.",
+    );
+    pause_en();
+
+    println!(
+        "{} {} {} \n",
+        "[Demo progress] Apply for certified blank ballots ↦",
+        "<<Vote>>".yellow(),
+        "↦ Verify voting ↦ Count jointly ↦ Verify counting ↦ Publish result ↦ \
+         Verify result",
+    );
+
+    print_alert("Please enter your votes for Kitten ▼▼");
+    let candidate1_votes = wait_for_number_en();
+    print_alert("Please enter your votes for Doge ▼▼");
+    let candidate2_votes = wait_for_number_en();
+    print_alert("Please enter your votes for Bunny ▼▼");
+    print_highlight(
+        "Notice: Your total votes cannot exceed your voter weight.",
+    );
+    let candidate3_votes = wait_for_number_en();
+
+    // All voters vote.
+    let candidate1_default = 10;
+    let candidate2_default = 20;
+    let candidate3_default = 30;
+    let voting_ballot_count: Vec<Vec<u32>> = vec![
+        vec![candidate1_default, candidate2_default, candidate3_default],
+        vec![candidate1_default, candidate2_default, candidate3_default],
+        vec![candidate1_default, candidate2_default, candidate3_default],
+        vec![candidate1_votes, candidate2_votes, candidate3_votes],
+    ];
+
+    let mut vote_request_list = vec![];
+    let mut encrypted_vote_sum = VoteStorage::new();
+    for index in 0..voting_ballot_count.len() {
+        let vote_choices = voter::make_vote_choices(
+            &voting_ballot_count[index],
+            &candidate_list,
+        );
+        let vote_request = match voter::vote(
+            &voter_secret_list[index],
+            &vote_choices,
+            &voter_registration_list[index],
+            &poll_parameters,
+        ) {
+            Ok(v) => v,
+            Err(_) => {
+                println!(
+                    "\nVote Failed: Your total votes has exceeded your voter \
+                     weight: {} + {} + {} > {}\n",
+                    candidate2_votes,
+                    candidate2_votes,
+                    candidate3_votes,
+                    last_voter_weight
+                );
+                return;
+            },
+        };
+
+        // Coordinator aggregates individual ciphertext ballots.
+        coordinator::aggregate_vote_sum_response(
+            &poll_parameters,
+            &vote_request.get_vote(),
+            &mut encrypted_vote_sum,
+        )
+        .unwrap();
+        vote_request_list.push(vote_request);
+    }
+    println!(
+        "\nYour voted ciphertext ballots are: \n{:?}\n",
+        vote_request_list[last_voter_id].get_vote()
+    );
+    print_alert(
+        "Notice: No voter id or candidate votes in ciphertext ballots.",
+    );
+    println!(
+        "For simplicity, we assume the other three voters voted [10, 20, 30] \
+         for our candidates."
+    );
+    pause_en();
+
+    println!(
+        "{} {} {} \n",
+        "[Demo progress] Apply for certified blank ballots ↦ Vote ↦",
+        "<<Verify voting>>".yellow(),
+        "↦ Count jointly ↦ Verify counting ↦ Publish result ↦ Verify result",
+    );
+
+    println!(
+        "Now verifying: \n1. All votes in ciphertext ballots is not negative \
+         numbers.\n2. All ciphertext ballots are in a valid format.\n3. The \
+         vote sum in ciphertext ballots from the same voter is no larger than \
+         its weight."
+    );
+    print_alert(
+        "\nNotice: Only verified ciphertext ballots will be later counted.",
+    );
+    pause_en();
+
+    // Verifier verifies all ciphertext ballots.
+    for index in 0..vote_request_list.len() {
+        println!(
+            "Voter {}'s voted ciphertext ballots: {}",
+            index,
+            if verifier::verify_vote_request(
+                &poll_parameters,
+                &vote_request_list[index],
+                &public_key,
+            )
+            .unwrap()
+            {
+                "✓"
+            } else {
+                "✗"
+            }
+        );
+    }
+    pause_en();
+
+    println!(
+        "{} {} {} \n",
+        "[Demo progress] Apply for certified blank ballots ↦ Vote ↦ Verify \
+         voting ↦",
+        "<<Count jointly>>".yellow(),
+        "↦ Verify counting ↦ Publish result ↦ Verify result",
+    );
+
+    // All counters decrypt the poll result in a distributed manner.
+    let mut aggregated_decrypted_result = DecryptedResultPartStorage::new();
+    let mut partially_decrypted_result_list = vec![];
+    let mut counter_share_list = vec![];
+    for index in 0..counter_secret_list.len() {
+        let partially_decrypted_result = counter::count(
+            &counter_id_list[index],
+            &counter_secret_list[index],
+            &encrypted_vote_sum,
+        )
+        .unwrap();
+        let counter_share = bytes_to_point(
+            counter_parameters.get_counter_parameters_share()[index]
+                .get_poll_point_share(),
+        )
+        .unwrap();
+
+        // Coordinator aggregates parts of decrypted poll result.
+        assert_eq!(
+            true,
+            coordinator::aggregate_decrypted_part_sum(
+                &poll_parameters,
+                &partially_decrypted_result,
+                &mut aggregated_decrypted_result
+            )
+            .unwrap()
+        );
+        partially_decrypted_result_list.push(partially_decrypted_result);
+        counter_share_list.push(counter_share);
+    }
+    println!(
+        "Aggregated decrypted voting result is: \n{:?}",
+        aggregated_decrypted_result
+    );
+    print_alert(
+        "Notice: Individual votes cannot be recovered from aggregated \
+         decrypted voting result.",
+    );
+    pause_en();
+
+    println!(
+        "{} {} {} \n",
+        "[Demo progress] Apply for certified blank ballots ↦ Vote ↦ Verify \
+         voting ↦ Count jointly ↦",
+        "<<Verify counting>>".yellow(),
+        "↦ Publish result ↦ Verify result",
+    );
+
+    println!(
+        "Now verifying:\n1. All counters use the correct secret share to \
+         count partially decrypted voting result.\n"
+    );
+    for index in 0..counter_secret_list.len() {
+        println!(
+            "Counter {}'s partially decrypted voting result: {}",
+            index,
+            if verifier::verify_count_request(
+                &poll_parameters,
+                &encrypted_vote_sum,
+                &counter_share_list[index],
+                &partially_decrypted_result_list[index],
+            )
+            .unwrap()
+            {
+                "✓"
+            } else {
+                "✗"
+            }
+        );
+    }
+
+    pause_en();
+
+    println!(
+        "{} {} {} \n",
+        "[Demo progress] Apply for certified blank ballots ↦ Vote ↦ Verify \
+         voting ↦ Count jointly ↦ Verify counting ↦",
+        "<<Publish result>>".yellow(),
+        "↦ Verify result",
+    );
+
+    let max_vote_limit = 20000;
+    let vote_result = coordinator::finalize_vote_result(
+        &poll_parameters,
+        &encrypted_vote_sum,
+        &aggregated_decrypted_result,
+        max_vote_limit,
+    )
+    .unwrap();
+    for result in vote_result.get_result() {
+        if result.get_key() == POLL_RESULT_KEY_TOTAL_BALLOTS {
+            continue;
+        }
+        println!("{}: total votes = {}", result.get_key(), result.get_value());
+    }
+
+    // TODO: Refactor to use a more elegant way for the following code.
+    print_alert("\nCompare with traditional plaintext counting:");
+    let plaintext_result1 = (candidate1_default
+        + candidate1_default
+        + candidate1_default
+        + candidate1_votes) as i64;
+    let plaintext_result2 = (candidate2_default
+        + candidate2_default
+        + candidate2_default
+        + candidate2_votes) as i64;
+    let plaintext_result3 = (candidate3_default
+        + candidate3_default
+        + candidate3_default
+        + candidate3_votes) as i64;
+    println!(
+        "Kitten: {} + {} + {} + {} = {}",
+        candidate1_default,
+        candidate1_default,
+        candidate1_default,
+        candidate1_votes,
+        plaintext_result1
+    );
+    println!(
+        "Doge: {} + {} + {} + {} = {}",
+        candidate2_default,
+        candidate2_default,
+        candidate2_default,
+        candidate2_votes,
+        plaintext_result2
+    );
+    println!(
+        "Bunny: {} + {} + {} + {} = {}",
+        candidate3_default,
+        candidate3_default,
+        candidate3_default,
+        candidate3_votes,
+        plaintext_result3
+    );
+    assert!(
+        vote_result.get_result()[1].get_value() == plaintext_result1
+            && vote_result.get_result()[2].get_value() == plaintext_result2
+            && vote_result.get_result()[3].get_value() == plaintext_result3
+    );
+    print_alert(
+        "\nNotice: ciphertext ballot counting yield the same result as \
+         traditional plaintext counting.",
+    );
+    pause_en();
+
+    println!(
+        "{} {} \n",
+        "[Demo progress] Apply for certified blank ballots ↦ Vote ↦ Verify \
+         voting ↦ Count jointly ↦ Verify counting ↦ Publish result ↦",
+        "<<Verify result>>".yellow(),
+    );
+    println!(
+        "\nFinal voting result's validity: {}",
+        if verifier::verify_vote_result(
+            &poll_parameters,
+            &encrypted_vote_sum,
+            &aggregated_decrypted_result,
+            &vote_result,
+        )
+        .unwrap()
+        {
+            "✓"
+        } else {
+            "✗"
+        }
+    );
+    pause_en();
+
+    print_alert("Thank you for your time!");
+    println!(
+        "\n{}\n\n{}\n",
+        "Welcome to contact us for more information about WeDPR by the \
+         following Email:",
+        "wedpr@webank.com"
+    );
+    println!();
 }
 
 // Utility functions
+// TODO: Extract those common functions to solution utility.
 fn print_highlight(message: &str) {
     println!("{}", message.green());
 }
@@ -465,7 +902,7 @@ fn wait_for_input() -> String {
     input.trim().to_string()
 }
 
-// In this demo, we set the upper limit of input value to 10000.
+// In this demo, we set the upper limit of input value to 100.
 const MAX_INPUT_VALUE: i32 = 100;
 
 fn wait_for_number(error_message: &str) -> u32 {

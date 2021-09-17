@@ -1,7 +1,8 @@
 // Copyright 2020 WeDPR Lab Project Authors. Licensed under Apache-2.0.
 
-//! Library of anonymous ciphertext voting (ACV) solution.
+//! Library for a poll voter.
 
+use crate::utils::{align_scalar_list_if_needed, align_u64_list_if_needed};
 use curve25519_dalek::{
     ristretto::RistrettoPoint, scalar::Scalar, traits::MultiscalarMul,
 };
@@ -16,12 +17,12 @@ use wedpr_l_crypto_zkp_utils::{
 use wedpr_l_protos::proto_to_bytes;
 use wedpr_l_utils::error::WedprError;
 use wedpr_s_protos::generated::acv::{
-    Ballot, BallotProof, CandidateBallot, RegistrationRequest,
-    RegistrationResponse, StringToCandidateBallotProofPair,
-    SystemParametersStorage, VoteChoices, VoteRequest, VoterSecret,
+    Ballot, BallotProof, CandidateBallot, CandidateList, PollParametersStorage,
+    RegistrationRequest, RegistrationResponse, StringToBallotProofPair,
+    VoteChoice, VoteChoices, VoteRequest, VoterSecret,
 };
 
-/// Generates a random number as secret number for applying for blank ballot.
+/// Makes secrets used by a voter.
 pub fn make_voter_secret() -> VoterSecret {
     let vote_secret = get_random_scalar();
     VoterSecret {
@@ -31,28 +32,25 @@ pub fn make_voter_secret() -> VoterSecret {
     }
 }
 
-/// Applys to the coordinator for blank ballot using own secret number and
-/// system parameters.
+/// Makes a request for voter registration.
 pub fn make_registration_request(
     secret: &VoterSecret,
-    param: &SystemParametersStorage,
+    poll_parameters: &PollParametersStorage,
 ) -> Result<RegistrationRequest, WedprError> {
     let voter_secret = bytes_to_scalar(secret.get_voter_secret())?;
     let blinding_basepoint_g2 = voter_secret * *BASEPOINT_G2;
-    let poll_point = bytes_to_point(param.get_poll_point())?;
+    let poll_point = bytes_to_point(poll_parameters.get_poll_point())?;
     let blinding_poll_point = voter_secret * poll_point;
     let mut request = RegistrationRequest::new();
-    request
-        .mut_weight_point()
+    let weight_point = request.mut_weight_point();
+    weight_point
         .set_blinding_basepoint_g2(point_to_bytes(&blinding_basepoint_g2));
-    request
-        .mut_weight_point()
-        .set_blinding_poll_point(point_to_bytes(&blinding_poll_point));
+    weight_point.set_blinding_poll_point(point_to_bytes(&blinding_poll_point));
     Ok(request)
 }
 
-/// Verifies blank ballot issued by coordinator
-/// by recalculating and comparing whether it is consistent.
+/// Verifies whether the blank ballot contained in a registration response is
+/// valid.
 pub fn verify_blank_ballot(
     request: &RegistrationRequest,
     response: &RegistrationResponse,
@@ -63,52 +61,69 @@ pub fn verify_blank_ballot(
     let computed_ciphertext1 = point_to_bytes(
         &(blinding_poll_point + *BASEPOINT_G1 * Scalar::from(voter_weight)),
     );
-
     let response_ciphertext1 = response.get_ballot().get_ciphertext1();
 
     let request_ciphertext2 =
         request.get_weight_point().get_blinding_basepoint_g2();
     let response_ciphertext2 = response.get_ballot().get_ciphertext2();
 
-    Ok(&computed_ciphertext1 == response_ciphertext1
-        && request_ciphertext2 == response_ciphertext2)
+    Ok(response_ciphertext1 == computed_ciphertext1
+        && response_ciphertext2 == request_ciphertext2)
 }
 
-/// Generate a vote request containing ballots for selected candidates, rest
-/// ballot and a group of zero-knowledge proofs to prove that ballots is
-/// correct, where zero-knowledge proofs contains format proof, balance proof
-/// and range proof. The format proof is used to prove that the format of
-/// ballots is correct so that it can be counted in the total number of votes
-/// when counting, the balance proof is used to prove that poll ballots + the
-/// rest ballot = the blank ballot, the range proof is used to prove that the
-/// value of each ballot is non-negative.
-pub fn vote(
-    secret: &VoterSecret,
-    choices: &VoteChoices,
-    response: &RegistrationResponse,
-    param: &SystemParametersStorage,
-) -> Result<VoteRequest, WedprError> {
-    let mut request = VoteRequest::new();
-    let mut blinding_vote_sum = Scalar::zero();
-    let mut blindings: Vec<Scalar> = Vec::new();
-    let mut vote_value: Vec<u64> = Vec::new();
-    let mut v_weight_rest = response.get_voter_weight() as i64;
-    let poll_point = bytes_to_point(param.get_poll_point())?;
-    let vote_secret = bytes_to_scalar(secret.get_voter_secret())?;
+/// Makes choices for all candidates.
+pub fn make_vote_choices(
+    choice_list: &Vec<u32>,
+    candidate_list: &CandidateList,
+) -> VoteChoices {
+    let mut choices = VoteChoices::new();
+    for i in 0..candidate_list.get_candidate().len() {
+        let mut pair = VoteChoice::new();
+        pair.set_candidate(candidate_list.get_candidate()[i].clone());
+        pair.set_value(choice_list[i]);
+        choices.mut_choice().push(pair);
+    }
+    choices
+}
 
-    for choice_keypair in choices.get_choice() {
+/// Votes the ciphertext ballots and generates associated ZKP proofs.
+pub fn vote(
+    voter_secret: &VoterSecret,
+    vote_choices: &VoteChoices,
+    registration_response: &RegistrationResponse,
+    poll_parameters: &PollParametersStorage,
+) -> Result<VoteRequest, WedprError> {
+    let mut vote_request = VoteRequest::new();
+
+    // Compute for each choice.
+    let mut blinding_sum = Scalar::zero();
+    let mut blinding_list: Vec<Scalar> = Vec::new();
+    let mut choice_list: Vec<u64> = Vec::new();
+    let mut unused_vote_weight =
+        registration_response.get_voter_weight() as i64;
+    let poll_point = bytes_to_point(poll_parameters.get_poll_point())?;
+    for choice_keypair in vote_choices.get_choice() {
         let candidate_address = choice_keypair.get_candidate();
         let value = choice_keypair.get_value();
-        v_weight_rest -= value as i64;
-        if v_weight_rest < 0 {
+        unused_vote_weight -= value as i64;
+        // Max voter weight has been used up.
+        if unused_vote_weight < 0 {
             return Err(WedprError::ArgumentError);
         }
+
+        // Make a ciphertext ballot.
         let mut vote_ballot = Ballot::new();
         let blinding = get_random_scalar();
         let ciphertext1 = RistrettoPoint::multiscalar_mul(
             &[Scalar::from(value as u64), blinding],
             &[*BASEPOINT_G1, poll_point],
         );
+        blinding_sum += blinding;
+        let ciphertext2 = *BASEPOINT_G2 * blinding;
+        vote_ballot.set_ciphertext1(point_to_bytes(&ciphertext1));
+        vote_ballot.set_ciphertext2(point_to_bytes(&ciphertext2));
+
+        // Prove ballot format.
         let format_proof = prove_format_proof(
             value as u64,
             &blinding,
@@ -116,88 +131,60 @@ pub fn vote(
             &*BASEPOINT_G2,
             &poll_point,
         );
-        blinding_vote_sum += blinding;
-        let ciphertext2 = *BASEPOINT_G2 * blinding;
-        vote_ballot.set_ciphertext1(point_to_bytes(&ciphertext1));
-        vote_ballot.set_ciphertext2(point_to_bytes(&ciphertext2));
         let mut ballot_proof = BallotProof::new();
         ballot_proof.set_format_proof(proto_to_bytes(&format_proof)?);
-        let mut proof_keypair = StringToCandidateBallotProofPair::new();
-        proof_keypair.set_key(candidate_address.to_string());
-        proof_keypair.set_value(ballot_proof);
-        request.mut_ballot_proof().push(proof_keypair);
 
-        blindings.push(blinding);
-        vote_value.push(value as u64);
+        // Write back.
+        let mut proof_pair = StringToBallotProofPair::new();
+        proof_pair.set_key(candidate_address.to_string());
+        proof_pair.set_value(ballot_proof);
+        vote_request.mut_ballot_proof().push(proof_pair);
+
+        blinding_list.push(blinding);
+        choice_list.push(value as u64);
+
         let mut ballot_pair = CandidateBallot::new();
         ballot_pair.set_candidate(candidate_address.to_string());
         ballot_pair.set_ballot(vote_ballot);
-        request.mut_vote().mut_voted_ballot().push(ballot_pair);
+        vote_request.mut_vote().mut_voted_ballot().push(ballot_pair);
     }
-    let v_vote_sum =
-        (response.get_voter_weight() - v_weight_rest as u32) as u64;
+
+    // Compute for the rest unused ballots.
     let blinding_rest = get_random_scalar();
     let rest_ballot = RistrettoPoint::multiscalar_mul(
-        &[Scalar::from(v_weight_rest as u64), blinding_rest],
+        &[Scalar::from(unused_vote_weight as u64), blinding_rest],
         &[*BASEPOINT_G1, poll_point],
     );
 
+    // Prove the balance.
+    let used_vote_weight_sum = (registration_response.get_voter_weight()
+        - unused_vote_weight as u32) as u64;
+    let vote_secret = bytes_to_scalar(voter_secret.get_voter_secret())?;
     let balance_proof = prove_sum_relationship(
-        v_vote_sum,
-        v_weight_rest as u64,
-        &blinding_vote_sum,
+        used_vote_weight_sum,
+        unused_vote_weight as u64,
+        &blinding_sum,
         &blinding_rest,
         &vote_secret,
         &BASEPOINT_G1,
         &poll_point,
     );
-    vote_value.push(v_weight_rest as u64);
-    blindings.push(blinding_rest);
-    pending_u64_vec(&mut vote_value);
-    pending_scalar_vec(&mut blindings);
 
+    // Prove the range.
+    choice_list.push(unused_vote_weight as u64);
+    blinding_list.push(blinding_rest);
+    align_u64_list_if_needed(&mut choice_list);
+    align_scalar_list_if_needed(&mut blinding_list);
     let (range_proof, _) =
-        prove_value_range_in_batch(&vote_value, &blindings, &poll_point)?;
-    let signature = response.get_signature();
-    request
-        .mut_vote()
-        .set_blank_ballot(response.get_ballot().clone());
-    request.set_sum_balance_proof(proto_to_bytes(&balance_proof)?);
-    request.set_range_proof(range_proof);
-    request.mut_vote().set_signature(signature.to_vec());
-    request
-        .mut_vote()
-        .mut_rest_ballot()
+        prove_value_range_in_batch(&choice_list, &blinding_list, &poll_point)?;
+
+    // Write back.
+    vote_request.set_sum_balance_proof(proto_to_bytes(&balance_proof)?);
+    vote_request.set_range_proof(range_proof);
+    let vote = vote_request.mut_vote();
+    vote.set_signature(registration_response.get_signature().to_vec());
+    vote.mut_rest_ballot()
         .set_ciphertext1(point_to_bytes(&rest_ballot));
-    Ok(request)
-}
-
-fn pending_u64_vec(v: &mut Vec<u64>) -> bool {
-    let length = v.len() as i32;
-    let log_length = (length as f64).log2().ceil() as u32;
-    let expected_len = 2_i32.pow(log_length);
-    if expected_len == length {
-        return true;
-    }
-    let pending_length = expected_len - length;
-    for _ in 0..pending_length {
-        let tpm = 0u64;
-        v.push(tpm);
-    }
-    true
-}
-
-fn pending_scalar_vec(v: &mut Vec<Scalar>) -> bool {
-    let length = v.len() as i32;
-    let log_length = (length as f64).log2().ceil() as u32;
-    let expected_len = 2_i32.pow(log_length);
-    if expected_len == length {
-        return true;
-    }
-    let pending_length = expected_len - length;
-    for _ in 0..pending_length {
-        let tpm = Scalar::default();
-        v.push(tpm);
-    }
-    true
+    vote.set_blank_ballot(registration_response.get_ballot().clone());
+    Ok(vote_request)
 }
