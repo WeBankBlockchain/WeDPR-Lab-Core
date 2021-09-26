@@ -207,7 +207,7 @@ fn flow_cn() {
                 println!(
                     "\n投票失败：您投出的总票数超出您的权重限制：{} + {} + {} \
                      > {}\n",
-                    candidate2_votes,
+                    candidate1_votes,
                     candidate2_votes,
                     candidate3_votes,
                     last_voter_weight
@@ -617,7 +617,7 @@ fn flow_en() {
                 println!(
                     "\nVote Failed: Your total votes has exceeded your voter \
                      weight: {} + {} + {} > {}\n",
-                    candidate2_votes,
+                    candidate1_votes,
                     candidate2_votes,
                     candidate3_votes,
                     last_voter_weight
