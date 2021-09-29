@@ -1,0 +1,137 @@
+// Copyright 2021 WeDPR Lab Project Authors. Licensed under Apache-2.0.
+
+syntax = "proto3";
+
+package com.webank.wedpr.acv.proto;
+option java_package = "com.webank.wedpr.acv.proto";
+option java_multiple_files = true;
+
+// Candidate list.
+message CandidateList {
+  repeated string candidate = 1;
+}
+
+// Shared system parameters to initialize a poll.
+message PollParametersStorage {
+  bytes poll_point = 1;
+  CandidateList candidates = 2;
+}
+
+// Secret of a counter.
+message CounterSecret {
+  bytes poll_secret_share = 1;
+}
+
+// Secret of a voter.
+message VoterSecret {
+  bytes voter_secret = 1;
+}
+
+// Request of registering a voter.
+message RegistrationRequest {
+  RegistrationBlindingPoint weight_point = 1;
+}
+
+// Blinding points for a voter registration.
+message RegistrationBlindingPoint {
+  bytes blinding_poll_point = 1;
+  bytes blinding_basepoint_g2 = 2;
+}
+
+// Response of voter registration.
+message RegistrationResponse {
+  uint32 voter_weight = 1;
+  Ballot ballot = 2;
+  bytes signature = 3;
+}
+
+// Ciphertext ballot.
+message Ballot {
+  bytes ciphertext1 = 1;
+  bytes ciphertext2 = 2;
+}
+
+// Request of aggregating a part of system parameters from a counter.
+message CounterParametersShareRequest {
+  string counter_id = 1;
+  bytes poll_point_share = 2;
+}
+
+// Shared system parameters to initialize a group of counters.
+message CounterParametersStorage {
+  repeated CounterParametersShareRequest counter_parameters_share = 1;
+}
+
+// Vote choice for a candidate.
+message VoteChoice {
+  string candidate = 1;
+  uint32 value = 2;
+}
+
+// Choice list for all candidates.
+message VoteChoices {
+  repeated VoteChoice choice = 1;
+}
+
+// Ciphertext ballot for a candidate.
+message CandidateBallot {
+  string candidate = 1;
+  Ballot ballot = 2;
+}
+
+// ZKP data to verify the format of ciphertext ballot.
+message BallotProof {
+  bytes format_proof = 1;
+}
+
+// Pair of string (candidate id) and BallotProof.
+message StringToBallotProofPair {
+  string key = 1;
+  BallotProof value = 2;
+}
+
+// Request of voting for all candidates.
+message VoteRequest {
+  VoteStorage vote = 1;
+  repeated StringToBallotProofPair ballot_proof = 2;
+  bytes range_proof = 3;
+  bytes sum_balance_proof = 4;
+}
+
+// Ciphertext ballot for all candidates.
+message VoteStorage {
+  bytes signature = 1;
+  Ballot blank_ballot = 2;
+  Ballot rest_ballot = 3;
+  repeated CandidateBallot voted_ballot = 4;
+}
+
+// Partially decrypted ballot and associated ZKP data for a candidate.
+message CountingPart {
+  string counter_id = 1;
+  bytes blinding_c2 = 2;
+  bytes equality_proof = 3;
+}
+
+// Pair of string (candidate id) and CountingPart.
+message StringToCountingPartPair {
+  string key = 1;
+  CountingPart value = 2;
+}
+
+// Partially decrypted ballots and associated ZKP data for a poll.
+message DecryptedResultPartStorage {
+  CountingPart blank_part = 1;
+  repeated StringToCountingPartPair candidate_part = 2;
+}
+
+// Fully decrypted result of a poll.
+message VoteResultStorage {
+  repeated StringToInt64Pair result = 1;
+}
+
+// Pair of string (candidate id) and number.
+message StringToInt64Pair {
+  string key = 1;
+  int64 value = 2;
+}

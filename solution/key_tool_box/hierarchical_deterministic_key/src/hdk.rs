@@ -2,11 +2,10 @@
 
 //! Core functions of hierarchical deterministic key (HDK)
 
-use wagyu_lib::{
-    wordlist, BitcoinDerivationPath, BitcoinExtendedPrivateKey,
-    BitcoinMnemonic, Mainnet,
+use hdk_ext_lib::{
+    wordlist, HdkDerivationPath, HdkExtendedPrivateKey, HdkMnemonic, Mainnet,
 };
-use wagyu_model::{
+use hdk_ext_model::{
     mnemonic::Mnemonic, ExtendedPrivateKey, MnemonicCount, MnemonicExtended,
 };
 
@@ -22,7 +21,7 @@ use wedpr_s_protos::generated::hdk::ExtendedKeyPair;
 pub fn create_mnemonic_en(word_count: u8) -> Result<String, WedprError> {
     let rng = &mut StdRng::from_entropy();
     let mnemonic =
-        match BitcoinMnemonic::<Mainnet, wordlist::English>::new_with_count(
+        match HdkMnemonic::<Mainnet, wordlist::English>::new_with_count(
             rng, word_count,
         ) {
             Ok(v) => v,
@@ -43,21 +42,20 @@ pub fn create_master_key_en(
     password: &str,
     mnemonic_str: &str,
 ) -> Result<Vec<u8>, WedprError> {
-    let mnemonic =
-        match BitcoinMnemonic::<Mainnet, wordlist::English>::from_phrase(
-            mnemonic_str,
-        ) {
-            Ok(v) => v,
-            Err(_) => {
-                wedpr_println!(
-                    "mnemonic check failed!, mnemonic = {}",
-                    mnemonic_str
-                );
-                return Err(WedprError::ArgumentError);
-            },
-        };
+    let mnemonic = match HdkMnemonic::<Mainnet, wordlist::English>::from_phrase(
+        mnemonic_str,
+    ) {
+        Ok(v) => v,
+        Err(_) => {
+            wedpr_println!(
+                "mnemonic check failed!, mnemonic = {}",
+                mnemonic_str
+            );
+            return Err(WedprError::ArgumentError);
+        },
+    };
     let master_extended_private_key = match mnemonic
-        .to_extended_private_key(Some(password).clone())
+        .to_extended_private_key(Some(password))
     {
         Ok(v) => v,
         Err(_) => {
@@ -98,7 +96,7 @@ pub fn derive_extended_key(
         },
     };
     let master_key =
-        match BitcoinExtendedPrivateKey::<Mainnet>::from_str(master_key_str) {
+        match HdkExtendedPrivateKey::<Mainnet>::from_str(master_key_str) {
             Ok(v) => v,
             Err(_) => {
                 wedpr_println!(
@@ -110,7 +108,7 @@ pub fn derive_extended_key(
         };
 
     let derivation_path =
-        match BitcoinDerivationPath::from_str(&key_derivation_path) {
+        match HdkDerivationPath::from_str(&key_derivation_path) {
             Ok(v) => v,
             Err(_) => {
                 wedpr_println!(
@@ -132,10 +130,12 @@ pub fn derive_extended_key(
             return Err(WedprError::FormatError);
         },
     };
-    let private_key_hex = extended_private_key
-        .to_private_key()
-        .to_secp256k1_secret_key()
-        .to_string();
+    let private_key_hex = hex::encode(
+        extended_private_key
+            .to_private_key()
+            .to_secp256k1_secret_key()
+            .serialize(),
+    );
 
     let extended_private_key_bytes = match decode_hex_string(&private_key_hex) {
         Ok(v) => v,
@@ -151,7 +151,8 @@ pub fn derive_extended_key(
     let extended_public_key_uncompress_bytes = extended_private_key
         .to_public_key()
         .to_secp256k1_public_key()
-        .serialize_uncompressed();
+        .serialize();
+    // .serialize_uncompressed();
 
     // TODO: Replace with a better way to initialize PB if available.
     Ok(ExtendedKeyPair {

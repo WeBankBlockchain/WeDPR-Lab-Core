@@ -13,11 +13,11 @@ crate-type = [ "cdylib", "staticlib" ]
 [dependencies]
 libc = "0.2.60"
 protobuf = "2.22.1"
-wedpr_s_selective_certificate_disclosure = "1.3.0"
 wedpr_ffi_common = "1.0.0"
 wedpr_ffi_macros = "1.0.0"
-wedpr_s_protos = "1.3.0"
 wedpr_l_macros = "1.0.0"
+wedpr_s_protos = { path = "../../../protos" }
+wedpr_s_selective_certificate_disclosure = { path = "../../../solution/selective_certificate_disclosure" }
 
 # This is required to generate C/C++ header files.
 [build-dependencies]

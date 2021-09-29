@@ -11,16 +11,16 @@ description = "Library of verifiable confidential ledger (VCL) solution."
 [dependencies]
 colored = "1.8"
 curve25519-dalek = { version = "1", features = [ "serde" ] }
-wedpr_l_macros = "1.0.0"
-wedpr_s_protos = { path = "../../protos"}
-wedpr_l_protos = "1.1.0"
-wedpr_l_utils = "1.1.0"
+protobuf = "2.22.1"
+
 wedpr_l_crypto_zkp_discrete_logarithm_proof = "1.1.0"
-wedpr_l_crypto_zkp_range_proof =  { git = "https://github.com/WeBankBlockchain/WeDPR-Lab-Crypto", branch = "main" }
+wedpr_l_crypto_zkp_range_proof = "1.2.0"
 wedpr_l_crypto_zkp_utils = "1.1.0"
 
-protobuf = "2.22.1"
-#protoc-rust = "2.20.0"
+wedpr_l_macros = "1.0.0"
+wedpr_l_protos = "1.1.0"
+wedpr_l_utils = "1.1.0"
+wedpr_s_protos = { path = "../../protos" }
 
 [dev-dependencies]
 criterion = "0.2"
