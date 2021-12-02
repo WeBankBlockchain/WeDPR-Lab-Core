@@ -9,10 +9,10 @@ description = "Library of Hierarchical Deterministic Key (HDK) solution."
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-hex = "0.3"
+hex = "0.4.2"
 rand = "0.7"
 hdk_ext_model = { package = "h-wagyu-model", version = "0.6.3" }
-hdk_ext_lib = { package = "wagyu-hdk", version = "0.6.4" }
+hdk_ext_lib = { package = "wagyu-hdk", version = "0.6.3" }
 wedpr_l_macros = "1.0.0"
 wedpr_l_utils = "1.0.0"
 

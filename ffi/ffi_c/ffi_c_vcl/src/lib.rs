@@ -279,7 +279,7 @@ pub extern "C" fn wedpr_vcl_verify_product_balance(
                 FAILURE
             ));
 
-        let result = match wedpr_s_verifiable_confidential_ledger::vcl::verify_sum_balance(
+        let result = match wedpr_s_verifiable_confidential_ledger::vcl::verify_product_balance(
             &c1_credit, &c2_credit, &c3_credit, &proof,
         ) {
             Ok(v) => v,
@@ -376,7 +376,7 @@ pub extern "C" fn wedpr_vcl_prove_range(
 
         let proof =
             wedpr_s_verifiable_confidential_ledger::vcl::prove_range(&secret);
-        c_safe_string_to_c_char_pointer!(proof)
+        c_safe_string_to_c_char_pointer!(bytes_to_string(&proof))
     });
     c_safe_return!(result)
 }
