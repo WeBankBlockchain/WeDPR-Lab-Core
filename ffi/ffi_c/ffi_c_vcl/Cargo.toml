@@ -16,7 +16,6 @@ protobuf = "2.22.1"
 wedpr_ffi_common = "1.0.0"
 wedpr_ffi_macros = "1.1.0"
 wedpr_l_macros = "1.0.0"
-wedpr_l_protos = "1.1.0"
 wedpr_s_protos = { path = "../../../protos" }
 wedpr_s_verifiable_confidential_ledger = { path = "../../../solution/verifiable_confidential_ledger" }
 

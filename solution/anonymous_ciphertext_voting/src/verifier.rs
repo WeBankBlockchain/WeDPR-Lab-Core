@@ -9,13 +9,13 @@ use wedpr_l_crypto_zkp_discrete_logarithm_proof::{
 };
 use wedpr_l_crypto_zkp_range_proof::verify_value_range_in_batch;
 use wedpr_l_crypto_zkp_utils::{bytes_to_point, BASEPOINT_G1, BASEPOINT_G2};
-use wedpr_l_protos::{
-    bytes_to_proto,
-    generated::zkp::{BalanceProof, EqualityProof},
-};
 use wedpr_l_utils::{
     error::WedprError,
     traits::{Hash, Signature},
+};
+use wedpr_s_protos::{
+    bytes_to_proto,
+    generated::zkp::{PBBalanceProof, PBEqualityProof},
 };
 
 use wedpr_s_protos::generated::acv::{
@@ -29,6 +29,9 @@ use crate::{
         align_commitment_list_if_needed, get_ballot_by_candidate,
         get_counting_part_by_candidate, get_int64_by_candidate,
     },
+};
+use wedpr_s_protos::{
+    pb_to_arithmetric_proof, pb_to_equality_proof, pb_to_format_proof,
 };
 
 /// Verifies whether ciphertext ballots from a certified voter are valid.
@@ -76,11 +79,11 @@ pub fn verify_vote_request(
         let ciphertext1 = bytes_to_point(&candidate_ballot.get_ciphertext1())?;
         let ciphertext2 = bytes_to_point(&candidate_ballot.get_ciphertext2())?;
         let format_proof =
-            bytes_to_proto::<BalanceProof>(ballot_proof.get_format_proof())?;
+            bytes_to_proto::<PBBalanceProof>(ballot_proof.get_format_proof())?;
         if !verify_format_proof(
             &ciphertext1,
             &ciphertext2,
-            &format_proof,
+            &pb_to_format_proof(&format_proof)?,
             &*BASEPOINT_G1,
             &*BASEPOINT_G2,
             &poll_point,
@@ -91,12 +94,12 @@ pub fn verify_vote_request(
     }
 
     let balance_proof =
-        bytes_to_proto::<BalanceProof>(vote_request.get_sum_balance_proof())?;
+        bytes_to_proto::<PBBalanceProof>(vote_request.get_sum_balance_proof())?;
     if !verify_sum_relationship(
         &voted_ballot_sum,
         &bytes_to_point(&rest_ballot)?,
         &bytes_to_point(&blank_ballot.get_ciphertext1())?,
-        &balance_proof,
+        &pb_to_arithmetric_proof(&balance_proof)?,
         &BASEPOINT_G1,
         &poll_point,
     )? {
@@ -126,11 +129,11 @@ pub fn verify_count_request(
             .get_blinding_c2(),
     )?;
     let blank_equality_proof =
-        bytes_to_proto::<EqualityProof>(&blank_equality_proof_bytes)?;
+        bytes_to_proto::<PBEqualityProof>(&blank_equality_proof_bytes)?;
     if !verify_equality_relationship_proof(
         &counter_share,
         &blank_c2_r,
-        &blank_equality_proof,
+        &pb_to_equality_proof(&blank_equality_proof)?,
         &BASEPOINT_G2,
         &blank_c2_sum,
     )? {
@@ -148,13 +151,13 @@ pub fn verify_count_request(
             candidate,
         )?;
         let candidate_c2_r = bytes_to_point(&counting_part.get_blinding_c2())?;
-        let candidate_equality_proof = bytes_to_proto::<EqualityProof>(
+        let candidate_equality_proof = bytes_to_proto::<PBEqualityProof>(
             counting_part.get_equality_proof(),
         )?;
         if !verify_equality_relationship_proof(
             &counter_share,
             &candidate_c2_r,
-            &candidate_equality_proof,
+            &pb_to_equality_proof(&candidate_equality_proof)?,
             &BASEPOINT_G2,
             &candidate_c2_sum,
         )? {

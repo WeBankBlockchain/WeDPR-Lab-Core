@@ -12,12 +12,16 @@ use wedpr_l_crypto_zkp_utils::{
 use curve25519_dalek::traits::MultiscalarMul;
 use wedpr_l_crypto_zkp_discrete_logarithm_proof;
 use wedpr_l_crypto_zkp_range_proof;
-use wedpr_l_protos::generated::zkp::BalanceProof;
 use wedpr_l_utils::error::WedprError;
-use wedpr_s_protos::generated::vcl::{
-    EncodedConfidentialCredit, EncodedOwnerSecret,
+use wedpr_s_protos::{
+    generated::{
+        vcl::{EncodedConfidentialCredit, EncodedOwnerSecret},
+        zkp::PBBalanceProof,
+    },
+    pb_to_arithmetric_proof,
 };
 
+use wedpr_s_protos::arithmetric_proof_to_pb;
 /// Owner secret used to spend a confidential credit.
 #[derive(Default, Debug, Clone)]
 pub struct OwnerSecret {
@@ -129,16 +133,18 @@ pub fn prove_sum_balance(
     c1_secret: &OwnerSecret,
     c2_secret: &OwnerSecret,
     c3_secret: &OwnerSecret,
-) -> BalanceProof {
-    wedpr_l_crypto_zkp_discrete_logarithm_proof::prove_sum_relationship(
-        c1_secret.credit_value,
-        c2_secret.credit_value,
-        &c1_secret.secret_blinding,
-        &c2_secret.secret_blinding,
-        &c3_secret.secret_blinding,
-        &BASEPOINT_G1,
-        &BASEPOINT_G2,
-    )
+) -> PBBalanceProof {
+    let proof =
+        wedpr_l_crypto_zkp_discrete_logarithm_proof::prove_sum_relationship(
+            c1_secret.credit_value,
+            c2_secret.credit_value,
+            &c1_secret.secret_blinding,
+            &c2_secret.secret_blinding,
+            &c3_secret.secret_blinding,
+            &BASEPOINT_G1,
+            &BASEPOINT_G2,
+        );
+    return arithmetric_proof_to_pb(&proof);
 }
 
 /// Verifies three confidential credit records satisfying a sum relationship,
@@ -148,13 +154,13 @@ pub fn verify_sum_balance(
     c1_credit: &ConfidentialCredit,
     c2_credit: &ConfidentialCredit,
     c3_credit: &ConfidentialCredit,
-    proof: &BalanceProof,
+    proof: &PBBalanceProof,
 ) -> Result<bool, WedprError> {
     wedpr_l_crypto_zkp_discrete_logarithm_proof::verify_sum_relationship(
         &c1_credit.get_point(),
         &c2_credit.get_point(),
         &c3_credit.get_point(),
-        proof,
+        &pb_to_arithmetric_proof(&proof)?,
         &BASEPOINT_G1,
         &BASEPOINT_G2,
     )
@@ -169,7 +175,7 @@ pub fn verify_sum_balance_in_batch(
     c1_credit_list: &Vec<ConfidentialCredit>,
     c2_credit_list: &Vec<ConfidentialCredit>,
     c3_credit_list: &Vec<ConfidentialCredit>,
-    proof_list: &Vec<BalanceProof>,
+    pb_proof_list: &Vec<PBBalanceProof>,
 ) -> Result<bool, WedprError> {
     let c1_point_list = c1_credit_list
         .iter()
@@ -184,11 +190,15 @@ pub fn verify_sum_balance_in_batch(
         .map(|x| x.get_point())
         .collect::<Vec<_>>();
 
+    let mut proof_list = Vec::new();
+    for i in 0..pb_proof_list.len() {
+        proof_list.push(pb_to_arithmetric_proof(&pb_proof_list[i])?);
+    }
     wedpr_l_crypto_zkp_discrete_logarithm_proof::verify_sum_relationship_in_batch(
         &c1_point_list,
         &c2_point_list,
         &c3_point_list,
-        proof_list,
+        &proof_list,
         &BASEPOINT_G1,
         &BASEPOINT_G2,
     )
@@ -202,16 +212,18 @@ pub fn prove_product_balance(
     c1_secret: &OwnerSecret,
     c2_secret: &OwnerSecret,
     c3_secret: &OwnerSecret,
-) -> BalanceProof {
-    wedpr_l_crypto_zkp_discrete_logarithm_proof::prove_product_relationship(
-        c1_secret.credit_value,
-        c2_secret.credit_value,
-        &c1_secret.secret_blinding,
-        &c2_secret.secret_blinding,
-        &c3_secret.secret_blinding,
-        &BASEPOINT_G1,
-        &BASEPOINT_G2,
-    )
+) -> PBBalanceProof {
+    let proof =
+        wedpr_l_crypto_zkp_discrete_logarithm_proof::prove_product_relationship(
+            c1_secret.credit_value,
+            c2_secret.credit_value,
+            &c1_secret.secret_blinding,
+            &c2_secret.secret_blinding,
+            &c3_secret.secret_blinding,
+            &BASEPOINT_G1,
+            &BASEPOINT_G2,
+        );
+    return arithmetric_proof_to_pb(&proof);
 }
 
 /// Verifies three confidential credit records satisfying a product
@@ -221,13 +233,13 @@ pub fn verify_product_balance(
     c1_credit: &ConfidentialCredit,
     c2_credit: &ConfidentialCredit,
     c3_credit: &ConfidentialCredit,
-    proof: &BalanceProof,
+    proof: &PBBalanceProof,
 ) -> Result<bool, WedprError> {
     wedpr_l_crypto_zkp_discrete_logarithm_proof::verify_product_relationship(
         &c1_credit.get_point(),
         &c2_credit.get_point(),
         &c3_credit.get_point(),
-        proof,
+        &pb_to_arithmetric_proof(&proof)?,
         &BASEPOINT_G1,
         &BASEPOINT_G2,
     )
@@ -242,7 +254,7 @@ pub fn verify_product_balance_in_batch(
     c1_credit_list: &Vec<ConfidentialCredit>,
     c2_credit_list: &Vec<ConfidentialCredit>,
     c3_credit_list: &Vec<ConfidentialCredit>,
-    proof_list: &Vec<BalanceProof>,
+    pb_proof_list: &Vec<PBBalanceProof>,
 ) -> Result<bool, WedprError> {
     let c1_point_list = c1_credit_list
         .iter()
@@ -257,11 +269,15 @@ pub fn verify_product_balance_in_batch(
         .map(|x| x.get_point())
         .collect::<Vec<_>>();
 
+    let mut proof_list = Vec::new();
+    for i in 0..pb_proof_list.len() {
+        proof_list.push(pb_to_arithmetric_proof(&pb_proof_list[i])?);
+    }
     wedpr_l_crypto_zkp_discrete_logarithm_proof::verify_product_relationship_in_batch(
         &c1_point_list,
         &c2_point_list,
         &c3_point_list,
-        proof_list,
+        &proof_list,
         &BASEPOINT_G1,
         &BASEPOINT_G2,
     )
@@ -288,7 +304,6 @@ pub fn verify_range(c1: &ConfidentialCredit, proof: &[u8]) -> bool {
 mod tests {
     use super::*;
     extern crate wedpr_l_crypto_zkp_utils;
-    extern crate wedpr_l_protos;
 
     const BATCH_SIZE: usize = 10;
 
@@ -297,7 +312,7 @@ mod tests {
         let mut c1_credits: Vec<ConfidentialCredit> = vec![];
         let mut c2_credits: Vec<ConfidentialCredit> = vec![];
         let mut c3_credits: Vec<ConfidentialCredit> = vec![];
-        let mut proofs: Vec<BalanceProof> = vec![];
+        let mut proofs: Vec<PBBalanceProof> = vec![];
         for _ in 0..BATCH_SIZE {
             let (c1_credit, c1_secret) = make_credit(10);
             let (c2_credit, c2_secret) = make_credit(20);
@@ -375,7 +390,7 @@ mod tests {
         let mut c1_credits: Vec<ConfidentialCredit> = vec![];
         let mut c2_credits: Vec<ConfidentialCredit> = vec![];
         let mut c3_credits: Vec<ConfidentialCredit> = vec![];
-        let mut proofs: Vec<BalanceProof> = vec![];
+        let mut proofs: Vec<PBBalanceProof> = vec![];
         for _ in 0..BATCH_SIZE {
             let (c1_credit, c1_secret) = make_credit(10);
             let (c2_credit, c2_secret) = make_credit(20);

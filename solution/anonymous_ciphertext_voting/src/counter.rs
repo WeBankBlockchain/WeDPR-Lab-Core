@@ -7,13 +7,17 @@ use wedpr_l_crypto_zkp_utils::{
     bytes_to_point, bytes_to_scalar, get_random_scalar, point_to_bytes,
     scalar_to_bytes, BASEPOINT_G2,
 };
-use wedpr_l_protos::proto_to_bytes;
 use wedpr_l_utils::error::WedprError;
 
-use wedpr_s_protos::generated::acv::{
-    CounterParametersShareRequest, CounterSecret, CountingPart,
-    DecryptedResultPartStorage, StringToCountingPartPair, VoteStorage,
+use wedpr_s_protos::{
+    generated::acv::{
+        CounterParametersShareRequest, CounterSecret, CountingPart,
+        DecryptedResultPartStorage, StringToCountingPartPair, VoteStorage,
+    },
+    proto_to_bytes,
 };
+
+use wedpr_s_protos::equality_proof_to_pb;
 
 /// Makes secrets used by a counter.
 pub fn make_counter_secret() -> CounterSecret {
@@ -66,8 +70,9 @@ pub fn count(
             &BASEPOINT_G2,
             &candidate_part_share,
         );
-        counting_part.set_equality_proof(proto_to_bytes(&equality_proof)?);
-
+        counting_part.set_equality_proof(proto_to_bytes(
+            &(equality_proof_to_pb(&equality_proof)),
+        )?);
         // Write back.
         let candidate = candidate_ballot_pair.get_candidate();
         let mut candidate_counting_part_pair = StringToCountingPartPair::new();
@@ -91,7 +96,9 @@ pub fn count(
 
     // Write back.
     let blank_part = partially_decrypted_result.mut_blank_part();
-    blank_part.set_equality_proof(proto_to_bytes(&equality_proof)?);
+    blank_part.set_equality_proof(proto_to_bytes(&equality_proof_to_pb(
+        &equality_proof,
+    ))?);
     blank_part.set_blinding_c2(point_to_bytes(&blinding_c2));
     blank_part.set_counter_id(counter_id.to_string());
     Ok(partially_decrypted_result)

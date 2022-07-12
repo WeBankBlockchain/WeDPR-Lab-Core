@@ -3,6 +3,8 @@
 //! Library for a poll voter.
 
 use crate::utils::{align_scalar_list_if_needed, align_u64_list_if_needed};
+use wedpr_s_protos::{arithmetric_proof_to_pb, format_proof_to_pb};
+
 use curve25519_dalek::{
     ristretto::RistrettoPoint, scalar::Scalar, traits::MultiscalarMul,
 };
@@ -14,12 +16,15 @@ use wedpr_l_crypto_zkp_utils::{
     bytes_to_point, bytes_to_scalar, get_random_scalar, point_to_bytes,
     scalar_to_bytes, BASEPOINT_G1, BASEPOINT_G2,
 };
-use wedpr_l_protos::proto_to_bytes;
 use wedpr_l_utils::error::WedprError;
-use wedpr_s_protos::generated::acv::{
-    Ballot, BallotProof, CandidateBallot, CandidateList, PollParametersStorage,
-    RegistrationRequest, RegistrationResponse, StringToBallotProofPair,
-    VoteChoice, VoteChoices, VoteRequest, VoterSecret,
+use wedpr_s_protos::{
+    generated::acv::{
+        Ballot, BallotProof, CandidateBallot, CandidateList,
+        PollParametersStorage, RegistrationRequest, RegistrationResponse,
+        StringToBallotProofPair, VoteChoice, VoteChoices, VoteRequest,
+        VoterSecret,
+    },
+    proto_to_bytes,
 };
 
 /// Makes secrets used by a voter.
@@ -132,7 +137,9 @@ pub fn vote(
             &poll_point,
         );
         let mut ballot_proof = BallotProof::new();
-        ballot_proof.set_format_proof(proto_to_bytes(&format_proof)?);
+        ballot_proof.set_format_proof(proto_to_bytes(&format_proof_to_pb(
+            &format_proof,
+        ))?);
 
         // Write back.
         let mut proof_pair = StringToBallotProofPair::new();
@@ -179,7 +186,9 @@ pub fn vote(
         prove_value_range_in_batch(&choice_list, &blinding_list, &poll_point)?;
 
     // Write back.
-    vote_request.set_sum_balance_proof(proto_to_bytes(&balance_proof)?);
+    vote_request.set_sum_balance_proof(proto_to_bytes(
+        &arithmetric_proof_to_pb(&balance_proof),
+    )?);
     vote_request.set_range_proof(range_proof);
     let vote = vote_request.mut_vote();
     vote.set_signature(registration_response.get_signature().to_vec());

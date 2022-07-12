@@ -11,3 +11,5 @@ description = "Library of WeDPR protobuf definitions and their generated code."
 [dependencies]
 protobuf = "2.22.1"
 protoc-rust = "2.22.1"
+wedpr_l_utils = "1.1.0"
+wedpr_l_crypto_zkp_utils = {version = "1.3.0", git = "https://github.com/WeBankBlockchain/WeDPR-Lab-Crypto", branch = "dev-1.3.0"}
