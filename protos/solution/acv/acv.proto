@@ -72,7 +72,7 @@ message VoteChoice {
 }
 
 // pick other candidates from outside the given candidate list
-message UnlistedVoteChoce
+message UnlistedVoteChoice
 {
   // the unlisted candidate id
   uint32 candidate_id = 1;
@@ -84,7 +84,7 @@ message UnlistedVoteChoce
 message VoteChoices {
   repeated VoteChoice choice = 1;
   // Choose unlisted candidates
-  repeated UnlistedVoteChoce unlisted_choice = 2;
+  repeated UnlistedVoteChoice unlisted_choice = 2;
 }
 
 // Ciphertext ballot for a candidate.
@@ -189,7 +189,7 @@ message VoteResultStorage {
   // the vote result for candidate list
   repeated StringToInt64Pair result = 1;
   // the vote result for the unlisted candidate list
-  repeated UnlistedVoteChoce unlisted_result = 2;
+  repeated UnlistedVoteChoice unlisted_result = 2;
 }
 
 // Pair of string (candidate id) and number.

@@ -12,7 +12,7 @@ use wedpr_s_protos::{
         Ballot, CandidateBallot, CandidateList, CounterParametersStorage,
         CountingPart, DecryptedResultPartStorage, PollParametersStorage,
         RegistrationRequest, RegistrationResponse, StringToCountingPartPair,
-        StringToInt64Pair, UnlistedBallotDecryptedResult, UnlistedVoteChoce,
+        StringToInt64Pair, UnlistedBallotDecryptedResult, UnlistedVoteChoice,
         VoteResultStorage, VoteStorage,
     },
 };
@@ -494,7 +494,7 @@ pub fn finalize_vote_result_unlisted(
     // push the aggregated_unlisted_candidate_ballot_result into
     // aggregated_decrypted_result
     for (key, value) in aggregated_unlisted_candidate_ballot_result {
-        let mut unlisted_candidate_ballot_result = UnlistedVoteChoce::new();
+        let mut unlisted_candidate_ballot_result = UnlistedVoteChoice::new();
         unlisted_candidate_ballot_result.set_candidate_id(key as u32);
         unlisted_candidate_ballot_result.set_value(value as u32);
         vote_result

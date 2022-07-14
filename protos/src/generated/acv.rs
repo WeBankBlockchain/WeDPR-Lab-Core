@@ -2218,7 +2218,7 @@ impl ::protobuf::reflect::ProtobufValue for VoteChoice {
 }
 
 #[derive(PartialEq,Clone,Default)]
-pub struct UnlistedVoteChoce {
+pub struct UnlistedVoteChoice {
     // message fields
     pub candidate_id: u32,
     pub value: u32,
@@ -2227,14 +2227,14 @@ pub struct UnlistedVoteChoce {
     pub cached_size: ::protobuf::CachedSize,
 }
 
-impl<'a> ::std::default::Default for &'a UnlistedVoteChoce {
-    fn default() -> &'a UnlistedVoteChoce {
-        <UnlistedVoteChoce as ::protobuf::Message>::default_instance()
+impl<'a> ::std::default::Default for &'a UnlistedVoteChoice {
+    fn default() -> &'a UnlistedVoteChoice {
+        <UnlistedVoteChoice as ::protobuf::Message>::default_instance()
     }
 }
 
-impl UnlistedVoteChoce {
-    pub fn new() -> UnlistedVoteChoce {
+impl UnlistedVoteChoice {
+    pub fn new() -> UnlistedVoteChoice {
         ::std::default::Default::default()
     }
 
@@ -2269,7 +2269,7 @@ impl UnlistedVoteChoce {
     }
 }
 
-impl ::protobuf::Message for UnlistedVoteChoce {
+impl ::protobuf::Message for UnlistedVoteChoice {
     fn is_initialized(&self) -> bool {
         true
     }
@@ -2352,8 +2352,8 @@ impl ::protobuf::Message for UnlistedVoteChoce {
         Self::descriptor_static()
     }
 
-    fn new() -> UnlistedVoteChoce {
-        UnlistedVoteChoce::new()
+    fn new() -> UnlistedVoteChoice {
+        UnlistedVoteChoice::new()
     }
 
     fn descriptor_static() -> &'static ::protobuf::reflect::MessageDescriptor {
@@ -2362,29 +2362,29 @@ impl ::protobuf::Message for UnlistedVoteChoce {
             let mut fields = ::std::vec::Vec::new();
             fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeUint32>(
                 "candidate_id",
-                |m: &UnlistedVoteChoce| { &m.candidate_id },
-                |m: &mut UnlistedVoteChoce| { &mut m.candidate_id },
+                |m: &UnlistedVoteChoice| { &m.candidate_id },
+                |m: &mut UnlistedVoteChoice| { &mut m.candidate_id },
             ));
             fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeUint32>(
                 "value",
-                |m: &UnlistedVoteChoce| { &m.value },
-                |m: &mut UnlistedVoteChoce| { &mut m.value },
+                |m: &UnlistedVoteChoice| { &m.value },
+                |m: &mut UnlistedVoteChoice| { &mut m.value },
             ));
-            ::protobuf::reflect::MessageDescriptor::new_pb_name::<UnlistedVoteChoce>(
-                "UnlistedVoteChoce",
+            ::protobuf::reflect::MessageDescriptor::new_pb_name::<UnlistedVoteChoice>(
+                "UnlistedVoteChoice",
                 fields,
                 file_descriptor_proto()
             )
         })
     }
 
-    fn default_instance() -> &'static UnlistedVoteChoce {
-        static instance: ::protobuf::rt::LazyV2<UnlistedVoteChoce> = ::protobuf::rt::LazyV2::INIT;
-        instance.get(UnlistedVoteChoce::new)
+    fn default_instance() -> &'static UnlistedVoteChoice {
+        static instance: ::protobuf::rt::LazyV2<UnlistedVoteChoice> = ::protobuf::rt::LazyV2::INIT;
+        instance.get(UnlistedVoteChoice::new)
     }
 }
 
-impl ::protobuf::Clear for UnlistedVoteChoce {
+impl ::protobuf::Clear for UnlistedVoteChoice {
     fn clear(&mut self) {
         self.candidate_id = 0;
         self.value = 0;
@@ -2392,13 +2392,13 @@ impl ::protobuf::Clear for UnlistedVoteChoce {
     }
 }
 
-impl ::std::fmt::Debug for UnlistedVoteChoce {
+impl ::std::fmt::Debug for UnlistedVoteChoice {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::protobuf::text_format::fmt(self, f)
     }
 }
 
-impl ::protobuf::reflect::ProtobufValue for UnlistedVoteChoce {
+impl ::protobuf::reflect::ProtobufValue for UnlistedVoteChoice {
     fn as_ref(&self) -> ::protobuf::reflect::ReflectValueRef {
         ::protobuf::reflect::ReflectValueRef::Message(self)
     }
@@ -2408,7 +2408,7 @@ impl ::protobuf::reflect::ProtobufValue for UnlistedVoteChoce {
 pub struct VoteChoices {
     // message fields
     pub choice: ::protobuf::RepeatedField<VoteChoice>,
-    pub unlisted_choice: ::protobuf::RepeatedField<UnlistedVoteChoce>,
+    pub unlisted_choice: ::protobuf::RepeatedField<UnlistedVoteChoice>,
     // special fields
     pub unknown_fields: ::protobuf::UnknownFields,
     pub cached_size: ::protobuf::CachedSize,
@@ -2450,10 +2450,10 @@ impl VoteChoices {
         ::std::mem::replace(&mut self.choice, ::protobuf::RepeatedField::new())
     }
 
-    // repeated .com.webank.wedpr.acv.proto.UnlistedVoteChoce unlisted_choice = 2;
+    // repeated .com.webank.wedpr.acv.proto.UnlistedVoteChoice unlisted_choice = 2;
 
 
-    pub fn get_unlisted_choice(&self) -> &[UnlistedVoteChoce] {
+    pub fn get_unlisted_choice(&self) -> &[UnlistedVoteChoice] {
         &self.unlisted_choice
     }
     pub fn clear_unlisted_choice(&mut self) {
@@ -2461,17 +2461,17 @@ impl VoteChoices {
     }
 
     // Param is passed by value, moved
-    pub fn set_unlisted_choice(&mut self, v: ::protobuf::RepeatedField<UnlistedVoteChoce>) {
+    pub fn set_unlisted_choice(&mut self, v: ::protobuf::RepeatedField<UnlistedVoteChoice>) {
         self.unlisted_choice = v;
     }
 
     // Mutable pointer to the field.
-    pub fn mut_unlisted_choice(&mut self) -> &mut ::protobuf::RepeatedField<UnlistedVoteChoce> {
+    pub fn mut_unlisted_choice(&mut self) -> &mut ::protobuf::RepeatedField<UnlistedVoteChoice> {
         &mut self.unlisted_choice
     }
 
     // Take field
-    pub fn take_unlisted_choice(&mut self) -> ::protobuf::RepeatedField<UnlistedVoteChoce> {
+    pub fn take_unlisted_choice(&mut self) -> ::protobuf::RepeatedField<UnlistedVoteChoice> {
         ::std::mem::replace(&mut self.unlisted_choice, ::protobuf::RepeatedField::new())
     }
 }
@@ -2580,7 +2580,7 @@ impl ::protobuf::Message for VoteChoices {
                 |m: &VoteChoices| { &m.choice },
                 |m: &mut VoteChoices| { &mut m.choice },
             ));
-            fields.push(::protobuf::reflect::accessor::make_repeated_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<UnlistedVoteChoce>>(
+            fields.push(::protobuf::reflect::accessor::make_repeated_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<UnlistedVoteChoice>>(
                 "unlisted_choice",
                 |m: &VoteChoices| { &m.unlisted_choice },
                 |m: &mut VoteChoices| { &mut m.unlisted_choice },
@@ -5749,7 +5749,7 @@ impl ::protobuf::reflect::ProtobufValue for UnlistedBallotDecryptedResult {
 pub struct VoteResultStorage {
     // message fields
     pub result: ::protobuf::RepeatedField<StringToInt64Pair>,
-    pub unlisted_result: ::protobuf::RepeatedField<UnlistedVoteChoce>,
+    pub unlisted_result: ::protobuf::RepeatedField<UnlistedVoteChoice>,
     // special fields
     pub unknown_fields: ::protobuf::UnknownFields,
     pub cached_size: ::protobuf::CachedSize,
@@ -5791,10 +5791,10 @@ impl VoteResultStorage {
         ::std::mem::replace(&mut self.result, ::protobuf::RepeatedField::new())
     }
 
-    // repeated .com.webank.wedpr.acv.proto.UnlistedVoteChoce unlisted_result = 2;
+    // repeated .com.webank.wedpr.acv.proto.UnlistedVoteChoice unlisted_result = 2;
 
 
-    pub fn get_unlisted_result(&self) -> &[UnlistedVoteChoce] {
+    pub fn get_unlisted_result(&self) -> &[UnlistedVoteChoice] {
         &self.unlisted_result
     }
     pub fn clear_unlisted_result(&mut self) {
@@ -5802,17 +5802,17 @@ impl VoteResultStorage {
     }
 
     // Param is passed by value, moved
-    pub fn set_unlisted_result(&mut self, v: ::protobuf::RepeatedField<UnlistedVoteChoce>) {
+    pub fn set_unlisted_result(&mut self, v: ::protobuf::RepeatedField<UnlistedVoteChoice>) {
         self.unlisted_result = v;
     }
 
     // Mutable pointer to the field.
-    pub fn mut_unlisted_result(&mut self) -> &mut ::protobuf::RepeatedField<UnlistedVoteChoce> {
+    pub fn mut_unlisted_result(&mut self) -> &mut ::protobuf::RepeatedField<UnlistedVoteChoice> {
         &mut self.unlisted_result
     }
 
     // Take field
-    pub fn take_unlisted_result(&mut self) -> ::protobuf::RepeatedField<UnlistedVoteChoce> {
+    pub fn take_unlisted_result(&mut self) -> ::protobuf::RepeatedField<UnlistedVoteChoice> {
         ::std::mem::replace(&mut self.unlisted_result, ::protobuf::RepeatedField::new())
     }
 }
@@ -5921,7 +5921,7 @@ impl ::protobuf::Message for VoteResultStorage {
                 |m: &VoteResultStorage| { &m.result },
                 |m: &mut VoteResultStorage| { &mut m.result },
             ));
-            fields.push(::protobuf::reflect::accessor::make_repeated_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<UnlistedVoteChoce>>(
+            fields.push(::protobuf::reflect::accessor::make_repeated_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<UnlistedVoteChoice>>(
                 "unlisted_result",
                 |m: &VoteResultStorage| { &m.unlisted_result },
                 |m: &mut VoteResultStorage| { &mut m.unlisted_result },
@@ -6180,12 +6180,12 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     erParametersStorage\x12s\n\x18counter_parameters_share\x18\x01\x20\x03(\
     \x0b29.com.webank.wedpr.acv.proto.CounterParametersShareRequestR\x16coun\
     terParametersShare\"@\n\nVoteChoice\x12\x1c\n\tcandidate\x18\x01\x20\x01\
-    (\tR\tcandidate\x12\x14\n\x05value\x18\x02\x20\x01(\rR\x05value\"L\n\x11\
-    UnlistedVoteChoce\x12!\n\x0ccandidate_id\x18\x01\x20\x01(\rR\x0bcandidat\
-    eId\x12\x14\n\x05value\x18\x02\x20\x01(\rR\x05value\"\xa5\x01\n\x0bVoteC\
-    hoices\x12>\n\x06choice\x18\x01\x20\x03(\x0b2&.com.webank.wedpr.acv.prot\
-    o.VoteChoiceR\x06choice\x12V\n\x0funlisted_choice\x18\x02\x20\x03(\x0b2-\
-    .com.webank.wedpr.acv.proto.UnlistedVoteChoceR\x0eunlistedChoice\"k\n\
+    (\tR\tcandidate\x12\x14\n\x05value\x18\x02\x20\x01(\rR\x05value\"M\n\x12\
+    UnlistedVoteChoice\x12!\n\x0ccandidate_id\x18\x01\x20\x01(\rR\x0bcandida\
+    teId\x12\x14\n\x05value\x18\x02\x20\x01(\rR\x05value\"\xa6\x01\n\x0bVote\
+    Choices\x12>\n\x06choice\x18\x01\x20\x03(\x0b2&.com.webank.wedpr.acv.pro\
+    to.VoteChoiceR\x06choice\x12W\n\x0funlisted_choice\x18\x02\x20\x03(\x0b2\
+    ..com.webank.wedpr.acv.proto.UnlistedVoteChoiceR\x0eunlistedChoice\"k\n\
     \x0fCandidateBallot\x12\x1c\n\tcandidate\x18\x01\x20\x01(\tR\tcandidate\
     \x12:\n\x06ballot\x18\x02\x20\x01(\x0b2\".com.webank.wedpr.acv.proto.Bal\
     lotR\x06ballot\"d\n\x0bBallotProof\x12!\n\x0cformat_proof\x18\x01\x20\
@@ -6233,13 +6233,13 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     idate\x18\x04\x20\x01(\x0b2(.com.webank.wedpr.acv.proto.CountingPartR\
     \x1adecryptedUnlistedCandidate\x12w\n#decrypted_unlisted_candidate_ballo\
     t\x18\x05\x20\x03(\x0b2(.com.webank.wedpr.acv.proto.CountingPartR\x20dec\
-    ryptedUnlistedCandidateBallot\"\xb2\x01\n\x11VoteResultStorage\x12E\n\
+    ryptedUnlistedCandidateBallot\"\xb3\x01\n\x11VoteResultStorage\x12E\n\
     \x06result\x18\x01\x20\x03(\x0b2-.com.webank.wedpr.acv.proto.StringToInt\
-    64PairR\x06result\x12V\n\x0funlisted_result\x18\x02\x20\x03(\x0b2-.com.w\
-    ebank.wedpr.acv.proto.UnlistedVoteChoceR\x0eunlistedResult\";\n\x11Strin\
-    gToInt64Pair\x12\x10\n\x03key\x18\x01\x20\x01(\tR\x03key\x12\x14\n\x05va\
-    lue\x18\x02\x20\x01(\x03R\x05valueB\x1e\n\x1acom.webank.wedpr.acv.protoP\
-    \x01b\x06proto3\
+    64PairR\x06result\x12W\n\x0funlisted_result\x18\x02\x20\x03(\x0b2..com.w\
+    ebank.wedpr.acv.proto.UnlistedVoteChoiceR\x0eunlistedResult\";\n\x11Stri\
+    ngToInt64Pair\x12\x10\n\x03key\x18\x01\x20\x01(\tR\x03key\x12\x14\n\x05v\
+    alue\x18\x02\x20\x01(\x03R\x05valueB\x1e\n\x1acom.webank.wedpr.acv.proto\
+    P\x01b\x06proto3\
 ";
 
 static file_descriptor_proto_lazy: ::protobuf::rt::LazyV2<::protobuf::descriptor::FileDescriptorProto> = ::protobuf::rt::LazyV2::INIT;
