@@ -6,7 +6,6 @@ use super::utils;
 extern crate wedpr_s_verifiable_confidential_ledger;
 use wedpr_s_verifiable_confidential_ledger::vcl;
 extern crate wedpr_l_crypto_zkp_range_proof;
-
 /// UI flow of VCL bounty playground.
 pub fn flow_vcl() {
     utils::print_highlight(
@@ -223,15 +222,16 @@ mod tests {
     };
     extern crate wedpr_l_common_coder_base64;
     extern crate wedpr_l_crypto_zkp_range_proof;
-    extern crate wedpr_l_protos;
     extern crate wedpr_s_verifiable_confidential_ledger;
     use crate::vcl_data::{
         TARGET_SIZE, VCL_C1_VEC, VCL_C2_VEC, VCL_C3_VEC, VCL_PROOF_VEC,
     };
     use protobuf::Message;
     use wedpr_l_common_coder_base64::WedprBase64;
-    use wedpr_l_protos::generated::zkp::BalanceProof;
     use wedpr_l_utils::traits::Coder;
+    use wedpr_s_protos::{
+        generated::zkp::PBBalanceProof, pb_to_arithmetric_proof,
+    };
 
     #[test]
     fn test_vcl_bounty_data_validity() {
@@ -249,16 +249,20 @@ mod tests {
                 bytes_to_point(&base64.decode(&VCL_C3_VEC[i]).unwrap())
                     .expect("failed to decode point");
 
-            let proof = <BalanceProof>::parse_from_bytes(
+            let pb_proof = <PBBalanceProof>::parse_from_bytes(
                 &base64.decode(&VCL_PROOF_VEC[i]).unwrap(),
             )
             .expect("failed to parse proof PB");
-
+            let arithmetric_proof_result = pb_to_arithmetric_proof(&pb_proof);
+            let arithmetric_proof = match arithmetric_proof_result {
+                Ok(v) => v,
+                Err(_) => panic!("invalid arithmetric_proof"),
+            };
             assert!(wedpr_l_crypto_zkp_discrete_logarithm_proof::verify_sum_relationship(
                 &c1_point,
                 &c2_point,
                 &c3_point,
-                &proof,
+                &arithmetric_proof,
                 &value_basepoint,
                 &blinding_basepoint
             ).unwrap());

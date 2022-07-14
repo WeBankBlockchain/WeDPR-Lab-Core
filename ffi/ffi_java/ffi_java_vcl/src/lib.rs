@@ -21,9 +21,11 @@ use wedpr_ffi_common::utils::{
 };
 use wedpr_s_verifiable_confidential_ledger;
 
-use wedpr_l_protos::generated::zkp::BalanceProof;
-use wedpr_s_protos::generated::vcl::{
-    BatchCreditBalanceProof, EncodedConfidentialCredit, EncodedOwnerSecret,
+use wedpr_s_protos::generated::{
+    vcl::{
+        BatchCreditBalanceProof, EncodedConfidentialCredit, EncodedOwnerSecret,
+    },
+    zkp::PBBalanceProof,
 };
 use wedpr_s_verifiable_confidential_ledger::vcl::ConfidentialCredit;
 
@@ -178,7 +180,7 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_verifySumBalanc
         _env,
         result_jobject,
         proof_jstring,
-        BalanceProof
+        PBBalanceProof
     );
 
     let c1_credit = decode_credit!(
@@ -254,7 +256,7 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_verifySumBalanc
     let mut c1_credits: Vec<ConfidentialCredit> = vec![];
     let mut c2_credits: Vec<ConfidentialCredit> = vec![];
     let mut c3_credits: Vec<ConfidentialCredit> = vec![];
-    let mut proofs: Vec<BalanceProof> = vec![];
+    let mut proofs: Vec<PBBalanceProof> = vec![];
     for credit_balance_proof in batch_proof.credit_balance_proof {
         c1_credits.push(decode_credit!(
             _env,
@@ -306,7 +308,7 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_verifySumBalanc
                 result_jobject,
                 credit_balance_proof.proof
             ),
-            BalanceProof
+            PBBalanceProof
         ));
     }
 
@@ -404,7 +406,7 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_verifyProductBa
         _env,
         result_jobject,
         proof_jstring,
-        BalanceProof
+        PBBalanceProof
     );
 
     let c1_credit = decode_credit!(
@@ -479,7 +481,7 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_verifyProductBa
     let mut c1_credits: Vec<ConfidentialCredit> = vec![];
     let mut c2_credits: Vec<ConfidentialCredit> = vec![];
     let mut c3_credits: Vec<ConfidentialCredit> = vec![];
-    let mut proofs: Vec<BalanceProof> = vec![];
+    let mut proofs: Vec<PBBalanceProof> = vec![];
     for credit_balance_proof in batch_proof.credit_balance_proof {
         c1_credits.push(decode_credit!(
             _env,
@@ -531,7 +533,7 @@ pub extern "system" fn Java_com_webank_wedpr_vcl_NativeInterface_verifyProductBa
                 result_jobject,
                 credit_balance_proof.proof
             ),
-            BalanceProof
+            PBBalanceProof
         ));
     }
 

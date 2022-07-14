@@ -16,10 +16,12 @@ use wedpr_ffi_common::utils::{
 };
 use wedpr_s_verifiable_confidential_ledger;
 
-use wedpr_l_protos::generated::zkp::BalanceProof;
-use wedpr_s_protos::generated::vcl::{
-    BatchCreditBalanceProof, EncodedConfidentialCredit, EncodedOwnerSecret,
-    VclResult,
+use wedpr_s_protos::generated::{
+    vcl::{
+        BatchCreditBalanceProof, EncodedConfidentialCredit, EncodedOwnerSecret,
+        VclResult,
+    },
+    zkp::PBBalanceProof,
 };
 
 use libc::{c_char, c_ulong};
@@ -110,7 +112,7 @@ pub extern "C" fn wedpr_vcl_verify_sum_balance(
     let result = panic::catch_unwind(|| {
         let proof = c_safe_c_char_pointer_to_proto_with_error_value!(
             proof_cstring,
-            BalanceProof,
+            PBBalanceProof,
             FAILURE
         );
         let c1_credit =
@@ -160,7 +162,7 @@ pub extern "C" fn wedpr_vcl_verify_sum_balance_in_batch(
         let mut c1_credits: Vec<ConfidentialCredit> = vec![];
         let mut c2_credits: Vec<ConfidentialCredit> = vec![];
         let mut c3_credits: Vec<ConfidentialCredit> = vec![];
-        let mut proofs: Vec<BalanceProof> = vec![];
+        let mut proofs: Vec<PBBalanceProof> = vec![];
         for credit_balance_proof in batch_proof.credit_balance_proof {
             c1_credits.push(decode_credit!(
                 c_safe_bytes_to_proto_with_error_value!(
@@ -197,7 +199,7 @@ pub extern "C" fn wedpr_vcl_verify_sum_balance_in_batch(
                     credit_balance_proof.proof,
                     FAILURE
                 ),
-                BalanceProof,
+                PBBalanceProof,
                 FAILURE
             ));
         }
@@ -257,7 +259,7 @@ pub extern "C" fn wedpr_vcl_verify_product_balance(
     let result = panic::catch_unwind(|| {
         let proof = c_safe_c_char_pointer_to_proto_with_error_value!(
             proof_cstring,
-            BalanceProof,
+            PBBalanceProof,
             FAILURE
         );
         let c1_credit =
@@ -307,7 +309,7 @@ pub extern "C" fn wedpr_vcl_verify_product_balance_in_batch(
         let mut c1_credits: Vec<ConfidentialCredit> = vec![];
         let mut c2_credits: Vec<ConfidentialCredit> = vec![];
         let mut c3_credits: Vec<ConfidentialCredit> = vec![];
-        let mut proofs: Vec<BalanceProof> = vec![];
+        let mut proofs: Vec<PBBalanceProof> = vec![];
         for credit_balance_proof in batch_proof.credit_balance_proof {
             c1_credits.push(decode_credit!(
                 c_safe_bytes_to_proto_with_error_value!(
@@ -344,7 +346,7 @@ pub extern "C" fn wedpr_vcl_verify_product_balance_in_batch(
                     credit_balance_proof.proof,
                     FAILURE
                 ),
-                BalanceProof,
+                PBBalanceProof,
                 FAILURE
             ));
         }
