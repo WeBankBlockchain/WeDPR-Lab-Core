@@ -30,6 +30,8 @@ message VoterSecret {
 // Request of registering a voter.
 message RegistrationRequest {
   RegistrationBlindingPoint weight_point = 1;
+  // In a restricted voting scenario, the voting weight must be 0 or weight
+  RegistrationBlindingPoint zero_point = 2;
 }
 
 // Blinding points for a voter registration.
@@ -43,6 +45,7 @@ message RegistrationResponse {
   uint32 voter_weight = 1;
   Ballot ballot = 2;
   bytes signature = 3;
+  Ballot zero_ballot = 4; 
 }
 
 // Ciphertext ballot.
@@ -68,9 +71,20 @@ message VoteChoice {
   uint32 value = 2;
 }
 
+// pick other candidates from outside the given candidate list
+message UnlistedVoteChoce
+{
+  // the unlisted candidate id
+  uint32 candidate_id = 1;
+  // the vote weight
+  uint32 value = 2;
+}
+
 // Choice list for all candidates.
 message VoteChoices {
   repeated VoteChoice choice = 1;
+  // Choose unlisted candidates
+  repeated UnlistedVoteChoce unlisted_choice = 2;
 }
 
 // Ciphertext ballot for a candidate.
@@ -82,6 +96,8 @@ message CandidateBallot {
 // ZKP data to verify the format of ciphertext ballot.
 message BallotProof {
   bytes format_proof = 1;
+  // proof for unbounded vote scenes
+  bytes either_equality_proof = 2;
 }
 
 // Pair of string (candidate id) and BallotProof.
@@ -96,6 +112,8 @@ message VoteRequest {
   repeated StringToBallotProofPair ballot_proof = 2;
   bytes range_proof = 3;
   bytes sum_balance_proof = 4;
+  // the ballot proof for unlisted-candidates
+  repeated CipherPointsToBallotProofPair unlisted_ballot_proof = 5;
 }
 
 // Ciphertext ballot for all candidates.
@@ -104,6 +122,32 @@ message VoteStorage {
   Ballot blank_ballot = 2;
   Ballot rest_ballot = 3;
   repeated CandidateBallot voted_ballot = 4;
+  // the ballot for unlisted-candidates
+  repeated CipherPointsToBallotPair voted_ballot_unlisted = 6;
+  Ballot zero_ballot = 7;
+}
+
+// the ballot for the unlisted-candidate
+message CipherPointsToBallotPair
+{
+  // the unlisted-candidate cipher
+  CipherPoints key = 1;
+  // the ballot for the unlisted-candidate
+  Ballot ballot = 3;
+}
+
+// CipherPointsToBallotPair and CipherPointsToBallotProofPair associated by candidate cipher(CipherPoints)
+message CipherPointsToBallotProofPair {
+  // the unlisted-candidate cipher
+  CipherPoints key = 1;
+  // the ballot proof for given ulisted-candidate
+  BallotProof value = 2;
+}
+
+// the cipher for the unlisted-candidate
+message CipherPoints {
+  bytes ciphertext1 = 1;
+  bytes ciphertext2 = 2;
 }
 
 // Partially decrypted ballot and associated ZKP data for a candidate.
@@ -123,11 +167,29 @@ message StringToCountingPartPair {
 message DecryptedResultPartStorage {
   CountingPart blank_part = 1;
   repeated StringToCountingPartPair candidate_part = 2;
+  // the decrypted part for the unlisted-candidate
+  repeated UnlistedBallotDecryptedResult unlisted_candidate_part = 3;
+}
+
+// the decrypted result for the unlisted-candidate
+message UnlistedBallotDecryptedResult
+{
+  // the unlisted candidate id
+  int64 candidate = 1;
+  CipherPoints candidate_cipher = 2;
+  // the decrypted unlisted candidate
+  CountingPart decrypted_unlisted_candidate = 4;
+  // the decrypted unlisted candidate ballot
+  // here use vector for aggregate_decrypted_part_sum_unlisted
+  repeated CountingPart decrypted_unlisted_candidate_ballot = 5;
 }
 
 // Fully decrypted result of a poll.
 message VoteResultStorage {
+  // the vote result for candidate list
   repeated StringToInt64Pair result = 1;
+  // the vote result for the unlisted candidate list
+  repeated UnlistedVoteChoce unlisted_result = 2;
 }
 
 // Pair of string (candidate id) and number.

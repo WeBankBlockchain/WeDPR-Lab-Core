@@ -1,16 +1,27 @@
 // Copyright 2020 WeDPR Lab Project Authors. Licensed under Apache-2.0.
 
 //! Library of protobuf definitions and their generated code.
-use crate::generated::zkp::{PBBalanceProof, PBEqualityProof};
+#[macro_use]
+extern crate lazy_static;
+use crate::{
+    config::{HASH, SIGNATURE},
+    generated::{
+        acv::Ballot,
+        zkp::{PBBalanceProof, PBEqualityProof},
+    },
+};
+use wedpr_l_utils::{
+    error::WedprError,
+    traits::{Hash, Signature},
+};
+pub mod config;
+pub mod generated;
+
 use protobuf::Message;
 use wedpr_l_crypto_zkp_utils::{
     bytes_to_point, bytes_to_scalar, point_to_bytes, scalar_to_bytes,
     ArithmeticProof, BalanceProof, EqualityProof, FormatProof, KnowledgeProof,
 };
-pub mod generated;
-
-#[cfg(not(tarpaulin_include))]
-use wedpr_l_utils::error::WedprError;
 
 pub fn proto_to_bytes<T: Message>(proto: &T) -> Result<Vec<u8>, WedprError> {
     return match proto.write_to_bytes() {
@@ -150,6 +161,67 @@ pub fn pb_to_equality_proof(
         t2: bytes_to_point(&equality_proof.get_t2())?,
         m1: bytes_to_scalar(&equality_proof.get_m1())?,
     })
+}
+
+// generate signature for the ballot
+pub fn generate_ballot_signature(
+    secret_key: &[u8],
+    ballot: &Ballot,
+) -> Result<Vec<u8>, WedprError> {
+    let mut hash_vec = Vec::new();
+    hash_vec.append(&mut ballot.get_ciphertext1().to_vec());
+    hash_vec.append(&mut ballot.get_ciphertext2().to_vec());
+    let message_hash = HASH.hash(&hash_vec);
+    SIGNATURE.sign(secret_key, &message_hash)
+}
+
+pub fn generate_ballots_signature(
+    secret_key: &[u8],
+    weight_ballot: &Ballot,
+    zero_ballot: &Ballot,
+) -> Result<Vec<u8>, WedprError> {
+    let mut hash_vec = Vec::new();
+    hash_vec.append(&mut weight_ballot.get_ciphertext1().to_vec());
+    hash_vec.append(&mut weight_ballot.get_ciphertext2().to_vec());
+    hash_vec.append(&mut zero_ballot.get_ciphertext1().to_vec());
+    hash_vec.append(&mut zero_ballot.get_ciphertext2().to_vec());
+    let message_hash = HASH.hash(&hash_vec);
+    SIGNATURE.sign(secret_key, &message_hash)
+}
+
+pub fn verify_ballot_signature(
+    public_key: &[u8],
+    ballot: &Ballot,
+    signature: &Vec<u8>,
+) -> Result<bool, WedprError> {
+    let mut hash_vec = Vec::new();
+    hash_vec.append(&mut ballot.get_ciphertext1().to_vec());
+    hash_vec.append(&mut ballot.get_ciphertext2().to_vec());
+    let message_hash: Vec<u8> = HASH.hash(&hash_vec);
+    Ok(SIGNATURE.verify(
+        &public_key,
+        &message_hash.as_ref(),
+        &signature.as_slice(),
+    ))
+}
+
+pub fn verify_ballots_signature(
+    public_key: &[u8],
+    weight_ballot: &Ballot,
+    zero_ballot: &Ballot,
+    signature: &Vec<u8>,
+) -> Result<bool, WedprError> {
+    let mut hash_vec = Vec::new();
+    hash_vec.append(&mut weight_ballot.get_ciphertext1().to_vec());
+    hash_vec.append(&mut weight_ballot.get_ciphertext2().to_vec());
+    hash_vec.append(&mut zero_ballot.get_ciphertext1().to_vec());
+    hash_vec.append(&mut zero_ballot.get_ciphertext2().to_vec());
+    let message_hash: Vec<u8> = HASH.hash(&hash_vec);
+    Ok(SIGNATURE.verify(
+        &public_key,
+        &message_hash.as_ref(),
+        &signature.as_slice(),
+    ))
 }
 
 #[cfg(test)]
