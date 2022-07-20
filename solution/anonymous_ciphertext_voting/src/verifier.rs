@@ -69,7 +69,6 @@ pub fn verify_vote_request(
     align_commitment_list_if_needed(&mut commitments);
     let range_proof = vote_request.get_range_proof();
     if !verify_value_range_in_batch(&commitments, range_proof, &poll_point) {
-        wedpr_println!("verify range proof failed!");
         return Err(WedprError::VerificationError);
     }
 
@@ -91,7 +90,6 @@ pub fn verify_vote_request(
             &*BASEPOINT_G2,
             &poll_point,
         )? {
-            wedpr_println!("verify_format failed!");
             return Err(WedprError::VerificationError);
         }
     }
@@ -192,7 +190,6 @@ pub fn verify_vote_result(
     if expected_blank_ballot_result
         .ne(&(*BASEPOINT_G1 * (Scalar::from(blank_result as u64))))
     {
-        wedpr_println!("verify blank_ballot_result failed!");
         return Ok(false);
     }
 
@@ -398,14 +395,18 @@ fn verify_ballot_proof(
     let either_equality_proof = pb_to_balance_proof(&bytes_to_proto(
         &ballot_proof.get_either_equality_proof(),
     )?)?;
-    verify_either_equality_relationship_proof(
+    let verify_ret = verify_either_equality_relationship_proof(
+        &bytes_to_point(candiate_ballot.get_ciphertext1())?,
         &bytes_to_point(weight_ballot.get_ciphertext1())?,
         &bytes_to_point(zero_ballot.get_ciphertext1())?,
-        &bytes_to_point(candiate_ballot.get_ciphertext1())?,
         &either_equality_proof,
         &BASEPOINT_G1,
         &polling_point,
-    )
+    )?;
+    if !verify_ret {
+        return Err(WedprError::VerificationError);
+    }
+    Ok(verify_ret)
 }
 
 fn batch_verify_ballot_proof(

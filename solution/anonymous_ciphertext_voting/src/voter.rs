@@ -265,7 +265,6 @@ pub fn generate_ballot_proof(
         &BASEPOINT_G2,
         &poll_point,
     );
-
     let ciphertext2 = *BASEPOINT_G2 * blinding;
     vote_ballot.set_ciphertext1(point_to_bytes(&c1_blinding));
     vote_ballot.set_ciphertext2(point_to_bytes(&ciphertext2));
