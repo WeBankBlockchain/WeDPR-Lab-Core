@@ -4,22 +4,25 @@
 
 use curve25519_dalek::{ristretto::RistrettoPoint, scalar::Scalar};
 use wedpr_l_crypto_zkp_utils::{bytes_to_point, point_to_bytes, BASEPOINT_G1};
-use wedpr_l_utils::{
-    error::WedprError,
-    traits::{Hash, Signature},
-};
+use wedpr_l_utils::error::WedprError;
 
-use wedpr_s_protos::generated::acv::{
-    Ballot, CandidateBallot, CandidateList, CounterParametersStorage,
-    CountingPart, DecryptedResultPartStorage, PollParametersStorage,
-    RegistrationRequest, RegistrationResponse, StringToCountingPartPair,
-    StringToInt64Pair, VoteResultStorage, VoteStorage,
+use wedpr_s_protos::{
+    generate_ballot_signature, generate_ballots_signature,
+    generated::acv::{
+        Ballot, CandidateBallot, CandidateList, CounterParametersStorage,
+        CountingPart, DecryptedResultPartStorage, PollParametersStorage,
+        RegistrationRequest, RegistrationResponse, StringToCountingPartPair,
+        StringToInt64Pair, UnlistedBallotDecryptedResult, UnlistedVoteChoice,
+        VoteResultStorage, VoteStorage,
+    },
 };
 
 use crate::{
-    config::{HASH, POLL_RESULT_KEY_TOTAL_BALLOTS, SIGNATURE},
+    config::POLL_RESULT_KEY_TOTAL_BALLOTS,
     utils::{get_ballot_by_candidate, get_counting_part_by_candidate},
 };
+
+use std::collections::BTreeMap;
 
 /// Makes system parameters for a new poll.
 pub fn make_poll_parameters(
@@ -59,17 +62,59 @@ pub fn certify_voter(
             .get_blinding_basepoint_g2()
             .to_vec(),
     );
+    let mut response = RegistrationResponse::new();
     // Sign the above data.
-    let mut hash_vec = Vec::new();
-    hash_vec.append(&mut ballot.get_ciphertext1().to_vec());
-    hash_vec.append(&mut ballot.get_ciphertext2().to_vec());
-    let message_hash = HASH.hash(&hash_vec);
-    let signature = SIGNATURE.sign(secret_key, &message_hash)?;
+    response.set_signature(generate_ballot_signature(secret_key, &ballot)?);
+    response.set_ballot(ballot);
+    response.set_voter_weight(voter_weight as u32);
+    Ok(response)
+}
+
+pub fn certify_unbounded_voter(
+    secret_key: &[u8],
+    registration_request: &RegistrationRequest,
+    value: u32,
+) -> Result<RegistrationResponse, WedprError> {
+    // generate weight ballot
+    let blinding_poll_point = bytes_to_point(
+        registration_request
+            .get_weight_point()
+            .get_blinding_poll_point(),
+    )?;
+    let weight_ciphertext1 =
+        blinding_poll_point + (*BASEPOINT_G1 * (Scalar::from(value as u64)));
+    let mut weight_ballot = Ballot::new();
+    weight_ballot.set_ciphertext1(point_to_bytes(&weight_ciphertext1));
+    weight_ballot.set_ciphertext2(
+        registration_request
+            .get_weight_point()
+            .get_blinding_basepoint_g2()
+            .to_vec(),
+    );
+    // generate zero ballot
+    let mut zero_ballot = Ballot::new();
+    zero_ballot.set_ciphertext1(
+        registration_request
+            .get_zero_point()
+            .get_blinding_poll_point()
+            .to_vec(),
+    );
+    zero_ballot.set_ciphertext2(
+        registration_request
+            .get_zero_point()
+            .get_blinding_basepoint_g2()
+            .to_vec(),
+    );
 
     let mut response = RegistrationResponse::new();
-    response.set_signature(signature);
-    response.set_ballot(ballot);
-    response.set_voter_weight(voter_weight);
+    response.set_signature(generate_ballots_signature(
+        secret_key,
+        &weight_ballot,
+        &zero_ballot,
+    )?);
+    response.set_ballot(weight_ballot);
+    response.set_zero_ballot(zero_ballot);
+    response.set_voter_weight(value);
     Ok(response)
 }
 
@@ -132,6 +177,21 @@ pub fn aggregate_vote_sum_response(
     blank_ballot.set_ciphertext1(point_to_bytes(&blank_c1_sum));
     blank_ballot.set_ciphertext2(point_to_bytes(&blank_c2_sum));
     *vote_sum = output_vote_sum;
+    Ok(true)
+}
+
+pub fn aggregate_vote_sum_response_unlisted(
+    poll_parameters: &PollParametersStorage,
+    vote_part: &VoteStorage,
+    vote_sum: &mut VoteStorage,
+) -> Result<bool, WedprError> {
+    aggregate_vote_sum_response(poll_parameters, vote_part, vote_sum)?;
+    // aggregate all unlisted voting cipher ballot in vote_part
+    for unlisted_ballot in vote_part.get_voted_ballot_unlisted() {
+        vote_sum
+            .mut_voted_ballot_unlisted()
+            .push(unlisted_ballot.clone());
+    }
     Ok(true)
 }
 
@@ -201,6 +261,78 @@ pub fn aggregate_decrypted_part_sum(
     Ok(true)
 }
 
+pub fn aggregate_decrypted_part_for_specify_unlisted_candidate(
+    decrypted_part: &UnlistedBallotDecryptedResult,
+    aggregated_decrypted_part: &mut UnlistedBallotDecryptedResult,
+) -> Result<bool, WedprError> {
+    // counting for the unlisted candidate
+    let current_aggregated_unlisted_candidate =
+        aggregated_decrypted_part.get_decrypted_unlisted_candidate();
+    let decrypted_part_unlisted_candidate =
+        decrypted_part.get_decrypted_unlisted_candidate();
+    let aggregated_unlisted_candidate = bytes_to_point(
+        current_aggregated_unlisted_candidate.get_blinding_c2(),
+    )? + bytes_to_point(
+        decrypted_part_unlisted_candidate.get_blinding_c2(),
+    )?;
+    // update the aggregated_decrypt_result for ulisted candidate
+    aggregated_decrypted_part
+        .mut_decrypted_unlisted_candidate()
+        .set_blinding_c2(point_to_bytes(&aggregated_unlisted_candidate));
+
+    // push the cipher unlisted candidate ballot into aggregated_decrypted_part
+    let unlisted_candidate_ballot =
+        decrypted_part.get_decrypted_unlisted_candidate_ballot();
+    // invalid decrypted_part
+    if unlisted_candidate_ballot.len() < 1 {
+        return Ok(false);
+    }
+    aggregated_decrypted_part
+        .mut_decrypted_unlisted_candidate_ballot()
+        .push((unlisted_candidate_ballot[0]).clone());
+    Ok(true)
+}
+
+pub fn aggregate_decrypted_part_sum_unlisted(
+    poll_parameters: &PollParametersStorage,
+    partially_decrypted_result: &DecryptedResultPartStorage,
+    aggregated_decrypted_result: &mut DecryptedResultPartStorage,
+) -> Result<bool, WedprError> {
+    aggregate_decrypted_part_sum(
+        poll_parameters,
+        partially_decrypted_result,
+        aggregated_decrypted_result,
+    )?;
+    // aggregate unlisted candidate
+    for unlisted_candidate_decrypt_part in
+        partially_decrypted_result.get_unlisted_candidate_part()
+    {
+        let mut match_candidate = false;
+        // find the aggregated_decrypted_part for the partially_decrypted_result
+        for mut aggregated_decrypted_part in
+            aggregated_decrypted_result.mut_unlisted_candidate_part()
+        {
+            if aggregated_decrypted_part.get_candidate_cipher()
+                == unlisted_candidate_decrypt_part.get_candidate_cipher()
+            {
+                match_candidate =
+                    aggregate_decrypted_part_for_specify_unlisted_candidate(
+                        unlisted_candidate_decrypt_part,
+                        &mut aggregated_decrypted_part,
+                    )?;
+                break;
+            }
+        }
+        // insert a new item
+        if !match_candidate {
+            aggregated_decrypted_result
+                .mut_unlisted_candidate_part()
+                .push(unlisted_candidate_decrypt_part.clone());
+        }
+    }
+    Ok(true)
+}
+
 /// Computes the final vote result from aggregated partially decrypted results.
 pub fn finalize_vote_result(
     poll_parameters: &PollParametersStorage,
@@ -252,4 +384,122 @@ pub fn finalize_vote_result(
         }
     }
     Ok(result)
+}
+
+pub fn decrypt_unlisted_candidate_ballot(
+    decrypted_unlisted_candidate_ballot_result: &mut BTreeMap<u64, u64>,
+    unlisted_candidate_part: &mut UnlistedBallotDecryptedResult,
+    vote_sum: &VoteStorage,
+    max_vote_limit: i64,
+    max_candidate_number: i64,
+) -> Result<bool, WedprError> {
+    let candidate_cipher = unlisted_candidate_part.get_candidate_cipher();
+    let aggregated_candidate_blinding_c2 = bytes_to_point(
+        unlisted_candidate_part
+            .get_decrypted_unlisted_candidate()
+            .get_blinding_c2(),
+    )?;
+    // find the candidate id according to the candidate_cipher
+    let target_total = bytes_to_point(candidate_cipher.get_ciphertext1())?
+        - aggregated_candidate_blinding_c2;
+    let mut decrypt_candidate_success = false;
+    for i in 0..=max_candidate_number {
+        let try_num = Scalar::from(i as u64);
+        if target_total.eq(&((*BASEPOINT_G1) * (try_num))) {
+            // find the candidate, update the candidate field of
+            // unlisted_candidate_part
+            unlisted_candidate_part.set_candidate(i);
+            decrypt_candidate_success = true;
+            break;
+        }
+    }
+    if !decrypt_candidate_success {
+        return Ok(false);
+    }
+    // decrypt the unlisted candidate ballot value when decrypt candidate
+    // success
+    for unlisted_vote_ballot in vote_sum.get_voted_ballot_unlisted() {
+        if unlisted_candidate_part.get_candidate_cipher()
+            != unlisted_vote_ballot.get_key()
+        {
+            continue;
+        }
+        // find out the unlisted vote ballot for the candidate
+        // aggregate blinding_c2 decrypted cipher ballot unlisted
+        let mut blinding_c2_sum = RistrettoPoint::default();
+        for decrypted_unlisted_candidate_blinding_c2 in
+            unlisted_candidate_part.get_decrypted_unlisted_candidate_ballot()
+        {
+            blinding_c2_sum += bytes_to_point(
+                decrypted_unlisted_candidate_blinding_c2.get_blinding_c2(),
+            )?;
+        }
+        // try to find out
+        let c1 = bytes_to_point(
+            unlisted_vote_ballot.get_ballot().get_ciphertext1(),
+        )?;
+        let target_total = c1 - blinding_c2_sum;
+        // decrypt the ballot value
+        for i in 0..max_vote_limit {
+            let try_num = Scalar::from(i as u64);
+            if !target_total.eq(&(*BASEPOINT_G1 * try_num)) {
+                continue;
+            }
+            // merge the  candidate unlisted value
+            let candidate = unlisted_candidate_part.get_candidate() as u64;
+            if decrypted_unlisted_candidate_ballot_result
+                .contains_key(&candidate)
+            {
+                let result_sum = decrypted_unlisted_candidate_ballot_result
+                    .get(&candidate)
+                    .unwrap()
+                    + (i as u64);
+                decrypted_unlisted_candidate_ballot_result
+                    .insert(candidate, result_sum);
+            } else {
+                decrypted_unlisted_candidate_ballot_result
+                    .insert(candidate, i as u64);
+            }
+        }
+    }
+    Ok(true)
+}
+
+pub fn finalize_vote_result_unlisted(
+    poll_parameters: &PollParametersStorage,
+    vote_sum: &VoteStorage,
+    aggregated_decrypted_result: &mut DecryptedResultPartStorage,
+    max_vote_limit: i64,
+    max_candidate_number: i64,
+) -> Result<VoteResultStorage, WedprError> {
+    let mut vote_result = finalize_vote_result(
+        poll_parameters,
+        vote_sum,
+        aggregated_decrypted_result,
+        max_vote_limit,
+    )?;
+    // finalize the vote result for the unlisted-candidates
+    let mut aggregated_unlisted_candidate_ballot_result = BTreeMap::new();
+    for mut unlisted_candidate in
+        aggregated_decrypted_result.mut_unlisted_candidate_part()
+    {
+        decrypt_unlisted_candidate_ballot(
+            &mut aggregated_unlisted_candidate_ballot_result,
+            &mut unlisted_candidate,
+            &vote_sum,
+            max_vote_limit,
+            max_candidate_number,
+        )?;
+    }
+    // push the aggregated_unlisted_candidate_ballot_result into
+    // aggregated_decrypted_result
+    for (key, value) in aggregated_unlisted_candidate_ballot_result {
+        let mut unlisted_candidate_ballot_result = UnlistedVoteChoice::new();
+        unlisted_candidate_ballot_result.set_candidate_id(key as u32);
+        unlisted_candidate_ballot_result.set_value(value as u32);
+        vote_result
+            .mut_unlisted_result()
+            .push(unlisted_candidate_ballot_result);
+    }
+    Ok(vote_result)
 }
