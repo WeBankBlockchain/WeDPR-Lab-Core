@@ -1,0 +1,163 @@
+name: WeDPR-Lab-Core GitHub Actions
+
+on:
+  push:
+    paths-ignore:
+      - "docs/**"
+      - "Changelog.md"
+      - "README.md"
+  pull_request:
+    paths-ignore:
+      - "docs/**"
+      - "Changelog.md"
+      - "README.md"
+  release:
+    types: [published, created, edited]
+env:
+  CCACHE_DIR: ${{ github.workspace }}/ccache
+
+jobs:
+  build_with_macos:
+    name: build_with_macos
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 5
+      - name: Nightly default
+        run: rustup default nightly
+      - name: install macOS dependencies
+        if: runner.os == 'macOS'
+        run: brew install ccache
+      - name: build
+        run: cargo build --all --all-targets --verbose --release
+      - name: run test and bench
+        run: cargo test && cargo bench
+      - uses: actions/upload-artifact@v2
+        with:
+          name: libffi_java_acv.dylib.tar.gz
+          path: target/release/libffi_java_acv.dylib
+      - uses: actions/upload-artifact@v2
+        with:
+          name: libffi_java_vcl.dylib.tar.gz
+          path: target/release/libffi_java_vcl.dylib
+      - uses: actions/upload-artifact@v2
+        with:
+          name: libffi_java_scd.dylib.tar.gz
+          path: target/release/libffi_java_scd.dylib
+      - uses: actions/upload-artifact@v2
+        with:
+          name: libffi_java_ktb.dylib.tar.gz
+          path: target/release/libffi_java_ktb.dylib
+      - uses: actions/upload-artifact@v2
+        with:
+          name: libffi_c_scd.dylib.tar.gz
+          path: target/release/libffi_c_scd.dylib
+      - uses: actions/upload-artifact@v2
+        with:
+          name: libffi_c_vcl.dylib.tar.gz
+          path: target/release/libffi_c_vcl.dylib
+      - uses: actions/upload-artifact@v2
+        with:
+          name: libffi_c_hdk.dylib.tar.gz
+          path: target/release/libffi_c_hdk.dylib
+
+  build_with_centos:
+    name: build_with_centos
+    runs-on: ubuntu-latest
+    container:
+      image: docker.io/centos:7
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 5
+      - name: install rust language
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly-2021-06-17
+          override: true
+      - name: install CentOS dependencies
+        run: |
+          yum install -y epel-release centos-release-scl
+          yum install -y openssl openssl-devel git make gcc gcc-c++ glibc-static glibc-devel cmake3 ccache devtoolset-7 libzstd-devel zlib-devel flex bison python-devel python3-devel && source /opt/rh/devtoolset-7/enable
+      - name: configure and compile
+        run: |
+          cargo build --all --all-targets --verbose --release
+          cargo test
+          cargo bench
+      - uses: actions/upload-artifact@v2
+        with:
+          name: libffi_java_acv.so.tar.gz
+          path: target/release/libffi_java_acv.so
+      - uses: actions/upload-artifact@v2
+        with:
+          name: libffi_java_vcl.so.tar.gz
+          path: target/release/libffi_java_vcl.so
+      - uses: actions/upload-artifact@v2
+        with:
+          name: libffi_java_scd.so.tar.gz
+          path: target/release/libffi_java_scd.so
+      - uses: actions/upload-artifact@v2
+        with:
+          name: libffi_java_ktb.so.tar.gz
+          path: target/release/libffi_java_ktb.so
+      - uses: actions/upload-artifact@v2
+        with:
+          name: libffi_c_scd.so.tar.gz
+          path: target/release/libffi_c_scd.so
+      - uses: actions/upload-artifact@v2
+        with:
+          name: libffi_c_vcl.so.tar.gz
+          path: target/release/libffi_c_vcl.so
+      - uses: actions/upload-artifact@v2
+        with:
+          name: libffi_c_hdk.so.tar.gz
+          path: target/release/libffi_c_hdk.so
+  build_with_windows:
+    name: build_with_windows
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-2019]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 5
+      - run: echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
+      - run: vcpkg install openssl:x64-windows-static-md
+      - name: build and test
+        run: |
+          cargo build --all --all-targets --verbose --release
+          cargo test
+          cargo bench
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ffi_java_acv.dll.zip
+          path: D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_java_acv.dll
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ffi_java_vcl.dll.zip
+          path: D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_java_vcl.dll
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ffi_java_scd.dll.zip
+          path: D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_java_scd.dll
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ffi_java_ktb.dll.zip
+          path: D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_java_ktb.dll
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ffi_c_scd.dll.zip
+          path: D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_c_scd.dll
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ffi_c_vcl.dll.zip
+          path: D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_c_vcl.dll
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ffi_c_hdk.dll.zip
+          path: D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_c_hdk.dll
