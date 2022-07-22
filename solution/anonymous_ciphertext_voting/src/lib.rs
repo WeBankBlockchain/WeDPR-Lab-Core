@@ -298,6 +298,20 @@ mod tests {
         )
         .unwrap();
 
+        // verify blank ballot
+        let result =
+            voter::verify_blank_ballot(&registration_request1, &response1)
+                .unwrap();
+        assert_eq!(result, true);
+        let result =
+            voter::verify_blank_ballot(&registration_request2, &response2)
+                .unwrap();
+        assert_eq!(result, true);
+        let result =
+            voter::verify_blank_ballot(&registration_request3, &response3)
+                .unwrap();
+        assert_eq!(result, true);
+
         // begin vote
         let mut encrypted_vote_sum = VoteStorage::new();
         let make_choice = |x: &Vec<i32>| {
@@ -614,7 +628,19 @@ mod tests {
             blank_ballot_count[2],
         )
         .unwrap();
-
+        // verify blank ballot
+        let result =
+            voter::verify_blank_ballot(&registration_request1, &response1)
+                .unwrap();
+        assert_eq!(result, true);
+        let result =
+            voter::verify_blank_ballot(&registration_request2, &response2)
+                .unwrap();
+        assert_eq!(result, true);
+        let result =
+            voter::verify_blank_ballot(&registration_request3, &response3)
+                .unwrap();
+        assert_eq!(result, true);
         let mut encrypted_vote_sum = VoteStorage::new();
 
         let make_choice = |x: &Vec<i32>, y: &Vec<i64>| {
