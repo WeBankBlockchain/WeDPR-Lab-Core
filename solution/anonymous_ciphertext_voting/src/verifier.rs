@@ -9,15 +9,13 @@ use wedpr_l_crypto_zkp_discrete_logarithm_proof::{
     verify_sum_relationship,
 };
 use wedpr_l_crypto_zkp_range_proof::verify_value_range_in_batch;
-use wedpr_l_crypto_zkp_utils::{bytes_to_point, BASEPOINT_G1, BASEPOINT_G2};
+use wedpr_l_crypto_zkp_utils::{
+    bytes_to_point, Deserialize, BASEPOINT_G1, BASEPOINT_G2,
+};
 use wedpr_l_utils::error::WedprError;
 use wedpr_s_protos::{
-    bytes_to_proto,
-    generated::{
-        acv::BallotProof,
-        zkp::{PBBalanceProof, PBEqualityProof},
-    },
-    verify_ballot_signature, verify_ballots_signature,
+    generated::acv::BallotProof, verify_ballot_signature,
+    verify_ballots_signature,
 };
 
 use wedpr_s_protos::generated::acv::{
@@ -33,11 +31,6 @@ use crate::{
         get_counting_part_by_candidate, get_int64_by_candidate,
     },
 };
-use wedpr_s_protos::{
-    pb_to_arithmetric_proof, pb_to_balance_proof, pb_to_equality_proof,
-    pb_to_format_proof,
-};
-
 /// Verifies whether ciphertext ballots from a certified voter are valid.
 pub fn verify_vote_request(
     poll_parameters: &PollParametersStorage,
@@ -71,7 +64,6 @@ pub fn verify_vote_request(
     if !verify_value_range_in_batch(&commitments, range_proof, &poll_point) {
         return Err(WedprError::VerificationError);
     }
-
     for candidate_ballot in vote_request.get_ballot_proof() {
         let candidate = candidate_ballot.get_key();
         let ballot_proof = candidate_ballot.get_value();
@@ -81,11 +73,11 @@ pub fn verify_vote_request(
         let ciphertext1 = bytes_to_point(&candidate_ballot.get_ciphertext1())?;
         let ciphertext2 = bytes_to_point(&candidate_ballot.get_ciphertext2())?;
         let format_proof =
-            bytes_to_proto::<PBBalanceProof>(ballot_proof.get_format_proof())?;
+            Deserialize::deserialize(&ballot_proof.get_format_proof())?;
         if !verify_format_proof(
             &ciphertext1,
             &ciphertext2,
-            &pb_to_format_proof(&format_proof)?,
+            &format_proof,
             &*BASEPOINT_G1,
             &*BASEPOINT_G2,
             &poll_point,
@@ -93,14 +85,13 @@ pub fn verify_vote_request(
             return Err(WedprError::VerificationError);
         }
     }
-
     let balance_proof =
-        bytes_to_proto::<PBBalanceProof>(vote_request.get_sum_balance_proof())?;
+        Deserialize::deserialize(vote_request.get_sum_balance_proof())?;
     if !verify_sum_relationship(
         &voted_ballot_sum,
         &bytes_to_point(&rest_ballot)?,
         &bytes_to_point(&blank_ballot.get_ciphertext1())?,
-        &pb_to_arithmetric_proof(&balance_proof)?,
+        &balance_proof,
         &BASEPOINT_G1,
         &poll_point,
     )? {
@@ -130,11 +121,11 @@ pub fn verify_count_request(
             .get_blinding_c2(),
     )?;
     let blank_equality_proof =
-        bytes_to_proto::<PBEqualityProof>(&blank_equality_proof_bytes)?;
+        Deserialize::deserialize(&blank_equality_proof_bytes)?;
     if !verify_equality_relationship_proof(
         &counter_share,
         &blank_c2_r,
-        &pb_to_equality_proof(&blank_equality_proof)?,
+        &&blank_equality_proof,
         &BASEPOINT_G2,
         &blank_c2_sum,
     )? {
@@ -152,13 +143,12 @@ pub fn verify_count_request(
             candidate,
         )?;
         let candidate_c2_r = bytes_to_point(&counting_part.get_blinding_c2())?;
-        let candidate_equality_proof = bytes_to_proto::<PBEqualityProof>(
-            counting_part.get_equality_proof(),
-        )?;
+        let candidate_equality_proof =
+            Deserialize::deserialize(counting_part.get_equality_proof())?;
         if !verify_equality_relationship_proof(
             &counter_share,
             &candidate_c2_r,
-            &pb_to_equality_proof(&candidate_equality_proof)?,
+            &candidate_equality_proof,
             &BASEPOINT_G2,
             &candidate_c2_sum,
         )? {
@@ -226,9 +216,9 @@ fn verify_count_request_for_unlisted_candidate(
     let decrypted_unlisted_candidate =
         candidate_aggregated_unlisted_decrypted_result
             .get_decrypted_unlisted_candidate();
-    let equality_proof = pb_to_equality_proof(&bytes_to_proto(
+    let equality_proof = Deserialize::deserialize(
         &decrypted_unlisted_candidate.get_equality_proof(),
-    )?)?;
+    )?;
     // verify the equality proof for unlisted candidate
     if !verify_equality_relationship_proof(
         &counter_share,
@@ -251,9 +241,9 @@ fn verify_count_request_for_unlisted_candidate(
     // verify equality proof for the candidate ballot
     let unlisted_candidate_ballot_basepoint2 =
         bytes_to_point(unlisted_candidate_ballot.get_ciphertext2())?;
-    let equality_proof = pb_to_equality_proof(&bytes_to_proto(
+    let equality_proof = Deserialize::deserialize(
         decrypted_unlisted_candidate_ballot_list[0].get_equality_proof(),
-    )?)?;
+    )?;
     let c2_point = bytes_to_point(
         decrypted_unlisted_candidate_ballot_list[0].get_blinding_c2(),
     )?;
@@ -280,9 +270,9 @@ fn verify_count_request_for_candidate(
         aggregated_decrypted_result,
         candidate_id,
     )?;
-    let proof = pb_to_equality_proof(&bytes_to_proto(
+    let proof = Deserialize::deserialize(
         &decrypted_candidate_part.get_equality_proof(),
-    )?)?;
+    )?;
     // verify equality from vote_sum to counting_sum
     if !verify_equality_relationship_proof(
         &counter_share,
@@ -310,11 +300,11 @@ pub fn verify_count_request_unlisted(
             .get_blank_part()
             .get_blinding_c2(),
     )?;
-    let blank_equality_proof = pb_to_equality_proof(&bytes_to_proto(
+    let blank_equality_proof = Deserialize::deserialize(
         &aggregated_decrypted_result
             .get_blank_part()
             .get_equality_proof(),
-    )?)?;
+    )?;
     if !verify_equality_relationship_proof(
         &counter_share,
         &blank_blinding_c2,
@@ -378,7 +368,7 @@ fn verify_ballot_proof(
 ) -> Result<bool, WedprError> {
     // verify the format proof
     let format_proof =
-        pb_to_format_proof(&bytes_to_proto(&ballot_proof.get_format_proof())?)?;
+        Deserialize::deserialize(&ballot_proof.get_format_proof())?;
     let polling_point = bytes_to_point(&poll_parameters.get_poll_point())?;
     let ret = verify_format_proof(
         &bytes_to_point(candiate_ballot.get_ciphertext1())?,
@@ -392,9 +382,8 @@ fn verify_ballot_proof(
         return Err(WedprError::VerificationError);
     }
     // verify either_equality_proof
-    let either_equality_proof = pb_to_balance_proof(&bytes_to_proto(
-        &ballot_proof.get_either_equality_proof(),
-    )?)?;
+    let either_equality_proof =
+        Deserialize::deserialize(&ballot_proof.get_either_equality_proof())?;
     let verify_ret = verify_either_equality_relationship_proof(
         &bytes_to_point(candiate_ballot.get_ciphertext1())?,
         &bytes_to_point(weight_ballot.get_ciphertext1())?,
