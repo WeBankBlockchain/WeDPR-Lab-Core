@@ -19,8 +19,8 @@ use wedpr_l_crypto_zkp_utils::bytes_to_point;
 use wedpr_s_anonymous_ciphertext_voting;
 
 use wedpr_s_protos::generated::acv::{
-    DecryptedResultPartStorage, PollParametersStorage, VoteRequest,
-    VoteResultStorage, VoteStorage,
+    DecryptedResultPartStorage, PollParametersStorage, RegistrationRequest,
+    RegistrationResponse, VoteRequest, VoteResultStorage, VoteStorage,
 };
 
 // Java FFI: Java interfaces will be generated under
@@ -364,5 +364,48 @@ pub extern "system" fn Java_com_webank_wedpr_acv_NativeInterface_verifyVoteResul
         verify_result,
         "verifyResult"
     );
+    result_jobject.into_inner()
+}
+
+// Java interface section.
+// All functions are under class name 'com.webank.wedpr.acv.NativeInterface'.
+/// Java interface for
+/// 'com.webank.wedpr.acv.NativeInterface->verifyBlankBallot'.
+#[no_mangle]
+pub extern "system" fn Java_com_webank_wedpr_acv_NativeInterface_verifyBlankBallot(
+    _env: JNIEnv,
+    _class: JClass,
+    registration_request: JString,
+    registration_response: JString,
+) -> jobject {
+    let result_jobject = get_result_jobject(&_env);
+    let pb_registration_request = java_safe_jstring_to_pb!(
+        _env,
+        result_jobject,
+        registration_request,
+        RegistrationRequest
+    );
+    let pb_registration_response = java_safe_jstring_to_pb!(
+        _env,
+        result_jobject,
+        registration_response,
+        RegistrationResponse
+    );
+    let result =
+        match wedpr_s_anonymous_ciphertext_voting::voter::verify_blank_ballot(
+            &pb_registration_request,
+            &pb_registration_response,
+        ) {
+            Ok(v) => v,
+            Err(e) => {
+                return java_set_error_field_and_extract_jobject(
+                    &_env,
+                    &result_jobject,
+                    &format!("verifyBlankBallot failed, err = {:?}", e),
+                )
+            },
+        };
+    // write verify_result
+    java_safe_set_boolean_field!(_env, result_jobject, result, "verifyResult");
     result_jobject.into_inner()
 }

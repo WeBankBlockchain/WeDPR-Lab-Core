@@ -46,7 +46,6 @@ mod tests {
                 .push(counter_parameters_share);
             counter_secret_list.push(counter_secret);
         }
-
         // Initialize the coordinator.
         let (public_key, secret_key) = SIGNATURE.generate_keypair();
 
@@ -60,7 +59,6 @@ mod tests {
             &counter_parameters,
         )
         .unwrap();
-
         // Initialize all voters.
         let mut voter_secret_list: Vec<VoterSecret> = vec![];
         let mut voter_registration_list = vec![];
@@ -121,7 +119,6 @@ mod tests {
                 &public_key
             )
             .unwrap());
-
             // Coordinator aggregates individual ciphertext ballots.
             assert!(coordinator::aggregate_vote_sum_response(
                 &poll_parameters,
@@ -131,7 +128,6 @@ mod tests {
             .unwrap());
             vote_request_list.push(vote_request);
         }
-
         // All counters decrypt the poll result in a distributed manner.
         let mut aggregated_decrypted_result = DecryptedResultPartStorage::new();
         for index in 0..counter_secret_list.len() {
@@ -153,7 +149,6 @@ mod tests {
                 &partially_decrypted_result
             )
             .unwrap());
-
             // Coordinator aggregates parts of decrypted poll result.
             assert!(coordinator::aggregate_decrypted_part_sum(
                 &poll_parameters,
@@ -162,7 +157,6 @@ mod tests {
             )
             .unwrap());
         }
-
         // Coordinator decrypts the final poll result by enumerating all
         // possible value and checking ZKP data.
         // TODO: Design a better way to do the decryption.
@@ -297,6 +291,20 @@ mod tests {
             blank_ballot_count[2],
         )
         .unwrap();
+
+        // verify blank ballot
+        let result =
+            voter::verify_blank_ballot(&registration_request1, &response1)
+                .unwrap();
+        assert_eq!(result, true);
+        let result =
+            voter::verify_blank_ballot(&registration_request2, &response2)
+                .unwrap();
+        assert_eq!(result, true);
+        let result =
+            voter::verify_blank_ballot(&registration_request3, &response3)
+                .unwrap();
+        assert_eq!(result, true);
 
         // begin vote
         let mut encrypted_vote_sum = VoteStorage::new();
@@ -614,7 +622,19 @@ mod tests {
             blank_ballot_count[2],
         )
         .unwrap();
-
+        // verify blank ballot
+        let result =
+            voter::verify_blank_ballot(&registration_request1, &response1)
+                .unwrap();
+        assert_eq!(result, true);
+        let result =
+            voter::verify_blank_ballot(&registration_request2, &response2)
+                .unwrap();
+        assert_eq!(result, true);
+        let result =
+            voter::verify_blank_ballot(&registration_request3, &response3)
+                .unwrap();
+        assert_eq!(result, true);
         let mut encrypted_vote_sum = VoteStorage::new();
 
         let make_choice = |x: &Vec<i32>, y: &Vec<i64>| {
