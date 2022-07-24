@@ -3750,7 +3750,7 @@ impl VoteStorage {
         ::std::mem::replace(&mut self.voted_ballot, ::protobuf::RepeatedField::new())
     }
 
-    // repeated .com.webank.wedpr.acv.proto.CipherPointsToBallotPair voted_ballot_unlisted = 6;
+    // repeated .com.webank.wedpr.acv.proto.CipherPointsToBallotPair voted_ballot_unlisted = 5;
 
 
     pub fn get_voted_ballot_unlisted(&self) -> &[CipherPointsToBallotPair] {
@@ -3775,7 +3775,7 @@ impl VoteStorage {
         ::std::mem::replace(&mut self.voted_ballot_unlisted, ::protobuf::RepeatedField::new())
     }
 
-    // .com.webank.wedpr.acv.proto.Ballot zero_ballot = 7;
+    // .com.webank.wedpr.acv.proto.Ballot zero_ballot = 6;
 
 
     pub fn get_zero_ballot(&self) -> &Ballot {
@@ -3855,10 +3855,10 @@ impl ::protobuf::Message for VoteStorage {
                 4 => {
                     ::protobuf::rt::read_repeated_message_into(wire_type, is, &mut self.voted_ballot)?;
                 },
-                6 => {
+                5 => {
                     ::protobuf::rt::read_repeated_message_into(wire_type, is, &mut self.voted_ballot_unlisted)?;
                 },
-                7 => {
+                6 => {
                     ::protobuf::rt::read_singular_message_into(wire_type, is, &mut self.zero_ballot)?;
                 },
                 _ => {
@@ -3921,12 +3921,12 @@ impl ::protobuf::Message for VoteStorage {
             v.write_to_with_cached_sizes(os)?;
         };
         for v in &self.voted_ballot_unlisted {
-            os.write_tag(6, ::protobuf::wire_format::WireTypeLengthDelimited)?;
+            os.write_tag(5, ::protobuf::wire_format::WireTypeLengthDelimited)?;
             os.write_raw_varint32(v.get_cached_size())?;
             v.write_to_with_cached_sizes(os)?;
         };
         if let Some(ref v) = self.zero_ballot.as_ref() {
-            os.write_tag(7, ::protobuf::wire_format::WireTypeLengthDelimited)?;
+            os.write_tag(6, ::protobuf::wire_format::WireTypeLengthDelimited)?;
             os.write_raw_varint32(v.get_cached_size())?;
             v.write_to_with_cached_sizes(os)?;
         }
@@ -4090,7 +4090,7 @@ impl CipherPointsToBallotPair {
         self.key.take().unwrap_or_else(|| CipherPoints::new())
     }
 
-    // .com.webank.wedpr.acv.proto.Ballot ballot = 3;
+    // .com.webank.wedpr.acv.proto.Ballot ballot = 2;
 
 
     pub fn get_ballot(&self) -> &Ballot {
@@ -4146,7 +4146,7 @@ impl ::protobuf::Message for CipherPointsToBallotPair {
                 1 => {
                     ::protobuf::rt::read_singular_message_into(wire_type, is, &mut self.key)?;
                 },
-                3 => {
+                2 => {
                     ::protobuf::rt::read_singular_message_into(wire_type, is, &mut self.ballot)?;
                 },
                 _ => {
@@ -4181,7 +4181,7 @@ impl ::protobuf::Message for CipherPointsToBallotPair {
             v.write_to_with_cached_sizes(os)?;
         }
         if let Some(ref v) = self.ballot.as_ref() {
-            os.write_tag(3, ::protobuf::wire_format::WireTypeLengthDelimited)?;
+            os.write_tag(2, ::protobuf::wire_format::WireTypeLengthDelimited)?;
             os.write_raw_varint32(v.get_cached_size())?;
             v.write_to_with_cached_sizes(os)?;
         }
@@ -6205,12 +6205,12 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     kBallot\x12C\n\x0brest_ballot\x18\x03\x20\x01(\x0b2\".com.webank.wedpr.a\
     cv.proto.BallotR\nrestBallot\x12N\n\x0cvoted_ballot\x18\x04\x20\x03(\x0b\
     2+.com.webank.wedpr.acv.proto.CandidateBallotR\x0bvotedBallot\x12h\n\x15\
-    voted_ballot_unlisted\x18\x06\x20\x03(\x0b24.com.webank.wedpr.acv.proto.\
+    voted_ballot_unlisted\x18\x05\x20\x03(\x0b24.com.webank.wedpr.acv.proto.\
     CipherPointsToBallotPairR\x13votedBallotUnlisted\x12C\n\x0bzero_ballot\
-    \x18\x07\x20\x01(\x0b2\".com.webank.wedpr.acv.proto.BallotR\nzeroBallot\
+    \x18\x06\x20\x01(\x0b2\".com.webank.wedpr.acv.proto.BallotR\nzeroBallot\
     \"\x92\x01\n\x18CipherPointsToBallotPair\x12:\n\x03key\x18\x01\x20\x01(\
     \x0b2(.com.webank.wedpr.acv.proto.CipherPointsR\x03key\x12:\n\x06ballot\
-    \x18\x03\x20\x01(\x0b2\".com.webank.wedpr.acv.proto.BallotR\x06ballot\"\
+    \x18\x02\x20\x01(\x0b2\".com.webank.wedpr.acv.proto.BallotR\x06ballot\"\
     \x9a\x01\n\x1dCipherPointsToBallotProofPair\x12:\n\x03key\x18\x01\x20\
     \x01(\x0b2(.com.webank.wedpr.acv.proto.CipherPointsR\x03key\x12=\n\x05va\
     lue\x18\x02\x20\x01(\x0b2'.com.webank.wedpr.acv.proto.BallotProofR\x05va\

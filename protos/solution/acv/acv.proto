@@ -123,8 +123,8 @@ message VoteStorage {
   Ballot rest_ballot = 3;
   repeated CandidateBallot voted_ballot = 4;
   // the ballot for unlisted-candidates
-  repeated CipherPointsToBallotPair voted_ballot_unlisted = 6;
-  Ballot zero_ballot = 7;
+  repeated CipherPointsToBallotPair voted_ballot_unlisted = 5;
+  Ballot zero_ballot = 6;
 }
 
 // the ballot for the unlisted-candidate
@@ -133,7 +133,7 @@ message CipherPointsToBallotPair
   // the unlisted-candidate cipher
   CipherPoints key = 1;
   // the ballot for the unlisted-candidate
-  Ballot ballot = 3;
+  Ballot ballot = 2;
 }
 
 // CipherPointsToBallotPair and CipherPointsToBallotProofPair associated by candidate cipher(CipherPoints)
