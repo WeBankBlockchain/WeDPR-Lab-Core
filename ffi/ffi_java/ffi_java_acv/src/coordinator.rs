@@ -8,10 +8,11 @@ use jni::{
     JNIEnv,
 };
 
+use jni::sys::jbyteArray;
 use protobuf::{self, Message};
 use wedpr_ffi_common::utils::{
-    bytes_to_string, java_jstring_to_bytes, java_new_jobject,
-    java_set_error_field_and_extract_jobject,
+    bytes_to_string, java_jbytes_to_bytes, java_jstring_to_bytes,
+    java_new_jobject, java_set_error_field_and_extract_jobject,
 };
 
 use wedpr_s_anonymous_ciphertext_voting;
@@ -82,14 +83,14 @@ pub extern "system" fn Java_com_webank_wedpr_acv_NativeInterface_makePollParamet
 pub extern "system" fn Java_com_webank_wedpr_acv_NativeInterface_certifyVoter(
     _env: JNIEnv,
     _class: JClass,
-    secret_key_data: JString,
+    secret_key_data: jbyteArray,
     registration_request: JString,
     voter_weight: jint,
 ) -> jobject {
     let result_jobject = get_result_jobject(&_env);
     let certify_result =
         match wedpr_s_anonymous_ciphertext_voting::coordinator::certify_voter(
-            &java_safe_jstring_to_bytes!(_env, result_jobject, secret_key_data),
+            &java_safe_jbytes_to_bytes!(_env, result_jobject, secret_key_data),
             &java_safe_jstring_to_pb!(
                 _env,
                 result_jobject,
@@ -122,14 +123,14 @@ pub extern "system" fn Java_com_webank_wedpr_acv_NativeInterface_certifyVoter(
 pub extern "system" fn Java_com_webank_wedpr_acv_NativeInterface_certifyUnboundedVoter(
     _env: JNIEnv,
     _class: JClass,
-    secret_key_data: JString,
+    secret_key_data: jbyteArray,
     registration_request: JString,
     voter_weight: jint,
 ) -> jobject {
     let result_jobject = get_result_jobject(&_env);
     let certify_result =
         match wedpr_s_anonymous_ciphertext_voting::coordinator::certify_unbounded_voter(
-            &java_safe_jstring_to_bytes!(_env, result_jobject, secret_key_data),
+            &java_safe_jbytes_to_bytes!(_env, result_jobject, secret_key_data),
             &java_safe_jstring_to_pb!(
                 _env,
                 result_jobject,
