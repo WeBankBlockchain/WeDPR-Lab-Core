@@ -8,9 +8,10 @@ use jni::{
     JNIEnv,
 };
 
+use jni::sys::jbyteArray;
 use protobuf::{self, Message};
 use wedpr_ffi_common::utils::{
-    java_jstring_to_bytes, java_new_jobject,
+    java_jbytes_to_bytes, java_jstring_to_bytes, java_new_jobject,
     java_set_error_field_and_extract_jobject,
 };
 
@@ -42,7 +43,7 @@ pub extern "system" fn Java_com_webank_wedpr_acv_NativeInterface_verifyVoteReque
     _class: JClass,
     poll_parameters: JString,
     vote_request: JString,
-    public_key_str: JString,
+    public_key_bytes: jbyteArray,
 ) -> jobject {
     let result_jobject = get_result_jobject(&_env);
     let pb_poll_parameters = java_safe_jstring_to_pb!(
@@ -58,7 +59,7 @@ pub extern "system" fn Java_com_webank_wedpr_acv_NativeInterface_verifyVoteReque
         VoteRequest
     );
     let public_key =
-        java_safe_jstring_to_bytes!(_env, result_jobject, public_key_str);
+        java_safe_jbytes_to_bytes!(_env, result_jobject, public_key_bytes);
     let verify_result =
         match wedpr_s_anonymous_ciphertext_voting::verifier::verify_vote_request(
             &pb_poll_parameters,
@@ -91,7 +92,7 @@ pub extern "system" fn Java_com_webank_wedpr_acv_NativeInterface_verifyUnbounded
     _class: JClass,
     poll_parameters: JString,
     vote_request: JString,
-    public_key_str: JString,
+    public_key_bytes: jbyteArray,
 ) -> jobject {
     let result_jobject = get_result_jobject(&_env);
     let pb_poll_parameters = java_safe_jstring_to_pb!(
@@ -107,7 +108,7 @@ pub extern "system" fn Java_com_webank_wedpr_acv_NativeInterface_verifyUnbounded
         VoteRequest
     );
     let public_key =
-        java_safe_jstring_to_bytes!(_env, result_jobject, public_key_str);
+        java_safe_jbytes_to_bytes!(_env, result_jobject, public_key_bytes);
     let verify_result = match wedpr_s_anonymous_ciphertext_voting::verifier::verify_unbounded_vote_request(&pb_poll_parameters,
     &pb_vote_request, &public_key)
     {
@@ -137,7 +138,7 @@ pub extern "system" fn Java_com_webank_wedpr_acv_NativeInterface_verifyUnbounded
     _class: JClass,
     poll_parameters: JString,
     vote_request: JString,
-    public_key_str: JString,
+    public_key_bytes: jbyteArray,
 ) -> jobject {
     let result_jobject = get_result_jobject(&_env);
     let pb_poll_parameters = java_safe_jstring_to_pb!(
@@ -153,7 +154,7 @@ pub extern "system" fn Java_com_webank_wedpr_acv_NativeInterface_verifyUnbounded
         VoteRequest
     );
     let public_key =
-        java_safe_jstring_to_bytes!(_env, result_jobject, public_key_str);
+        java_safe_jbytes_to_bytes!(_env, result_jobject, public_key_bytes);
     let verify_result = match wedpr_s_anonymous_ciphertext_voting::verifier::verify_unbounded_vote_request(&pb_poll_parameters,
     &pb_vote_request, &public_key)
     {
@@ -183,7 +184,7 @@ pub extern "system" fn Java_com_webank_wedpr_acv_NativeInterface_verifyCountRequ
     _class: JClass,
     poll_parameters: JString,
     encrypted_vote_sum: JString,
-    counter_share: JString,
+    counter_share: jbyteArray,
     partially_decrypted_result: JString,
 ) -> jobject {
     let result_jobject = get_result_jobject(&_env);
@@ -206,7 +207,7 @@ pub extern "system" fn Java_com_webank_wedpr_acv_NativeInterface_verifyCountRequ
         DecryptedResultPartStorage
     );
     let counter_share_bytes =
-        java_safe_jstring_to_bytes!(_env, result_jobject, counter_share);
+        java_safe_jbytes_to_bytes!(_env, result_jobject, counter_share);
     let counter_share_point =
         match bytes_to_point(&counter_share_bytes.to_vec()) {
             Ok(v) => v,
@@ -251,7 +252,7 @@ pub extern "system" fn Java_com_webank_wedpr_acv_NativeInterface_verifyCountRequ
     _class: JClass,
     poll_parameters: JString,
     encrypted_vote_sum: JString,
-    counter_share: JString,
+    counter_share: jbyteArray,
     partially_decrypted_result: JString,
 ) -> jobject {
     let result_jobject = get_result_jobject(&_env);
@@ -274,7 +275,7 @@ pub extern "system" fn Java_com_webank_wedpr_acv_NativeInterface_verifyCountRequ
         DecryptedResultPartStorage
     );
     let counter_share_bytes =
-        java_safe_jstring_to_bytes!(_env, result_jobject, counter_share);
+        java_safe_jbytes_to_bytes!(_env, result_jobject, counter_share);
     let counter_share_point =
         match bytes_to_point(&counter_share_bytes.to_vec()) {
             Ok(v) => v,
