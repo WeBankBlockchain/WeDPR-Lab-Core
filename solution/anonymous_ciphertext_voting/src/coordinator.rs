@@ -153,7 +153,7 @@ pub fn aggregate_vote_sum_response(
         bytes_to_point(&vote_sum.get_blank_ballot().get_ciphertext2())?
             + c2_point;
 
-    let mut output_vote_sum = VoteStorage::new();
+    let mut updated_vote_sum_list = Vec::new();
     for candidate in poll_parameters.get_candidates().get_candidate() {
         let sum_ballot = get_ballot_by_candidate(&vote_sum, candidate)?;
         let new_ballot = get_ballot_by_candidate(&vote_part, candidate)?;
@@ -171,12 +171,19 @@ pub fn aggregate_vote_sum_response(
         let mut new_pair = CandidateBallot::new();
         new_pair.set_candidate(candidate.to_string());
         new_pair.set_ballot(new_sum_ballot);
-        output_vote_sum.mut_voted_ballot().push(new_pair);
+        updated_vote_sum_list.push(new_pair);
     }
-    let blank_ballot = output_vote_sum.mut_blank_ballot();
-    blank_ballot.set_ciphertext1(point_to_bytes(&blank_c1_sum));
-    blank_ballot.set_ciphertext2(point_to_bytes(&blank_c2_sum));
-    *vote_sum = output_vote_sum;
+    // update the voted_ballot for vote sum
+    vote_sum.clear_voted_ballot();
+    for voted_ballot in updated_vote_sum_list {
+        vote_sum.mut_voted_ballot().push(voted_ballot);
+    }
+    vote_sum
+        .mut_blank_ballot()
+        .set_ciphertext1(point_to_bytes(&blank_c1_sum));
+    vote_sum
+        .mut_blank_ballot()
+        .set_ciphertext2(point_to_bytes(&blank_c2_sum));
     Ok(true)
 }
 
@@ -233,8 +240,7 @@ pub fn aggregate_decrypted_part_sum(
         .mut_blank_part()
         .set_blinding_c2(point_to_bytes(&blank_c2_r_sum));
 
-    let mut output_decrypted_result = aggregated_decrypted_result.clone();
-    output_decrypted_result.clear_candidate_part();
+    let mut updated_candidate_part_list = Vec::new();
     for candidate in poll_parameters.get_candidates().get_candidate() {
         let aggregated_part = get_counting_part_by_candidate(
             &aggregated_decrypted_result,
@@ -255,9 +261,14 @@ pub fn aggregate_decrypted_part_sum(
         let mut new_pair = StringToCountingPartPair::new();
         new_pair.set_key(candidate.to_string());
         new_pair.set_value(candidate_part);
-        output_decrypted_result.mut_candidate_part().push(new_pair);
+        updated_candidate_part_list.push(new_pair);
     }
-    *aggregated_decrypted_result = output_decrypted_result;
+    aggregated_decrypted_result.clear_candidate_part();
+    for updated_candidate_part in updated_candidate_part_list {
+        aggregated_decrypted_result
+            .mut_candidate_part()
+            .push(updated_candidate_part);
+    }
     Ok(true)
 }
 
@@ -268,8 +279,10 @@ pub fn aggregate_decrypted_part_for_specify_unlisted_candidate(
     // counting for the unlisted candidate
     let current_aggregated_unlisted_candidate =
         aggregated_decrypted_part.get_decrypted_unlisted_candidate();
+
     let decrypted_part_unlisted_candidate =
         decrypted_part.get_decrypted_unlisted_candidate();
+
     let aggregated_unlisted_candidate = bytes_to_point(
         current_aggregated_unlisted_candidate.get_blinding_c2(),
     )? + bytes_to_point(
@@ -279,7 +292,6 @@ pub fn aggregate_decrypted_part_for_specify_unlisted_candidate(
     aggregated_decrypted_part
         .mut_decrypted_unlisted_candidate()
         .set_blinding_c2(point_to_bytes(&aggregated_unlisted_candidate));
-
     // push the cipher unlisted candidate ballot into aggregated_decrypted_part
     let unlisted_candidate_ballot =
         decrypted_part.get_decrypted_unlisted_candidate_ballot();
