@@ -318,7 +318,7 @@ pub fn generate_candidate_cipher(
     let blinding = get_random_scalar();
     let ciphertext1 = RistrettoPoint::multiscalar_mul(
         &[Scalar::from(value as u64), blinding],
-        &[*BASEPOINT_G2, *poll_point],
+        &[*BASEPOINT_G1, *poll_point],
     );
     let ciphertext2 = *BASEPOINT_G2 * blinding;
     cipher_point.set_ciphertext1(point_to_bytes(&ciphertext1));

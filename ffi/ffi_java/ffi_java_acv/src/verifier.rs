@@ -155,7 +155,7 @@ pub extern "system" fn Java_com_webank_wedpr_acv_NativeInterface_verifyUnbounded
     );
     let public_key =
         java_safe_jbytes_to_bytes!(_env, result_jobject, public_key_bytes);
-    let verify_result = match wedpr_s_anonymous_ciphertext_voting::verifier::verify_unbounded_vote_request(&pb_poll_parameters,
+    let verify_result = match wedpr_s_anonymous_ciphertext_voting::verifier::verify_unbounded_vote_request_unlisted(&pb_poll_parameters,
     &pb_vote_request, &public_key)
     {
         Ok(v) => v,

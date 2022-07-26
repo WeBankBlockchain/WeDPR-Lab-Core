@@ -18,7 +18,10 @@ pub mod voter;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{config::SIGNATURE, coordinator};
+    use crate::{
+        config::{POLL_RESULT_KEY_TOTAL_BALLOTS, SIGNATURE},
+        coordinator,
+    };
     use wedpr_l_crypto_zkp_utils::{
         bytes_to_point, get_random_scalar, scalar_to_bytes,
     };
@@ -681,6 +684,7 @@ mod tests {
             .unwrap()
         );
         // aggregate
+        wedpr_println!("##### aggregate_vote_sum_response_unlisted request1");
         assert_eq!(
             true,
             coordinator::aggregate_vote_sum_response_unlisted(
@@ -689,6 +693,11 @@ mod tests {
                 &mut encrypted_vote_sum
             )
             .unwrap()
+        );
+        wedpr_println!(
+            "##### aggregate_vote_sum_response_unlisted request1 success, \
+             size: {:?}",
+            encrypted_vote_sum.get_voted_ballot_unlisted().len()
         );
         // vote2
         let choice_candidate_unlisted2 =
@@ -713,6 +722,7 @@ mod tests {
             )
             .unwrap()
         );
+        wedpr_println!("##### aggregate_vote_sum_response_unlisted request2");
         assert_eq!(
             true,
             coordinator::aggregate_vote_sum_response_unlisted(
@@ -721,6 +731,11 @@ mod tests {
                 &mut encrypted_vote_sum
             )
             .unwrap()
+        );
+        wedpr_println!(
+            "##### aggregate_vote_sum_response_unlisted request2 success, \
+             size: {:?}",
+            encrypted_vote_sum.get_voted_ballot_unlisted().len()
         );
         // vote3
         let choice_candidate_unlisted3 =
@@ -736,6 +751,7 @@ mod tests {
             &poll_parameters,
         )
         .unwrap();
+        wedpr_println!("##### aggregate_vote_sum_response_unlisted request3");
         assert_eq!(
             true,
             verifier::verify_unbounded_vote_request_unlisted(
@@ -754,7 +770,13 @@ mod tests {
             )
             .unwrap()
         );
-        wedpr_println!("encrypted_vote_sum: {:?}", encrypted_vote_sum);
+        wedpr_println!(
+            "##### aggregate_vote_sum_response_unlisted request3 success"
+        );
+        wedpr_println!(
+            "encrypted_vote_sum, unlisted size: {:?}",
+            encrypted_vote_sum.get_voted_ballot_unlisted().len()
+        );
 
         let mut vote_sum_total = DecryptedResultPartStorage::new();
 
@@ -778,6 +800,11 @@ mod tests {
             .unwrap()
         );
 
+        wedpr_println!(
+            "##### aggregate_decrypted_part_sum_unlisted request1, unlisted \
+             size: {:?}",
+            vote_sum_total.get_unlisted_candidate_part().len()
+        );
         assert_eq!(
             true,
             coordinator::aggregate_decrypted_part_sum_unlisted(
@@ -786,6 +813,11 @@ mod tests {
                 &mut vote_sum_total,
             )
             .unwrap()
+        );
+        wedpr_println!(
+            "##### aggregate_decrypted_part_sum_unlisted request1, success \
+             unlisted size: {:?}",
+            vote_sum_total.get_unlisted_candidate_part().len()
         );
         let decrypt_request2 = counter::count_unlisted(
             counter_id_list[1],
@@ -806,7 +838,11 @@ mod tests {
             )
             .unwrap()
         );
-
+        wedpr_println!(
+            "##### aggregate_decrypted_part_sum_unlisted request2, unlisted \
+             size: {:?}",
+            vote_sum_total.get_unlisted_candidate_part().len()
+        );
         assert_eq!(
             true,
             coordinator::aggregate_decrypted_part_sum_unlisted(
@@ -815,6 +851,11 @@ mod tests {
                 &mut vote_sum_total,
             )
             .unwrap()
+        );
+        wedpr_println!(
+            "##### aggregate_decrypted_part_sum_unlisted request2, unlisted \
+             size: {:?} succ",
+            vote_sum_total.get_unlisted_candidate_part().len()
         );
 
         let decrypt_request3 = counter::count_unlisted(
@@ -836,7 +877,11 @@ mod tests {
             )
             .unwrap()
         );
-
+        wedpr_println!(
+            "##### aggregate_decrypted_part_sum_unlisted request3, unlisted \
+             size: {:?}",
+            vote_sum_total.get_unlisted_candidate_part().len()
+        );
         assert_eq!(
             true,
             coordinator::aggregate_decrypted_part_sum_unlisted(
@@ -845,6 +890,11 @@ mod tests {
                 &mut vote_sum_total,
             )
             .unwrap()
+        );
+        wedpr_println!(
+            "##### aggregate_decrypted_part_sum_unlisted request3, unlisted \
+             size: {:?} success",
+            vote_sum_total.get_unlisted_candidate_part().len()
         );
         //        wedpr_println!("vote_sum_total:{:?}", vote_sum_total);
 
@@ -871,5 +921,38 @@ mod tests {
         )
         .unwrap();
         assert!(result);
+        // check the candidate result(with Wedpr_voting_total_ballots)
+        assert!(final_result_request_unlisted.get_result().len() == 4);
+        for candidate_result in final_result_request_unlisted.get_result() {
+            if candidate_result.get_key()
+                == POLL_RESULT_KEY_TOTAL_BALLOTS.to_string()
+            {
+                assert!(candidate_result.get_value() == 60);
+            }
+            if candidate_result.get_key() == "Alice" {
+                assert!(candidate_result.get_value() == 40);
+            }
+            if candidate_result.get_key() == "Bob" {
+                assert!(candidate_result.get_value() == 50);
+            }
+            if candidate_result.get_key() == "charlie" {
+                assert!(candidate_result.get_value() == 60);
+            }
+        }
+        // check the unlisted candidate result
+        assert!(final_result_request_unlisted.get_unlisted_result().len() == 3);
+        for candidate_result in
+            final_result_request_unlisted.get_unlisted_result()
+        {
+            if candidate_result.get_candidate_id() == 1 {
+                assert!(candidate_result.get_value() == 10);
+            }
+            if candidate_result.get_candidate_id() == 2 {
+                assert!(candidate_result.get_value() == 0);
+            }
+            if candidate_result.get_candidate_id() == 3 {
+                assert!(candidate_result.get_value() == 60);
+            }
+        }
     }
 }
