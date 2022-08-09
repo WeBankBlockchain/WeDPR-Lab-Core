@@ -64,6 +64,14 @@ jobs:
         with:
           name: libffi_c_hdk.dylib.tar.gz
           path: target/release/libffi_c_hdk.dylib
+      - name: build sm-acv
+        run: cd ffi/ffi_java/ffi_java_acv && cargo clean && cargo build --release --no-default-features --features sm
+      - name: rename libffi_java_acv
+        run: mv target/release/libffi_java_acv.dylib target/release/libffi_java_sm_acv.dylib
+      - uses: actions/upload-artifact@v2
+        with:
+          name: libffi_java_sm_acv.dylib.tar.gz
+          path: target/release/libffi_java_sm_acv.dylib    
 
   build_with_centos:
     name: build_with_centos
@@ -116,6 +124,14 @@ jobs:
         with:
           name: libffi_c_hdk.so.tar.gz
           path: target/release/libffi_c_hdk.so
+      - name: build sm-acv
+        run: cd ffi/ffi_java/ffi_java_acv && cargo clean && cargo build --release --no-default-features --features sm
+      - name: rename libffi_java_acv
+        run: mv target/release/libffi_java_acv.so target/release/libffi_java_sm_acv.so
+      - uses: actions/upload-artifact@v2
+        with:
+          name: libffi_java_sm_acv.so.tar.gz
+          path: target/release/libffi_java_sm_acv.so   
   build_with_windows:
     name: build_with_windows
     runs-on: ${{ matrix.os }}
@@ -161,3 +177,11 @@ jobs:
         with:
           name: ffi_c_hdk.dll.zip
           path: D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_c_hdk.dll
+      - name: build sm-acv
+        run: cd ffi/ffi_java/ffi_java_acv && cargo clean && cargo build --release --no-default-features --features sm
+      - name: rename libffi_java_acv
+        run: mv D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_java_acv.dll D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_java_sm_acv.dll
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ffi_java_sm_acv.dll.zip
+          path: D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_java_sm_acv.dll  

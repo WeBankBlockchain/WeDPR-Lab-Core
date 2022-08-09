@@ -4,6 +4,7 @@
 
 use wedpr_l_crypto_zkp_utils::bytes_to_point;
 use wedpr_l_utils::traits::Signature;
+use wedpr_s_protos::config::SIGNATURE;
 
 use wedpr_s_protos::generated::acv::{
     CandidateList, CounterParametersStorage, CounterSecret,
@@ -13,8 +14,8 @@ use wedpr_s_protos::generated::acv::{
 extern crate wedpr_s_anonymous_ciphertext_voting;
 use colored::Colorize;
 use wedpr_s_anonymous_ciphertext_voting::{
-    config::{POLL_RESULT_KEY_TOTAL_BALLOTS, SIGNATURE},
-    coordinator, counter, verifier, voter,
+    config::POLL_RESULT_KEY_TOTAL_BALLOTS, coordinator, counter, verifier,
+    voter,
 };
 
 fn main() {
