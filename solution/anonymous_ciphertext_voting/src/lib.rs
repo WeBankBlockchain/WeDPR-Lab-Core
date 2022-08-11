@@ -18,18 +18,18 @@ pub mod voter;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{
-        config::{POLL_RESULT_KEY_TOTAL_BALLOTS, SIGNATURE},
-        coordinator,
-    };
+    use crate::{config::POLL_RESULT_KEY_TOTAL_BALLOTS, coordinator};
     use wedpr_l_crypto_zkp_utils::{
         bytes_to_point, get_random_scalar, scalar_to_bytes,
     };
     use wedpr_l_utils::traits::Signature;
-    use wedpr_s_protos::generated::acv::{
-        CandidateList, CounterParametersStorage, CounterSecret,
-        DecryptedResultPartStorage, UnlistedVoteChoice, VoteChoice,
-        VoteChoices, VoteStorage, VoterSecret,
+    use wedpr_s_protos::{
+        config::SIGNATURE,
+        generated::acv::{
+            CandidateList, CounterParametersStorage, CounterSecret,
+            DecryptedResultPartStorage, UnlistedVoteChoice, VoteChoice,
+            VoteChoices, VoteStorage, VoterSecret,
+        },
     };
 
     #[test]
