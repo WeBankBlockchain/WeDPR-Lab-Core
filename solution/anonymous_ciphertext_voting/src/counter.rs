@@ -5,14 +5,14 @@
 use wedpr_l_crypto_zkp_discrete_logarithm_proof::prove_equality_relationship_proof;
 use wedpr_l_crypto_zkp_utils::{
     bytes_to_point, bytes_to_scalar, get_random_scalar, point_to_bytes,
-    scalar_to_bytes, BASEPOINT_G2,
+    scalar_to_bytes, Serialize, BASEPOINT_G2,
 };
-use wedpr_l_protos::proto_to_bytes;
 use wedpr_l_utils::error::WedprError;
 
 use wedpr_s_protos::generated::acv::{
     CounterParametersShareRequest, CounterSecret, CountingPart,
-    DecryptedResultPartStorage, StringToCountingPartPair, VoteStorage,
+    DecryptedResultPartStorage, StringToCountingPartPair,
+    UnlistedBallotDecryptedResult, VoteStorage,
 };
 
 /// Makes secrets used by a counter.
@@ -66,8 +66,7 @@ pub fn count(
             &BASEPOINT_G2,
             &candidate_part_share,
         );
-        counting_part.set_equality_proof(proto_to_bytes(&equality_proof)?);
-
+        counting_part.set_equality_proof(equality_proof.serialize());
         // Write back.
         let candidate = candidate_ballot_pair.get_candidate();
         let mut candidate_counting_part_pair = StringToCountingPartPair::new();
@@ -91,8 +90,77 @@ pub fn count(
 
     // Write back.
     let blank_part = partially_decrypted_result.mut_blank_part();
-    blank_part.set_equality_proof(proto_to_bytes(&equality_proof)?);
+    blank_part.set_equality_proof(equality_proof.serialize());
     blank_part.set_blinding_c2(point_to_bytes(&blinding_c2));
     blank_part.set_counter_id(counter_id.to_string());
+    Ok(partially_decrypted_result)
+}
+
+pub fn count_unlisted(
+    counter_id: &str,
+    counter_secret: &CounterSecret,
+    encrypted_vote_sum: &VoteStorage,
+) -> Result<DecryptedResultPartStorage, WedprError> {
+    let mut partially_decrypted_result =
+        count(counter_id, counter_secret, encrypted_vote_sum)?;
+    // count unlisted ballot
+    let secret_share =
+        bytes_to_scalar(&counter_secret.get_poll_secret_share())?;
+    for unlisted_ballot in encrypted_vote_sum.get_voted_ballot_unlisted() {
+        let unlisted_candidate_cipher = unlisted_ballot.get_key();
+        let unlisted_candidate_part_share =
+            bytes_to_point(unlisted_candidate_cipher.get_ciphertext2())?;
+        // generate equality proof
+        let equality_proof = prove_equality_relationship_proof(
+            &secret_share,
+            &BASEPOINT_G2,
+            &unlisted_candidate_part_share,
+        );
+        // decrypt and generate the equality proof for unlisted candidate
+        let mut decrypted_unlisted_candidate = CountingPart::new();
+        decrypted_unlisted_candidate.set_blinding_c2(point_to_bytes(
+            &(unlisted_candidate_part_share * secret_share),
+        ));
+        decrypted_unlisted_candidate
+            .set_equality_proof(equality_proof.serialize());
+
+        // decrypt and generaate the equality proof for unlisted candidate
+        // ballot
+        let unlisted_candidate_ballot = unlisted_ballot.get_ballot();
+        let unlisted_candidate_ballot_part_share =
+            bytes_to_point(unlisted_candidate_ballot.get_ciphertext2())?;
+        let equality_proof = prove_equality_relationship_proof(
+            &secret_share,
+            &BASEPOINT_G2,
+            &unlisted_candidate_ballot_part_share,
+        );
+        let mut decrypted_ulisted_candidate_ballot = CountingPart::new();
+        decrypted_ulisted_candidate_ballot.set_blinding_c2(point_to_bytes(
+            &(unlisted_candidate_ballot_part_share * secret_share),
+        ));
+        decrypted_ulisted_candidate_ballot
+            .set_equality_proof(equality_proof.serialize());
+
+        let mut unlisted_candidate_part_item =
+            UnlistedBallotDecryptedResult::new();
+        unlisted_candidate_part_item
+            .set_decrypted_unlisted_candidate(decrypted_unlisted_candidate);
+        unlisted_candidate_part_item
+            .mut_decrypted_unlisted_candidate_ballot()
+            .push(decrypted_ulisted_candidate_ballot);
+        unlisted_candidate_part_item
+            .mut_candidate_cipher()
+            .set_ciphertext1(
+                unlisted_candidate_cipher.get_ciphertext1().to_vec(),
+            );
+        unlisted_candidate_part_item
+            .mut_candidate_cipher()
+            .set_ciphertext2(
+                unlisted_candidate_cipher.get_ciphertext2().to_vec(),
+            );
+        partially_decrypted_result
+            .mut_unlisted_candidate_part()
+            .push(unlisted_candidate_part_item);
+    }
     Ok(partially_decrypted_result)
 }

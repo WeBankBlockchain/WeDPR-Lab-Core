@@ -18,12 +18,18 @@ pub mod voter;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{config::SIGNATURE, coordinator};
-    use wedpr_l_crypto_zkp_utils::bytes_to_point;
+    use crate::{config::POLL_RESULT_KEY_TOTAL_BALLOTS, coordinator};
+    use wedpr_l_crypto_zkp_utils::{
+        bytes_to_point, get_random_scalar, scalar_to_bytes,
+    };
     use wedpr_l_utils::traits::Signature;
-    use wedpr_s_protos::generated::acv::{
-        CandidateList, CounterParametersStorage, CounterSecret,
-        DecryptedResultPartStorage, VoteStorage, VoterSecret,
+    use wedpr_s_protos::{
+        config::SIGNATURE,
+        generated::acv::{
+            CandidateList, CounterParametersStorage, CounterSecret,
+            DecryptedResultPartStorage, UnlistedVoteChoice, VoteChoice,
+            VoteChoices, VoteStorage, VoterSecret,
+        },
     };
 
     #[test]
@@ -43,7 +49,6 @@ mod tests {
                 .push(counter_parameters_share);
             counter_secret_list.push(counter_secret);
         }
-
         // Initialize the coordinator.
         let (public_key, secret_key) = SIGNATURE.generate_keypair();
 
@@ -57,7 +62,6 @@ mod tests {
             &counter_parameters,
         )
         .unwrap();
-
         // Initialize all voters.
         let mut voter_secret_list: Vec<VoterSecret> = vec![];
         let mut voter_registration_list = vec![];
@@ -118,7 +122,6 @@ mod tests {
                 &public_key
             )
             .unwrap());
-
             // Coordinator aggregates individual ciphertext ballots.
             assert!(coordinator::aggregate_vote_sum_response(
                 &poll_parameters,
@@ -128,7 +131,6 @@ mod tests {
             .unwrap());
             vote_request_list.push(vote_request);
         }
-
         // All counters decrypt the poll result in a distributed manner.
         let mut aggregated_decrypted_result = DecryptedResultPartStorage::new();
         for index in 0..counter_secret_list.len() {
@@ -150,7 +152,6 @@ mod tests {
                 &partially_decrypted_result
             )
             .unwrap());
-
             // Coordinator aggregates parts of decrypted poll result.
             assert!(coordinator::aggregate_decrypted_part_sum(
                 &poll_parameters,
@@ -159,7 +160,6 @@ mod tests {
             )
             .unwrap());
         }
-
         // Coordinator decrypts the final poll result by enumerating all
         // possible value and checking ZKP data.
         // TODO: Design a better way to do the decryption.
@@ -179,5 +179,780 @@ mod tests {
             &vote_result,
         )
         .unwrap());
+    }
+
+    #[test]
+    fn test_unbounded_voting() {
+        let candidate_list: Vec<String> = vec!["Alice", "Bob", "charlie"]
+            .iter()
+            .map(|i| i.to_string())
+            .collect();
+        let counter_id_list = vec!["10086", "10010", "10000"];
+        let blank_ballot_count = vec![10, 20, 30];
+        let voting_ballot_weight =
+            vec![vec![10, 0, 10], vec![0, 20, 20], vec![30, 30, 30]];
+        let max_vote_number = 60;
+        let init_counter = || {
+            let counter_secret = counter::make_counter_secret();
+            counter_secret
+        };
+
+        let counter1 = init_counter();
+        let counter2 = init_counter();
+        let counter3 = init_counter();
+
+        let counter_share1 =
+            counter::make_parameters_share(&counter_id_list[0], &counter1)
+                .unwrap();
+        let counter_share2 =
+            counter::make_parameters_share(&counter_id_list[1], &counter2)
+                .unwrap();
+        let counter_share3 =
+            counter::make_parameters_share(&counter_id_list[2], &counter3)
+                .unwrap();
+
+        // generate the candidate list
+        let mut pb_candidate_list = CandidateList::new();
+        for i in candidate_list.iter() {
+            pb_candidate_list.mut_candidate().push(i.to_string());
+        }
+        // generate the CounterParametersStorage
+        let mut counter_parameters = CounterParametersStorage::new();
+        counter_parameters
+            .mut_counter_parameters_share()
+            .push(counter_share1.clone());
+        counter_parameters
+            .mut_counter_parameters_share()
+            .push(counter_share2.clone());
+        counter_parameters
+            .mut_counter_parameters_share()
+            .push(counter_share3.clone());
+        let poll_parameters = coordinator::make_poll_parameters(
+            &pb_candidate_list,
+            &counter_parameters,
+        )
+        .unwrap();
+        pub struct VoterSecretPair {
+            pub weight_secret: VoterSecret,
+            pub zero_sercret: VoterSecret,
+        }
+        let init_voter = || {
+            let mut pb_secret_r = VoterSecret::new();
+            pb_secret_r.set_voter_secret(scalar_to_bytes(&get_random_scalar()));
+            let mut pb_zero_secret_r = VoterSecret::new();
+            pb_zero_secret_r
+                .set_voter_secret(scalar_to_bytes(&get_random_scalar()));
+            VoterSecretPair {
+                weight_secret: pb_secret_r,
+                zero_sercret: pb_zero_secret_r,
+            }
+        };
+
+        let voter1_secret_pair = init_voter();
+        let registration_request1 = voter::make_unbounded_registration_request(
+            &voter1_secret_pair.zero_sercret,
+            &voter1_secret_pair.weight_secret,
+            &poll_parameters,
+        )
+        .unwrap();
+
+        let voter2_secret_pair = init_voter();
+        let registration_request2 = voter::make_unbounded_registration_request(
+            &voter2_secret_pair.zero_sercret,
+            &voter2_secret_pair.weight_secret,
+            &poll_parameters,
+        )
+        .unwrap();
+
+        let voter3_secret_pair = init_voter();
+        let registration_request3 = voter::make_unbounded_registration_request(
+            &voter3_secret_pair.zero_sercret,
+            &voter3_secret_pair.weight_secret,
+            &poll_parameters,
+        )
+        .unwrap();
+
+        // certify_unbounded_voter
+        let coordinator_key_pair = SIGNATURE.generate_keypair();
+        let response1 = coordinator::certify_unbounded_voter(
+            &coordinator_key_pair.1,
+            &registration_request1,
+            blank_ballot_count[0],
+        )
+        .unwrap();
+
+        let response2 = coordinator::certify_unbounded_voter(
+            &coordinator_key_pair.1,
+            &registration_request2,
+            blank_ballot_count[1],
+        )
+        .unwrap();
+
+        let response3 = coordinator::certify_unbounded_voter(
+            &coordinator_key_pair.1,
+            &registration_request3,
+            blank_ballot_count[2],
+        )
+        .unwrap();
+
+        // verify blank ballot
+        let result =
+            voter::verify_blank_ballot(&registration_request1, &response1)
+                .unwrap();
+        assert_eq!(result, true);
+        let result =
+            voter::verify_blank_ballot(&registration_request2, &response2)
+                .unwrap();
+        assert_eq!(result, true);
+        let result =
+            voter::verify_blank_ballot(&registration_request3, &response3)
+                .unwrap();
+        assert_eq!(result, true);
+
+        // begin vote
+        let mut encrypted_vote_sum = VoteStorage::new();
+        let make_choice = |x: &Vec<i32>| {
+            let mut choices = VoteChoices::new();
+            for i in 0..candidate_list.len() {
+                let mut choice = VoteChoice::new();
+                choice.set_candidate(candidate_list[i].clone());
+                choice.set_value(x[i] as u32);
+                choices.mut_choice().push(choice);
+            }
+            choices
+        };
+        // voter1 vote
+        let choice1 = make_choice(&voting_ballot_weight[0]);
+        let vote_request1 = voter::vote_unbounded(
+            &voter1_secret_pair.weight_secret,
+            &voter1_secret_pair.zero_sercret,
+            &choice1,
+            &response1,
+            &poll_parameters,
+        )
+        .unwrap();
+        // verify the vote
+        assert_eq!(
+            true,
+            verifier::verify_unbounded_vote_request(
+                &poll_parameters,
+                &vote_request1,
+                &coordinator_key_pair.0
+            )
+            .unwrap()
+        );
+        wedpr_println!("vote_request1 = {:?}", vote_request1);
+        // aggregate the vote
+        assert_eq!(
+            true,
+            coordinator::aggregate_vote_sum_response(
+                &poll_parameters,
+                &vote_request1.get_vote(),
+                &mut encrypted_vote_sum
+            )
+            .unwrap()
+        );
+
+        // voter2 vote
+        let choice2 = make_choice(&voting_ballot_weight[1]);
+        let vote_request2 = voter::vote_unbounded(
+            &voter2_secret_pair.weight_secret,
+            &voter2_secret_pair.zero_sercret,
+            &choice2,
+            &response2,
+            &poll_parameters,
+        )
+        .unwrap();
+        // verify the vote request
+        assert_eq!(
+            true,
+            verifier::verify_unbounded_vote_request(
+                &poll_parameters,
+                &vote_request2,
+                &coordinator_key_pair.0
+            )
+            .unwrap()
+        );
+        // aggregate the vote
+        assert_eq!(
+            true,
+            coordinator::aggregate_vote_sum_response(
+                &poll_parameters,
+                &vote_request2.get_vote(),
+                &mut encrypted_vote_sum
+            )
+            .unwrap()
+        );
+
+        // voter3 vote
+        let choice3 = make_choice(&voting_ballot_weight[2]);
+        let vote_request3 = voter::vote_unbounded(
+            &voter3_secret_pair.weight_secret,
+            &voter3_secret_pair.zero_sercret,
+            &choice3,
+            &response3,
+            &poll_parameters,
+        )
+        .unwrap();
+        // verify the vote request
+        assert_eq!(
+            true,
+            verifier::verify_unbounded_vote_request(
+                &poll_parameters,
+                &vote_request3,
+                &coordinator_key_pair.0
+            )
+            .unwrap()
+        );
+        // aggregate the vote_request3
+        // aggregate the vote
+        assert_eq!(
+            true,
+            coordinator::aggregate_vote_sum_response(
+                &poll_parameters,
+                &vote_request3.get_vote(),
+                &mut encrypted_vote_sum
+            )
+            .unwrap()
+        );
+        wedpr_println!("encrypted_vote_sum: {:?}", encrypted_vote_sum);
+
+        // count the encrypted_vote_sum
+        let mut vote_sum_total = DecryptedResultPartStorage::new();
+        let decrypt_request1 =
+            counter::count(counter_id_list[0], &counter1, &encrypted_vote_sum)
+                .unwrap();
+        // verify the count request
+        assert_eq!(
+            true,
+            verifier::verify_count_request(
+                &poll_parameters,
+                &encrypted_vote_sum,
+                &bytes_to_point(&counter_share1.get_poll_point_share())
+                    .unwrap(),
+                &decrypt_request1
+            )
+            .unwrap()
+        );
+        assert_eq!(
+            true,
+            coordinator::aggregate_decrypted_part_sum(
+                &poll_parameters,
+                &decrypt_request1,
+                &mut vote_sum_total,
+            )
+            .unwrap()
+        );
+
+        let decrypt_request2 =
+            counter::count(counter_id_list[1], &counter2, &encrypted_vote_sum)
+                .unwrap();
+        // verify the count request
+        assert_eq!(
+            true,
+            verifier::verify_count_request(
+                &poll_parameters,
+                &encrypted_vote_sum,
+                &bytes_to_point(&counter_share2.get_poll_point_share())
+                    .unwrap(),
+                &decrypt_request2
+            )
+            .unwrap()
+        );
+        assert_eq!(
+            true,
+            coordinator::aggregate_decrypted_part_sum(
+                &poll_parameters,
+                &decrypt_request2,
+                &mut vote_sum_total,
+            )
+            .unwrap()
+        );
+        // count3
+        let decrypt_request3 =
+            counter::count(counter_id_list[2], &counter3, &encrypted_vote_sum)
+                .unwrap();
+        // verify the count request
+        assert_eq!(
+            true,
+            verifier::verify_count_request(
+                &poll_parameters,
+                &encrypted_vote_sum,
+                &bytes_to_point(&counter_share3.get_poll_point_share())
+                    .unwrap(),
+                &decrypt_request3
+            )
+            .unwrap()
+        );
+        assert_eq!(
+            true,
+            coordinator::aggregate_decrypted_part_sum(
+                &poll_parameters,
+                &decrypt_request3,
+                &mut vote_sum_total,
+            )
+            .unwrap()
+        );
+
+        // finalize_vote_result
+        let final_result_request = coordinator::finalize_vote_result(
+            &poll_parameters,
+            &encrypted_vote_sum,
+            &vote_sum_total,
+            max_vote_number,
+        )
+        .unwrap();
+        wedpr_println!("final result is : {:?}", final_result_request);
+        let result = verifier::verify_vote_result(
+            &poll_parameters,
+            &encrypted_vote_sum,
+            &vote_sum_total,
+            &final_result_request,
+        )
+        .unwrap();
+        assert!(result);
+    }
+
+    #[test]
+    fn test_unbounded_voting_unlisted() {
+        let candidate_list: Vec<String> = vec!["Alice", "Bob", "charlie"]
+            .iter()
+            .map(|i| i.to_string())
+            .collect();
+        let candidate_list_unlisted: Vec<i64> = vec![1, 2, 3, 4, 5];
+        let counter_id_list = vec!["10086", "10010", "10000"];
+        let blank_ballot_count = vec![10, 20, 30];
+        let voting_ballot_weight =
+            vec![vec![10, 0, 10], vec![0, 20, 20], vec![30, 30, 30]];
+        let max_vote_number = 60;
+        let max_candidate_number = 10;
+
+        let init_counter = || {
+            let counter_secret = counter::make_counter_secret();
+            counter_secret
+        };
+        let counter1 = init_counter();
+        let counter2 = init_counter();
+        let counter3 = init_counter();
+        let counter_share1 =
+            counter::make_parameters_share(&counter_id_list[0], &counter1)
+                .unwrap();
+        let counter_share2 =
+            counter::make_parameters_share(&counter_id_list[1], &counter2)
+                .unwrap();
+        let counter_share3 =
+            counter::make_parameters_share(&counter_id_list[2], &counter3)
+                .unwrap();
+
+        // generate the candidate list
+        let mut pb_candidate_list = CandidateList::new();
+        for i in candidate_list.iter() {
+            pb_candidate_list.mut_candidate().push(i.to_string());
+        }
+        // generate the CounterParametersStorage
+        let mut counter_parameters = CounterParametersStorage::new();
+        counter_parameters
+            .mut_counter_parameters_share()
+            .push(counter_share1.clone());
+        counter_parameters
+            .mut_counter_parameters_share()
+            .push(counter_share2.clone());
+        counter_parameters
+            .mut_counter_parameters_share()
+            .push(counter_share3.clone());
+        let poll_parameters = coordinator::make_poll_parameters(
+            &pb_candidate_list,
+            &counter_parameters,
+        )
+        .unwrap();
+        pub struct VoterSecretPair {
+            pub weight_secret: VoterSecret,
+            pub zero_sercret: VoterSecret,
+        }
+        let init_voter = || {
+            let mut pb_secret_r = VoterSecret::new();
+            pb_secret_r.set_voter_secret(scalar_to_bytes(&get_random_scalar()));
+            let mut pb_zero_secret_r = VoterSecret::new();
+            pb_zero_secret_r
+                .set_voter_secret(scalar_to_bytes(&get_random_scalar()));
+            VoterSecretPair {
+                weight_secret: pb_secret_r,
+                zero_sercret: pb_zero_secret_r,
+            }
+        };
+        let voter1_secret_pair = init_voter();
+        let registration_request1 = voter::make_unbounded_registration_request(
+            &voter1_secret_pair.zero_sercret,
+            &voter1_secret_pair.weight_secret,
+            &poll_parameters,
+        )
+        .unwrap();
+
+        let voter2_secret_pair = init_voter();
+        let registration_request2 = voter::make_unbounded_registration_request(
+            &voter2_secret_pair.zero_sercret,
+            &voter2_secret_pair.weight_secret,
+            &poll_parameters,
+        )
+        .unwrap();
+
+        let voter3_secret_pair = init_voter();
+        let registration_request3 = voter::make_unbounded_registration_request(
+            &voter3_secret_pair.zero_sercret,
+            &voter3_secret_pair.weight_secret,
+            &poll_parameters,
+        )
+        .unwrap();
+
+        let coordinator_key_pair = SIGNATURE.generate_keypair();
+        let response1 = coordinator::certify_unbounded_voter(
+            &coordinator_key_pair.1,
+            &registration_request1,
+            blank_ballot_count[0],
+        )
+        .unwrap();
+
+        let response2 = coordinator::certify_unbounded_voter(
+            &coordinator_key_pair.1,
+            &registration_request2,
+            blank_ballot_count[1],
+        )
+        .unwrap();
+
+        let response3 = coordinator::certify_unbounded_voter(
+            &coordinator_key_pair.1,
+            &registration_request3,
+            blank_ballot_count[2],
+        )
+        .unwrap();
+        // verify blank ballot
+        let result =
+            voter::verify_blank_ballot(&registration_request1, &response1)
+                .unwrap();
+        assert_eq!(result, true);
+        let result =
+            voter::verify_blank_ballot(&registration_request2, &response2)
+                .unwrap();
+        assert_eq!(result, true);
+        let result =
+            voter::verify_blank_ballot(&registration_request3, &response3)
+                .unwrap();
+        assert_eq!(result, true);
+        let mut encrypted_vote_sum = VoteStorage::new();
+
+        let make_choice = |x: &Vec<i32>, y: &Vec<i64>| {
+            let mut choices = VoteChoices::new();
+            for i in 0..candidate_list.len() {
+                let mut choice = VoteChoice::new();
+                choice.set_candidate(candidate_list[i].clone());
+                choice.set_value(x[i] as u32);
+                choices.mut_choice().push(choice);
+            }
+            // unlisted
+            for j in 0..y.len() {
+                let mut pair_unlisted = UnlistedVoteChoice::new();
+                pair_unlisted.set_candidate_id(y[j] as u32);
+                pair_unlisted.set_value(x[j] as u32);
+                choices.mut_unlisted_choice().push(pair_unlisted);
+            }
+            choices
+        };
+
+        // make unlisted choice
+        let choice_candidate_unlisted1 =
+            &candidate_list_unlisted[0..3].to_vec();
+        let choice1 =
+            make_choice(&voting_ballot_weight[0], choice_candidate_unlisted1);
+        wedpr_println!("choice1:{:?}", choice1);
+
+        let vote_request1 = voter::vote_unbounded_unlisted(
+            &voter1_secret_pair.weight_secret,
+            &voter1_secret_pair.zero_sercret,
+            &choice1,
+            &response1,
+            &poll_parameters,
+        )
+        .unwrap();
+        // verify
+        assert_eq!(
+            true,
+            verifier::verify_unbounded_vote_request_unlisted(
+                &poll_parameters,
+                &vote_request1,
+                &coordinator_key_pair.0
+            )
+            .unwrap()
+        );
+        // aggregate
+        wedpr_println!("##### aggregate_vote_sum_response_unlisted request1");
+        assert_eq!(
+            true,
+            coordinator::aggregate_vote_sum_response_unlisted(
+                &poll_parameters,
+                &vote_request1.get_vote(),
+                &mut encrypted_vote_sum
+            )
+            .unwrap()
+        );
+        wedpr_println!(
+            "##### aggregate_vote_sum_response_unlisted request1 success, \
+             size: {:?}",
+            encrypted_vote_sum.get_voted_ballot_unlisted().len()
+        );
+        // vote2
+        let choice_candidate_unlisted2 =
+            &candidate_list_unlisted[1..3].to_vec();
+        let choice2 =
+            make_choice(&voting_ballot_weight[1], choice_candidate_unlisted2);
+        wedpr_println!("choice2:{:?}", choice2);
+        let vote_request2 = voter::vote_unbounded_unlisted(
+            &voter2_secret_pair.weight_secret,
+            &voter2_secret_pair.zero_sercret,
+            &choice2,
+            &response2,
+            &poll_parameters,
+        )
+        .unwrap();
+        assert_eq!(
+            true,
+            verifier::verify_unbounded_vote_request_unlisted(
+                &poll_parameters,
+                &vote_request2,
+                &coordinator_key_pair.0
+            )
+            .unwrap()
+        );
+        wedpr_println!("##### aggregate_vote_sum_response_unlisted request2");
+        assert_eq!(
+            true,
+            coordinator::aggregate_vote_sum_response_unlisted(
+                &poll_parameters,
+                &vote_request2.get_vote(),
+                &mut encrypted_vote_sum
+            )
+            .unwrap()
+        );
+        wedpr_println!(
+            "##### aggregate_vote_sum_response_unlisted request2 success, \
+             size: {:?}",
+            encrypted_vote_sum.get_voted_ballot_unlisted().len()
+        );
+        // vote3
+        let choice_candidate_unlisted3 =
+            &candidate_list_unlisted[2..3].to_vec();
+        let choice3 =
+            make_choice(&voting_ballot_weight[2], choice_candidate_unlisted3);
+        wedpr_println!("choice3:{:?}", choice3);
+        let vote_request3 = voter::vote_unbounded_unlisted(
+            &voter3_secret_pair.weight_secret,
+            &voter3_secret_pair.zero_sercret,
+            &choice3,
+            &response3,
+            &poll_parameters,
+        )
+        .unwrap();
+        wedpr_println!("##### aggregate_vote_sum_response_unlisted request3");
+        assert_eq!(
+            true,
+            verifier::verify_unbounded_vote_request_unlisted(
+                &poll_parameters,
+                &vote_request3,
+                &coordinator_key_pair.0
+            )
+            .unwrap()
+        );
+        assert_eq!(
+            true,
+            coordinator::aggregate_vote_sum_response_unlisted(
+                &poll_parameters,
+                &vote_request3.get_vote(),
+                &mut encrypted_vote_sum
+            )
+            .unwrap()
+        );
+        wedpr_println!(
+            "##### aggregate_vote_sum_response_unlisted request3 success"
+        );
+        wedpr_println!(
+            "encrypted_vote_sum, unlisted size: {:?}",
+            encrypted_vote_sum.get_voted_ballot_unlisted().len()
+        );
+
+        let mut vote_sum_total = DecryptedResultPartStorage::new();
+
+        let decrypt_request1 = counter::count_unlisted(
+            counter_id_list[0],
+            &counter1,
+            &encrypted_vote_sum,
+        )
+        .unwrap();
+        //        wedpr_println!("decrypt_request1=========================:{:?
+        // }", decrypt_request1);
+        assert_eq!(
+            true,
+            verifier::verify_count_request_unlisted(
+                &poll_parameters,
+                &bytes_to_point(&counter_share1.get_poll_point_share())
+                    .unwrap(),
+                &encrypted_vote_sum,
+                &decrypt_request1
+            )
+            .unwrap()
+        );
+
+        wedpr_println!(
+            "##### aggregate_decrypted_part_sum_unlisted request1, unlisted \
+             size: {:?}",
+            vote_sum_total.get_unlisted_candidate_part().len()
+        );
+        assert_eq!(
+            true,
+            coordinator::aggregate_decrypted_part_sum_unlisted(
+                &poll_parameters,
+                &decrypt_request1,
+                &mut vote_sum_total,
+            )
+            .unwrap()
+        );
+        wedpr_println!(
+            "##### aggregate_decrypted_part_sum_unlisted request1, success \
+             unlisted size: {:?}",
+            vote_sum_total.get_unlisted_candidate_part().len()
+        );
+        let decrypt_request2 = counter::count_unlisted(
+            counter_id_list[1],
+            &counter2,
+            &encrypted_vote_sum,
+        )
+        .unwrap();
+        //        wedpr_println!("decrypt_request2=========================:{:?
+        // }", decrypt_request2);
+        assert_eq!(
+            true,
+            verifier::verify_count_request_unlisted(
+                &poll_parameters,
+                &bytes_to_point(&counter_share2.get_poll_point_share())
+                    .unwrap(),
+                &encrypted_vote_sum,
+                &decrypt_request2
+            )
+            .unwrap()
+        );
+        wedpr_println!(
+            "##### aggregate_decrypted_part_sum_unlisted request2, unlisted \
+             size: {:?}",
+            vote_sum_total.get_unlisted_candidate_part().len()
+        );
+        assert_eq!(
+            true,
+            coordinator::aggregate_decrypted_part_sum_unlisted(
+                &poll_parameters,
+                &decrypt_request2,
+                &mut vote_sum_total,
+            )
+            .unwrap()
+        );
+        wedpr_println!(
+            "##### aggregate_decrypted_part_sum_unlisted request2, unlisted \
+             size: {:?} succ",
+            vote_sum_total.get_unlisted_candidate_part().len()
+        );
+
+        let decrypt_request3 = counter::count_unlisted(
+            counter_id_list[2],
+            &counter3,
+            &encrypted_vote_sum,
+        )
+        .unwrap();
+        //        wedpr_println!("decrypt_request3=========================:{:?
+        // }", decrypt_request3);
+        assert_eq!(
+            true,
+            verifier::verify_count_request_unlisted(
+                &poll_parameters,
+                &bytes_to_point(&counter_share3.get_poll_point_share())
+                    .unwrap(),
+                &encrypted_vote_sum,
+                &decrypt_request3
+            )
+            .unwrap()
+        );
+        wedpr_println!(
+            "##### aggregate_decrypted_part_sum_unlisted request3, unlisted \
+             size: {:?}",
+            vote_sum_total.get_unlisted_candidate_part().len()
+        );
+        assert_eq!(
+            true,
+            coordinator::aggregate_decrypted_part_sum_unlisted(
+                &poll_parameters,
+                &decrypt_request3,
+                &mut vote_sum_total,
+            )
+            .unwrap()
+        );
+        wedpr_println!(
+            "##### aggregate_decrypted_part_sum_unlisted request3, unlisted \
+             size: {:?} success",
+            vote_sum_total.get_unlisted_candidate_part().len()
+        );
+        //        wedpr_println!("vote_sum_total:{:?}", vote_sum_total);
+
+        let final_result_request_unlisted =
+            coordinator::finalize_vote_result_unlisted(
+                &poll_parameters,
+                &encrypted_vote_sum,
+                &mut vote_sum_total,
+                max_vote_number,
+                max_candidate_number,
+            )
+            .unwrap();
+
+        wedpr_println!(
+            "final result unlisted is : {:?}",
+            final_result_request_unlisted
+        );
+
+        let result = verifier::verify_vote_result(
+            &poll_parameters,
+            &encrypted_vote_sum,
+            &vote_sum_total,
+            &final_result_request_unlisted,
+        )
+        .unwrap();
+        assert!(result);
+        // check the candidate result(with Wedpr_voting_total_ballots)
+        assert!(final_result_request_unlisted.get_result().len() == 4);
+        for candidate_result in final_result_request_unlisted.get_result() {
+            if candidate_result.get_key()
+                == POLL_RESULT_KEY_TOTAL_BALLOTS.to_string()
+            {
+                assert!(candidate_result.get_value() == 60);
+            }
+            if candidate_result.get_key() == "Alice" {
+                assert!(candidate_result.get_value() == 40);
+            }
+            if candidate_result.get_key() == "Bob" {
+                assert!(candidate_result.get_value() == 50);
+            }
+            if candidate_result.get_key() == "charlie" {
+                assert!(candidate_result.get_value() == 60);
+            }
+        }
+        // check the unlisted candidate result
+        assert!(final_result_request_unlisted.get_unlisted_result().len() == 3);
+        for candidate_result in
+            final_result_request_unlisted.get_unlisted_result()
+        {
+            if candidate_result.get_candidate_id() == 1 {
+                assert!(candidate_result.get_value() == 10);
+            }
+            if candidate_result.get_candidate_id() == 2 {
+                assert!(candidate_result.get_value() == 0);
+            }
+            if candidate_result.get_candidate_id() == 3 {
+                assert!(candidate_result.get_value() == 60);
+            }
+        }
     }
 }
