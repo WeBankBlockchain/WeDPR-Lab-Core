@@ -1,0 +1,264 @@
+name: WeDPR-Lab-Core release Actions
+on:
+  push:
+    branches-ignore:
+      - "**"
+  release:
+    types: [published, created]
+
+jobs:
+  build_with_macos:
+    name: build_with_macos
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 5
+      - name: Nightly default
+        run: rustup default nightly
+      - name: install macOS dependencies
+        if: runner.os == 'macOS'
+        run: brew install ccache
+      - name: build
+        run: cargo build --all --all-targets --verbose --release
+      - name: Upload wedpr-lab-core libraries to release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          asset_name: libffi_java_acv.dylib.tar.gz
+          file: target/release/libffi_java_acv.dylib
+          tag: ${{ github.ref }}
+          overwrite: true  
+      - name: Upload wedpr-lab-core libraries to release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          asset_name: libffi_java_vcl.dylib.tar.gz
+          file: target/release/libffi_java_vcl.dylib
+          tag: ${{ github.ref }}
+          overwrite: true            
+      - name: Upload wedpr-lab-core libraries to release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          asset_name: libffi_java_scd.dylib.tar.gz
+          file: target/release/libffi_java_scd.dylib
+          tag: ${{ github.ref }}
+          overwrite: true  
+      - name: Upload wedpr-lab-core libraries to release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          asset_name: libffi_java_ktb.dylib.tar.gz
+          file: target/release/libffi_java_ktb.dylib
+          tag: ${{ github.ref }}
+          overwrite: true  
+      - name: Upload wedpr-lab-core libraries to release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          asset_name: libffi_c_scd.dylib.tar.gz
+          file: target/release/libffi_c_scd.dylib
+          tag: ${{ github.ref }}
+          overwrite: true  
+      - name: Upload wedpr-lab-core libraries to release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          asset_name: libffi_c_vcl.dylib.tar.gz
+          file: target/release/libffi_c_vcl.dylib
+      - name: Upload wedpr-lab-core libraries to release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          asset_name: libffi_c_hdk.dylib.tar.gz
+          file: target/release/libffi_c_hdk.dylib
+          tag: ${{ github.ref }}
+          overwrite: true  
+      - name: build sm-acv
+        run: cd ffi/ffi_java/ffi_java_acv && cargo clean && cargo build --release --no-default-features --features sm
+      - name: rename libffi_java_acv
+        run: mv target/release/libffi_java_acv.dylib target/release/libffi_java_sm_acv.dylib
+      - name: Upload wedpr-lab-core libraries to release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          asset_name: libffi_java_sm_acv.dylib.tar.gz
+          file: target/release/libffi_java_sm_acv.dylib    
+          tag: ${{ github.ref }}
+          overwrite: true
+  build_with_centos:
+    name: build_with_centos
+    runs-on: ubuntu-latest
+    container:
+      image: docker.io/centos:7
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 5
+      - name: install rust language
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly-2021-06-17
+          override: true
+      - name: install CentOS dependencies
+        run: |
+          yum install -y epel-release centos-release-scl
+          yum install -y openssl openssl-devel git make gcc gcc-c++ glibc-static glibc-devel cmake3 ccache devtoolset-7 libzstd-devel zlib-devel flex bison python-devel python3-devel && source /opt/rh/devtoolset-7/enable
+      - name: configure and compile
+        run: |
+          cargo build --all --all-targets --verbose --release
+      - name: Upload wedpr-lab-core libraries to release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          name: libffi_java_acv.so.tar.gz
+          file: target/release/libffi_java_acv.so
+          tag: ${{ github.ref }}
+          overwrite: true
+      - name: Upload wedpr-lab-core libraries to release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          asset_name: libffi_java_vcl.so.tar.gz
+          file: target/release/libffi_java_vcl.so
+          tag: ${{ github.ref }}
+          overwrite: true
+      - name: Upload wedpr-lab-core libraries to release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          asset_name: libffi_java_scd.so.tar.gz
+          file: target/release/libffi_java_scd.so
+          tag: ${{ github.ref }}
+          overwrite: true
+      - name: Upload wedpr-lab-core libraries to release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          asset_name: libffi_java_ktb.so.tar.gz
+          file: target/release/libffi_java_ktb.so
+          tag: ${{ github.ref }}
+          overwrite: true
+      - name: Upload wedpr-lab-core libraries to release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          asset_name: libffi_c_scd.so.tar.gz
+          file: target/release/libffi_c_scd.so
+          tag: ${{ github.ref }}
+          overwrite: true          
+      - name: Upload wedpr-lab-core libraries to release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          asset_name: libffi_c_vcl.so.tar.gz
+          file: target/release/libffi_c_vcl.so
+          tag: ${{ github.ref }}
+          overwrite: true
+      - name: Upload wedpr-lab-core libraries to release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          asset_name: libffi_c_hdk.so.tar.gz
+          file: target/release/libffi_c_hdk.so
+          tag: ${{ github.ref }}
+          overwrite: true          
+      - name: build sm-acv
+        run: cd ffi/ffi_java/ffi_java_acv && cargo clean && cargo build --release --no-default-features --features sm
+      - name: rename libffi_java_acv
+        run: mv target/release/libffi_java_acv.so target/release/libffi_java_sm_acv.so
+      - name: Upload wedpr-lab-core libraries to release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          asset_name: libffi_java_sm_acv.so.tar.gz
+          file: target/release/libffi_java_sm_acv.so 
+          tag: ${{ github.ref }}
+          overwrite: true  
+  build_with_windows:
+    name: build_with_windows
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-2019]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 5
+      - run: echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
+      - run: vcpkg install openssl:x64-windows-static-md
+      - name: build and test
+        run: |
+          cargo build --all --all-targets --verbose --release
+      - name: Upload wedpr-lab-core libraries to release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          asset_name: ffi_java_acv.dll.zip
+          file: D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_java_acv.dll
+          tag: ${{ github.ref }}
+          overwrite: true
+      - name: Upload wedpr-lab-core libraries to release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          asset_name: ffi_java_vcl.dll.zip
+          file: D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_java_vcl.dll
+          tag: ${{ github.ref }}
+          overwrite: true      
+      - name: Upload wedpr-lab-core libraries to release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          asset_name: ffi_java_scd.dll.zip
+          file: D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_java_scd.dll
+          tag: ${{ github.ref }}
+          overwrite: true
+      - name: Upload wedpr-lab-core libraries to release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          asset_name: ffi_java_ktb.dll.zip
+          file: D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_java_ktb.dll
+          tag: ${{ github.ref }}
+          overwrite: true
+      - name: Upload wedpr-lab-core libraries to release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          asset_name: ffi_c_scd.dll.zip
+          file: D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_c_scd.dll
+          tag: ${{ github.ref }}
+          overwrite: true
+      - name: Upload wedpr-lab-core libraries to release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          asset_name: ffi_c_vcl.dll.zip
+          file: D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_c_vcl.dll
+          tag: ${{ github.ref }}
+          overwrite: true
+      - name: Upload wedpr-lab-core libraries to release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          asset_name: ffi_c_hdk.dll.zip
+          file: D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_c_hdk.dll
+          tag: ${{ github.ref }}
+          overwrite: true
+      - name: build sm-acv
+        run: cd ffi/ffi_java/ffi_java_acv && cargo clean && cargo build --release --no-default-features --features sm
+      - name: rename libffi_java_acv
+        run: mv D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_java_acv.dll D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_java_sm_acv.dll
+      - name: Upload wedpr-lab-core libraries to release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          asset_name: ffi_java_sm_acv.dll.zip
+          file: D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_java_sm_acv.dll  
+          tag: ${{ github.ref }}
+          overwrite: true
