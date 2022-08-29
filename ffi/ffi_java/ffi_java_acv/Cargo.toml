@@ -19,7 +19,7 @@ protobuf = "2.22.1"
 wedpr_ffi_common = "1.1.0"
 wedpr_ffi_macros = "1.1.0"
 
-wedpr_l_crypto_zkp_utils = {version = "1.3.0", git = "https://github.com/WeBankBlockchain/WeDPR-Lab-Crypto", branch = "dev-1.3.0"}
+wedpr_l_crypto_zkp_utils = {version = "1.3.0", git = "https://github.com/WeBankBlockchain/WeDPR-Lab-Crypto", tag = "v1.3.0"}
 wedpr_s_protos = { path = "../../../protos", default-features = false}
 wedpr_s_anonymous_ciphertext_voting = { path = "../../../solution/anonymous_ciphertext_voting", default-features = false}
 
