@@ -12,19 +12,6 @@
 
 - 更新[WeDPR-Lab-Crypto](https://github.com/WeBankBlockchain/WeDPR-Lab-Crypto)依赖到[v1.3.0](https://github.com/WeBankBlockchain/WeDPR-Lab-Crypto/releases/tag/v1.3.0)
 
-
-
-**新增**
-
-- 新增`zkp`相关接口的`c ffi`封装
-- 添加`wedpr_aggregate_ristretto_point`方法支持`RistrettoPoint`加操作
-- 新增ci自动上传各平台动态库功能
-
-**更新**
-
-- 升级`rust toolchain`到`nightly-2022-07-28`
-- 将`zkp`、`ot`算法相关的证明参数由`ProtoBuf`修改为结构体
-
 ## v1.5.0
 
 **WeDPR-Lab-Core v1.5.0版本**开源主要内容如下：
