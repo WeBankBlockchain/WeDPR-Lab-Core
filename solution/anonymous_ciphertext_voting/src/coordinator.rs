@@ -452,7 +452,7 @@ pub fn decrypt_unlisted_candidate_ballot(
         )?;
         let target_total = c1 - blinding_c2_sum;
         // decrypt the ballot value
-        for i in 0..max_vote_limit {
+        for i in 0..=max_vote_limit {
             let try_num = Scalar::from(i as u64);
             if !target_total.eq(&(*BASEPOINT_G1 * try_num)) {
                 continue;
