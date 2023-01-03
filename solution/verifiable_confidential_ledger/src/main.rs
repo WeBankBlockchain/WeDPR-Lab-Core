@@ -6,6 +6,7 @@ use colored::*;
 use std;
 use wedpr_l_crypto_zkp_utils::point_to_bytes;
 use wedpr_s_verifiable_confidential_ledger::vcl;
+use protobuf::Message;
 
 fn main() {
     print_highlight2(
@@ -110,13 +111,13 @@ fn flow_cn() {
 
     print_wide(" ▶ 是否存在加和关系？尝试证明c1_value + c2_value =? c3_value");
     let sum_proof = vcl::prove_sum_balance(&c1_secret, &c2_secret, &c3_secret);
-    println!("加和关系的证明数据：\n{:?}", sum_proof);
+    println!("加和关系的证明数据：\n{:?}", sum_proof.write_to_bytes());
     pause_cn();
 
     print_wide(" ▶ 是否存在乘积关系？尝试证明c1_value * c2_value =? c3_value");
     let product_proof =
         vcl::prove_product_balance(&c1_secret, &c2_secret, &c3_secret);
-    println!("乘积关系的证明数据：\n{:?}", product_proof);
+    println!("乘积关系的证明数据：\n{:?}", product_proof.write_to_bytes());
     pause_cn();
 
     print_wide(" ▶ 是否是非负数？尝试证明c1_value >=? 0");
@@ -301,7 +302,7 @@ fn flow_en() {
          c3_value",
     );
     let sum_proof = vcl::prove_sum_balance(&c1_secret, &c2_secret, &c3_secret);
-    println!("Proof data for the sum relationship:\n{:?}", sum_proof);
+    println!("Proof data for the sum relationship:\n{:?}", sum_proof.write_to_bytes());
     pause_en();
 
     print_wide(
@@ -312,7 +313,7 @@ fn flow_en() {
         vcl::prove_product_balance(&c1_secret, &c2_secret, &c3_secret);
     println!(
         "Proof data for the product relationship:\n{:?}",
-        product_proof
+        product_proof.write_to_bytes()
     );
     pause_en();
 
