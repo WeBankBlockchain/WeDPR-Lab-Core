@@ -70,6 +70,8 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           asset_name: libffi_c_vcl.dylib
           file: target/release/libffi_c_vcl.dylib
+          tag: ${{ github.ref }}
+          overwrite: true
       - name: Upload wedpr-lab-core libraries to release
         uses: svenstaro/upload-release-action@v1-release
         with:
@@ -115,7 +117,7 @@ jobs:
         uses: svenstaro/upload-release-action@v1-release
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          name: libffi_java_acv.so
+          asset_name: libffi_java_acv.so
           file: target/release/libffi_java_acv.so
           tag: ${{ github.ref }}
           overwrite: true
