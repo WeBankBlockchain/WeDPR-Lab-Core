@@ -38,31 +38,31 @@ jobs:
         run: cargo test && cargo bench
       - uses: actions/upload-artifact@v2
         with:
-          name: libffi_java_acv.dylib.tar.gz
+          name: libffi_java_acv.dylib
           path: target/release/libffi_java_acv.dylib
       - uses: actions/upload-artifact@v2
         with:
-          name: libffi_java_vcl.dylib.tar.gz
+          name: libffi_java_vcl.dylib
           path: target/release/libffi_java_vcl.dylib
       - uses: actions/upload-artifact@v2
         with:
-          name: libffi_java_scd.dylib.tar.gz
+          name: libffi_java_scd.dylib
           path: target/release/libffi_java_scd.dylib
       - uses: actions/upload-artifact@v2
         with:
-          name: libffi_java_ktb.dylib.tar.gz
+          name: libffi_java_ktb.dylib
           path: target/release/libffi_java_ktb.dylib
       - uses: actions/upload-artifact@v2
         with:
-          name: libffi_c_scd.dylib.tar.gz
+          name: libffi_c_scd.dylib
           path: target/release/libffi_c_scd.dylib
       - uses: actions/upload-artifact@v2
         with:
-          name: libffi_c_vcl.dylib.tar.gz
+          name: libffi_c_vcl.dylib
           path: target/release/libffi_c_vcl.dylib
       - uses: actions/upload-artifact@v2
         with:
-          name: libffi_c_hdk.dylib.tar.gz
+          name: libffi_c_hdk.dylib
           path: target/release/libffi_c_hdk.dylib
       - name: build sm-acv
         run: cd ffi/ffi_java/ffi_java_acv && cargo clean && cargo build --release --no-default-features --features sm
@@ -70,7 +70,7 @@ jobs:
         run: mv target/release/libffi_java_acv.dylib target/release/libffi_java_sm_acv.dylib
       - uses: actions/upload-artifact@v2
         with:
-          name: libffi_java_sm_acv.dylib.tar.gz
+          name: libffi_java_sm_acv.dylib
           path: target/release/libffi_java_sm_acv.dylib    
 
   build_with_centos:
@@ -98,31 +98,31 @@ jobs:
           cargo bench
       - uses: actions/upload-artifact@v2
         with:
-          name: libffi_java_acv.so.tar.gz
+          name: libffi_java_acv.so
           path: target/release/libffi_java_acv.so
       - uses: actions/upload-artifact@v2
         with:
-          name: libffi_java_vcl.so.tar.gz
+          name: libffi_java_vcl.so
           path: target/release/libffi_java_vcl.so
       - uses: actions/upload-artifact@v2
         with:
-          name: libffi_java_scd.so.tar.gz
+          name: libffi_java_scd.so
           path: target/release/libffi_java_scd.so
       - uses: actions/upload-artifact@v2
         with:
-          name: libffi_java_ktb.so.tar.gz
+          name: libffi_java_ktb.so
           path: target/release/libffi_java_ktb.so
       - uses: actions/upload-artifact@v2
         with:
-          name: libffi_c_scd.so.tar.gz
+          name: libffi_c_scd.so
           path: target/release/libffi_c_scd.so
       - uses: actions/upload-artifact@v2
         with:
-          name: libffi_c_vcl.so.tar.gz
+          name: libffi_c_vcl.so
           path: target/release/libffi_c_vcl.so
       - uses: actions/upload-artifact@v2
         with:
-          name: libffi_c_hdk.so.tar.gz
+          name: libffi_c_hdk.so
           path: target/release/libffi_c_hdk.so
       - name: build sm-acv
         run: cd ffi/ffi_java/ffi_java_acv && cargo clean && cargo build --release --no-default-features --features sm
@@ -130,7 +130,7 @@ jobs:
         run: mv target/release/libffi_java_acv.so target/release/libffi_java_sm_acv.so
       - uses: actions/upload-artifact@v2
         with:
-          name: libffi_java_sm_acv.so.tar.gz
+          name: libffi_java_sm_acv.so
           path: target/release/libffi_java_sm_acv.so   
   build_with_windows:
     name: build_with_windows
@@ -151,31 +151,31 @@ jobs:
           cargo bench
       - uses: actions/upload-artifact@v2
         with:
-          name: ffi_java_acv.dll.zip
+          name: ffi_java_acv.dll
           path: D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_java_acv.dll
       - uses: actions/upload-artifact@v2
         with:
-          name: ffi_java_vcl.dll.zip
+          name: ffi_java_vcl.dll
           path: D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_java_vcl.dll
       - uses: actions/upload-artifact@v2
         with:
-          name: ffi_java_scd.dll.zip
+          name: ffi_java_scd.dll
           path: D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_java_scd.dll
       - uses: actions/upload-artifact@v2
         with:
-          name: ffi_java_ktb.dll.zip
+          name: ffi_java_ktb.dll
           path: D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_java_ktb.dll
       - uses: actions/upload-artifact@v2
         with:
-          name: ffi_c_scd.dll.zip
+          name: ffi_c_scd.dll
           path: D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_c_scd.dll
       - uses: actions/upload-artifact@v2
         with:
-          name: ffi_c_vcl.dll.zip
+          name: ffi_c_vcl.dll
           path: D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_c_vcl.dll
       - uses: actions/upload-artifact@v2
         with:
-          name: ffi_c_hdk.dll.zip
+          name: ffi_c_hdk.dll
           path: D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_c_hdk.dll
       - name: build sm-acv
         run: cd ffi/ffi_java/ffi_java_acv && cargo clean && cargo build --release --no-default-features --features sm
@@ -183,5 +183,5 @@ jobs:
         run: mv D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_java_acv.dll D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_java_sm_acv.dll
       - uses: actions/upload-artifact@v2
         with:
-          name: ffi_java_sm_acv.dll.zip
+          name: ffi_java_sm_acv.dll
           path: D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_java_sm_acv.dll  
