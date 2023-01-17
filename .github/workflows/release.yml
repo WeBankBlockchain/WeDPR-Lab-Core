@@ -28,7 +28,7 @@ jobs:
         uses: svenstaro/upload-release-action@v1-release
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          asset_name: libffi_java_acv.dylib.tar.gz
+          asset_name: libffi_java_acv.dylib
           file: target/release/libffi_java_acv.dylib
           tag: ${{ github.ref }}
           overwrite: true  
@@ -36,7 +36,7 @@ jobs:
         uses: svenstaro/upload-release-action@v1-release
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          asset_name: libffi_java_vcl.dylib.tar.gz
+          asset_name: libffi_java_vcl.dylib
           file: target/release/libffi_java_vcl.dylib
           tag: ${{ github.ref }}
           overwrite: true            
@@ -44,7 +44,7 @@ jobs:
         uses: svenstaro/upload-release-action@v1-release
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          asset_name: libffi_java_scd.dylib.tar.gz
+          asset_name: libffi_java_scd.dylib
           file: target/release/libffi_java_scd.dylib
           tag: ${{ github.ref }}
           overwrite: true  
@@ -52,7 +52,7 @@ jobs:
         uses: svenstaro/upload-release-action@v1-release
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          asset_name: libffi_java_ktb.dylib.tar.gz
+          asset_name: libffi_java_ktb.dylib
           file: target/release/libffi_java_ktb.dylib
           tag: ${{ github.ref }}
           overwrite: true  
@@ -60,7 +60,7 @@ jobs:
         uses: svenstaro/upload-release-action@v1-release
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          asset_name: libffi_c_scd.dylib.tar.gz
+          asset_name: libffi_c_scd.dylib
           file: target/release/libffi_c_scd.dylib
           tag: ${{ github.ref }}
           overwrite: true  
@@ -68,13 +68,13 @@ jobs:
         uses: svenstaro/upload-release-action@v1-release
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          asset_name: libffi_c_vcl.dylib.tar.gz
+          asset_name: libffi_c_vcl.dylib
           file: target/release/libffi_c_vcl.dylib
       - name: Upload wedpr-lab-core libraries to release
         uses: svenstaro/upload-release-action@v1-release
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          asset_name: libffi_c_hdk.dylib.tar.gz
+          asset_name: libffi_c_hdk.dylib
           file: target/release/libffi_c_hdk.dylib
           tag: ${{ github.ref }}
           overwrite: true  
@@ -86,7 +86,7 @@ jobs:
         uses: svenstaro/upload-release-action@v1-release
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          asset_name: libffi_java_sm_acv.dylib.tar.gz
+          asset_name: libffi_java_sm_acv.dylib
           file: target/release/libffi_java_sm_acv.dylib    
           tag: ${{ github.ref }}
           overwrite: true
@@ -115,7 +115,7 @@ jobs:
         uses: svenstaro/upload-release-action@v1-release
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          name: libffi_java_acv.so.tar.gz
+          name: libffi_java_acv.so
           file: target/release/libffi_java_acv.so
           tag: ${{ github.ref }}
           overwrite: true
@@ -123,7 +123,7 @@ jobs:
         uses: svenstaro/upload-release-action@v1-release
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          asset_name: libffi_java_vcl.so.tar.gz
+          asset_name: libffi_java_vcl.so
           file: target/release/libffi_java_vcl.so
           tag: ${{ github.ref }}
           overwrite: true
@@ -131,7 +131,7 @@ jobs:
         uses: svenstaro/upload-release-action@v1-release
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          asset_name: libffi_java_scd.so.tar.gz
+          asset_name: libffi_java_scd.so
           file: target/release/libffi_java_scd.so
           tag: ${{ github.ref }}
           overwrite: true
@@ -139,7 +139,7 @@ jobs:
         uses: svenstaro/upload-release-action@v1-release
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          asset_name: libffi_java_ktb.so.tar.gz
+          asset_name: libffi_java_ktb.so
           file: target/release/libffi_java_ktb.so
           tag: ${{ github.ref }}
           overwrite: true
@@ -147,7 +147,7 @@ jobs:
         uses: svenstaro/upload-release-action@v1-release
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          asset_name: libffi_c_scd.so.tar.gz
+          asset_name: libffi_c_scd.so
           file: target/release/libffi_c_scd.so
           tag: ${{ github.ref }}
           overwrite: true          
@@ -155,7 +155,7 @@ jobs:
         uses: svenstaro/upload-release-action@v1-release
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          asset_name: libffi_c_vcl.so.tar.gz
+          asset_name: libffi_c_vcl.so
           file: target/release/libffi_c_vcl.so
           tag: ${{ github.ref }}
           overwrite: true
@@ -163,7 +163,7 @@ jobs:
         uses: svenstaro/upload-release-action@v1-release
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          asset_name: libffi_c_hdk.so.tar.gz
+          asset_name: libffi_c_hdk.so
           file: target/release/libffi_c_hdk.so
           tag: ${{ github.ref }}
           overwrite: true          
@@ -175,7 +175,7 @@ jobs:
         uses: svenstaro/upload-release-action@v1-release
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          asset_name: libffi_java_sm_acv.so.tar.gz
+          asset_name: libffi_java_sm_acv.so
           file: target/release/libffi_java_sm_acv.so 
           tag: ${{ github.ref }}
           overwrite: true  
@@ -198,7 +198,7 @@ jobs:
         uses: svenstaro/upload-release-action@v1-release
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          asset_name: ffi_java_acv.dll.zip
+          asset_name: ffi_java_acv.dll
           file: D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_java_acv.dll
           tag: ${{ github.ref }}
           overwrite: true
@@ -206,7 +206,7 @@ jobs:
         uses: svenstaro/upload-release-action@v1-release
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          asset_name: ffi_java_vcl.dll.zip
+          asset_name: ffi_java_vcl.dll
           file: D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_java_vcl.dll
           tag: ${{ github.ref }}
           overwrite: true      
@@ -214,7 +214,7 @@ jobs:
         uses: svenstaro/upload-release-action@v1-release
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          asset_name: ffi_java_scd.dll.zip
+          asset_name: ffi_java_scd.dll
           file: D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_java_scd.dll
           tag: ${{ github.ref }}
           overwrite: true
@@ -222,7 +222,7 @@ jobs:
         uses: svenstaro/upload-release-action@v1-release
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          asset_name: ffi_java_ktb.dll.zip
+          asset_name: ffi_java_ktb.dll
           file: D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_java_ktb.dll
           tag: ${{ github.ref }}
           overwrite: true
@@ -230,7 +230,7 @@ jobs:
         uses: svenstaro/upload-release-action@v1-release
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          asset_name: ffi_c_scd.dll.zip
+          asset_name: ffi_c_scd.dll
           file: D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_c_scd.dll
           tag: ${{ github.ref }}
           overwrite: true
@@ -238,7 +238,7 @@ jobs:
         uses: svenstaro/upload-release-action@v1-release
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          asset_name: ffi_c_vcl.dll.zip
+          asset_name: ffi_c_vcl.dll
           file: D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_c_vcl.dll
           tag: ${{ github.ref }}
           overwrite: true
@@ -246,7 +246,7 @@ jobs:
         uses: svenstaro/upload-release-action@v1-release
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          asset_name: ffi_c_hdk.dll.zip
+          asset_name: ffi_c_hdk.dll
           file: D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_c_hdk.dll
           tag: ${{ github.ref }}
           overwrite: true
@@ -258,7 +258,7 @@ jobs:
         uses: svenstaro/upload-release-action@v1-release
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          asset_name: ffi_java_sm_acv.dll.zip
+          asset_name: ffi_java_sm_acv.dll
           file: D:\a\WeDPR-Lab-Core\WeDPR-Lab-Core\target\release\ffi_java_sm_acv.dll  
           tag: ${{ github.ref }}
           overwrite: true
