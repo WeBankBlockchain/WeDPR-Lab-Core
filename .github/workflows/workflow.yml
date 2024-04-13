@@ -85,7 +85,7 @@ jobs:
       - name: install rust language
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2022-07-28
+          toolchain: nightly-2024-01-10
           override: true
       - name: install CentOS dependencies
         run: |
@@ -145,7 +145,7 @@ jobs:
       - name: install rust language
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2022-07-28
+          toolchain: nightly-2024-01-10
           override: true
       - run: echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
       - run: vcpkg install openssl:x64-windows-static-md
