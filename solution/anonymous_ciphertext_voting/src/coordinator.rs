@@ -472,6 +472,7 @@ pub fn decrypt_unlisted_candidate_ballot(
                 decrypted_unlisted_candidate_ballot_result
                     .insert(candidate, i as u64);
             }
+            break;
         }
     }
     Ok(true)
