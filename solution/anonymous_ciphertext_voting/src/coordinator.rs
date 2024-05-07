@@ -354,28 +354,6 @@ pub fn finalize_vote_result(
     max_vote_limit: i64,
 ) -> Result<VoteResultStorage, WedprError> {
     let mut result = VoteResultStorage::new();
-    let blank_c1_sum =
-        bytes_to_point(vote_sum.get_blank_ballot().get_ciphertext1())?;
-    let blank_c2_r_sum = bytes_to_point(
-        aggregated_decrypted_result
-            .get_blank_part()
-            .get_blinding_c2(),
-    )?;
-
-    // Compute the total votes.
-    let target_total = blank_c1_sum - blank_c2_r_sum;
-    let mut calculate_total_iter = 0;
-    for i in 0..=max_vote_limit {
-        calculate_total_iter = &calculate_total_iter + 1;
-        if target_total.eq(&(*BASEPOINT_G1 * Scalar::from(i as u64))) {
-            let mut new_pair = StringToInt64Pair::new();
-            new_pair.set_key(POLL_RESULT_KEY_TOTAL_BALLOTS.to_string());
-            new_pair.set_value(i);
-            result.mut_result().push(new_pair);
-            break;
-        }
-    }
-
     // Compute the votes for each candidate.
     let mut iter = 0;
     for candidate in poll_parameters.get_candidates().get_candidate() {
@@ -401,9 +379,7 @@ pub fn finalize_vote_result(
         }
     }
     wedpr_println!(
-        "** finalize_vote_result calculate_total_iter: {:?}, decrypt \
-         candidate iter: {:?}, result: {:?}",
-        calculate_total_iter,
+        "** finalize_vote_result: decrypt candidate iter: {:?}, result: {:?}",
         iter,
         result.get_result()
     );
