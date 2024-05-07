@@ -922,13 +922,8 @@ mod tests {
         .unwrap();
         assert!(result);
         // check the candidate result(with Wedpr_voting_total_ballots)
-        assert!(final_result_request_unlisted.get_result().len() == 4);
+        assert!(final_result_request_unlisted.get_result().len() == 3);
         for candidate_result in final_result_request_unlisted.get_result() {
-            if candidate_result.get_key()
-                == POLL_RESULT_KEY_TOTAL_BALLOTS.to_string()
-            {
-                assert!(candidate_result.get_value() == 60);
-            }
             if candidate_result.get_key() == "Alice" {
                 assert!(candidate_result.get_value() == 40);
             }

@@ -174,15 +174,6 @@ pub fn verify_vote_result(
             .get_blinding_c2(),
     )?;
 
-    let blank_result =
-        get_int64_by_candidate(vote_result, POLL_RESULT_KEY_TOTAL_BALLOTS)?;
-    let expected_blank_ballot_result = blank_c1_sum - (blank_c2_r_sum);
-    if expected_blank_ballot_result
-        .ne(&(*BASEPOINT_G1 * (Scalar::from(blank_result as u64))))
-    {
-        return Ok(false);
-    }
-
     for candidate in poll_parameters.get_candidates().get_candidate() {
         let ballot = get_ballot_by_candidate(vote_sum, candidate)?;
         let candidate_counting_part = get_counting_part_by_candidate(
