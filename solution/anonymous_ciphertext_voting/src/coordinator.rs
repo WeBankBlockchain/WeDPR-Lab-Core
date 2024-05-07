@@ -3,6 +3,7 @@
 //! Library for a poll coordinator.
 
 use curve25519_dalek::{ristretto::RistrettoPoint, scalar::Scalar};
+use std::time::Instant;
 use wedpr_l_crypto_zkp_utils::{bytes_to_point, point_to_bytes, BASEPOINT_G1};
 use wedpr_l_utils::error::WedprError;
 
@@ -363,7 +364,9 @@ pub fn finalize_vote_result(
 
     // Compute the total votes.
     let target_total = blank_c1_sum - blank_c2_r_sum;
-    for i in 1..=max_vote_limit {
+    let mut calculate_total_iter = 0;
+    for i in 0..=max_vote_limit {
+        calculate_total_iter = &calculate_total_iter + 1;
         if target_total.eq(&(*BASEPOINT_G1 * Scalar::from(i as u64))) {
             let mut new_pair = StringToInt64Pair::new();
             new_pair.set_key(POLL_RESULT_KEY_TOTAL_BALLOTS.to_string());
@@ -374,6 +377,7 @@ pub fn finalize_vote_result(
     }
 
     // Compute the votes for each candidate.
+    let mut iter = 0;
     for candidate in poll_parameters.get_candidates().get_candidate() {
         let ballot = get_ballot_by_candidate(vote_sum, candidate)?;
         let candidate_counting_part = get_counting_part_by_candidate(
@@ -386,6 +390,7 @@ pub fn finalize_vote_result(
             bytes_to_point(ballot.get_ciphertext1())? - candidate_c2_r_sum;
 
         for i in 0..=max_vote_limit {
+            iter = &iter + 1;
             if target_candidate.eq(&(*BASEPOINT_G1 * Scalar::from(i as u64))) {
                 let mut new_pair = StringToInt64Pair::new();
                 new_pair.set_key(candidate.to_string());
@@ -395,6 +400,13 @@ pub fn finalize_vote_result(
             }
         }
     }
+    wedpr_println!(
+        "** finalize_vote_result calculate_total_iter: {:?}, decrypt \
+         candidate iter: {:?}, result: {:?}",
+        calculate_total_iter,
+        iter,
+        result.get_result()
+    );
     Ok(result)
 }
 
@@ -430,6 +442,7 @@ pub fn decrypt_unlisted_candidate_ballot(
     }
     // decrypt the unlisted candidate ballot value when decrypt candidate
     // success
+    let mut iter = 0;
     for unlisted_vote_ballot in vote_sum.get_voted_ballot_unlisted() {
         if unlisted_candidate_part.get_candidate_cipher()
             != unlisted_vote_ballot.get_key()
@@ -454,6 +467,7 @@ pub fn decrypt_unlisted_candidate_ballot(
         // decrypt the ballot value
         for i in 0..=max_vote_limit {
             let try_num = Scalar::from(i as u64);
+            iter = &iter + 1;
             if !target_total.eq(&(*BASEPOINT_G1 * try_num)) {
                 continue;
             }
@@ -475,6 +489,11 @@ pub fn decrypt_unlisted_candidate_ballot(
             break;
         }
     }
+    wedpr_println!(
+        "** decrypt_unlisted_candidate_ballot iter: {:?}, result: {:?}",
+        iter,
+        decrypted_unlisted_candidate_ballot_result
+    );
     Ok(true)
 }
 
@@ -485,12 +504,16 @@ pub fn finalize_vote_result_unlisted(
     max_vote_limit: i64,
     max_candidate_number: i64,
 ) -> Result<VoteResultStorage, WedprError> {
+    let start_t = Instant::now();
+    let mut start = Instant::now();
     let mut vote_result = finalize_vote_result(
         poll_parameters,
         vote_sum,
         aggregated_decrypted_result,
         max_vote_limit,
     )?;
+    let finalize_vote_result_duration = start.elapsed();
+    start = Instant::now();
     // finalize the vote result for the unlisted-candidates
     let mut aggregated_unlisted_candidate_ballot_result = BTreeMap::new();
     for mut unlisted_candidate in
@@ -514,5 +537,16 @@ pub fn finalize_vote_result_unlisted(
             .mut_unlisted_result()
             .push(unlisted_candidate_ballot_result);
     }
+    let decrypt_unlisted_candidate_ballot_duration = start.elapsed();
+    let total_time_cost = start_t.elapsed();
+    wedpr_println!(
+        "** Time elapsed: finalize_vote_result_duration: {:?}, \
+         decrypt_unlisted_candidate_ballot_duration: {:?}, total time cost: \
+         {:?}, ### {:?}",
+        finalize_vote_result_duration,
+        decrypt_unlisted_candidate_ballot_duration,
+        total_time_cost,
+        vote_result
+    );
     Ok(vote_result)
 }
