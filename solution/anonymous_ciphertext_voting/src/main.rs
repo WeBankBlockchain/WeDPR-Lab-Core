@@ -143,6 +143,7 @@ fn flow_cn() {
             &secret_key,
             &registration_request,
             blank_ballot,
+            &poll_parameters,
         )
         .unwrap();
         // Verify the blank ballot contained in registration_response.
@@ -551,6 +552,7 @@ fn flow_en() {
             &secret_key,
             &registration_request,
             blank_ballot,
+            &poll_parameters,
         )
         .unwrap();
         // Verify the blank ballot contained in registration_response.

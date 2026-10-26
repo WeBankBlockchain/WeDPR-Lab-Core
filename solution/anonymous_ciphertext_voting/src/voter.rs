@@ -9,7 +9,8 @@ use curve25519_dalek::{
     ristretto::RistrettoPoint, scalar::Scalar, traits::MultiscalarMul,
 };
 use wedpr_l_crypto_zkp_discrete_logarithm_proof::{
-    prove_either_equality_relationship_proof, prove_format_proof,
+    prove_either_equality_relationship_proof,
+    prove_equality_relationship_proof, prove_format_proof,
     prove_sum_relationship,
 };
 use wedpr_l_crypto_zkp_range_proof::prove_value_range_in_batch;
@@ -49,6 +50,14 @@ pub fn generate_registration_blinding_point(
         .set_blinding_basepoint_g2(point_to_bytes(&blinding_basepoint_g2));
     registration_blinding_point
         .set_blinding_poll_point(point_to_bytes(&blinding_poll_point));
+    registration_blinding_point.set_equality_proof(
+        prove_equality_relationship_proof(
+            &voter_secret,
+            &poll_point,
+            &BASEPOINT_G2,
+        )
+        .serialize(),
+    );
     Ok(registration_blinding_point)
 }
 
