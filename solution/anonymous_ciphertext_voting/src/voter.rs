@@ -224,6 +224,7 @@ pub fn vote(
     vote_request.set_sum_balance_proof(balance_proof.serialize());
     vote_request.set_range_proof(range_proof);
     let vote = vote_request.mut_vote();
+    vote.set_poll_id(poll_parameters.get_poll_id().to_vec());
     vote.set_signature(registration_response.get_signature().to_vec());
     vote.mut_rest_ballot()
         .set_ciphertext1(point_to_bytes(&rest_ballot));
@@ -282,6 +283,9 @@ pub fn vote_unbounded(
     poll_parameters: &PollParametersStorage,
 ) -> Result<VoteRequest, WedprError> {
     let mut vote_request = VoteRequest::new();
+    vote_request
+        .mut_vote()
+        .set_poll_id(poll_parameters.get_poll_id().to_vec());
     let poll_point = bytes_to_point(poll_parameters.get_poll_point())?;
     // generate ballot for every vote choice
     for vote_choice in vote_choices.get_choice() {
@@ -323,6 +327,13 @@ pub fn generate_candidate_cipher(
     value: u64,
     poll_point: &RistrettoPoint,
 ) -> Result<CipherPoints, WedprError> {
+    Ok(generate_candidate_cipher_with_blinding(value, poll_point).0)
+}
+
+fn generate_candidate_cipher_with_blinding(
+    value: u64,
+    poll_point: &RistrettoPoint,
+) -> (CipherPoints, Scalar) {
     let mut cipher_point = CipherPoints::new();
     let blinding = get_random_scalar();
     let ciphertext1 = RistrettoPoint::multiscalar_mul(
@@ -332,7 +343,7 @@ pub fn generate_candidate_cipher(
     let ciphertext2 = *BASEPOINT_G2 * blinding;
     cipher_point.set_ciphertext1(point_to_bytes(&ciphertext1));
     cipher_point.set_ciphertext2(point_to_bytes(&ciphertext2));
-    Ok(cipher_point)
+    (cipher_point, blinding)
 }
 
 pub fn vote_unbounded_unlisted(
@@ -350,7 +361,21 @@ pub fn vote_unbounded_unlisted(
         poll_parameters,
     )?;
     let poll_point = bytes_to_point(poll_parameters.get_poll_point())?;
-    for unlisted_vote_choice in vote_choices.get_unlisted_choice() {
+    let mut choices = vote_choices.get_unlisted_choice().to_vec();
+    choices.sort_by_key(|choice| choice.get_candidate_id());
+    if choices
+        .windows(2)
+        .any(|pair| pair[0].get_candidate_id() == pair[1].get_candidate_id())
+    {
+        return Err(WedprError::ArgumentError);
+    }
+    // Including the signed credential binds this proof to its voter. A public
+    // candidate ciphertext/proof copied from another voter cannot be spliced
+    // in.
+    let mut ids = vec![registration_response.get_voter_weight() as u64];
+    let mut blindings = vec![bytes_to_scalar(voter_secret.get_voter_secret())?];
+    let mut previous: Option<(u32, Scalar)> = None;
+    for unlisted_vote_choice in &choices {
         let mut ballot_proof = BallotProof::new();
         let mut vote_ballot = Ballot::new();
         generate_ballot_proof(
@@ -365,10 +390,29 @@ pub fn vote_unbounded_unlisted(
         // update the vote_request
         // push ballot_proof
         let mut proof_pair = CipherPointsToBallotProofPair::new();
-        let candidate_cipher = generate_candidate_cipher(
-            unlisted_vote_choice.get_candidate_id() as u64,
-            &poll_point,
-        )?;
+        let (candidate_cipher, candidate_blinding) =
+            generate_candidate_cipher_with_blinding(
+                unlisted_vote_choice.get_candidate_id() as u64,
+                &poll_point,
+            );
+        let candidate_id = unlisted_vote_choice.get_candidate_id();
+        proof_pair.set_candidate_format_proof(
+            prove_format_proof(
+                candidate_id as u64,
+                &candidate_blinding,
+                &BASEPOINT_G1,
+                &BASEPOINT_G2,
+                &poll_point,
+            )
+            .serialize(),
+        );
+        ids.push(candidate_id as u64);
+        blindings.push(candidate_blinding);
+        if let Some((previous_id, previous_blinding)) = previous {
+            ids.push((candidate_id - previous_id - 1) as u64);
+            blindings.push(candidate_blinding - previous_blinding);
+        }
+        previous = Some((candidate_id, candidate_blinding));
         proof_pair.set_key(candidate_cipher.clone());
         proof_pair.set_value(ballot_proof);
         vote_request.mut_unlisted_ballot_proof().push(proof_pair);
@@ -380,6 +424,13 @@ pub fn vote_unbounded_unlisted(
             .mut_vote()
             .mut_voted_ballot_unlisted()
             .push(unlisted_ballot);
+    }
+    if !choices.is_empty() {
+        align_u64_list_if_needed(&mut ids);
+        align_scalar_list_if_needed(&mut blindings);
+        let (proof, _) =
+            prove_value_range_in_batch(&ids, &blindings, &poll_point)?;
+        vote_request.set_unlisted_candidate_range_proof(proof);
     }
     Ok(vote_request)
 }

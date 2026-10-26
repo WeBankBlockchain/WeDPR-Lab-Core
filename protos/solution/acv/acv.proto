@@ -15,6 +15,8 @@ message CandidateList {
 message PollParametersStorage {
   bytes poll_point = 1;
   CandidateList candidates = 2;
+  bytes poll_id = 3;
+  CounterParametersStorage counters = 4;
 }
 
 // Secret of a counter.
@@ -60,6 +62,7 @@ message Ballot {
 message CounterParametersShareRequest {
   string counter_id = 1;
   bytes poll_point_share = 2;
+  bytes knowledge_proof = 3;
 }
 
 // Shared system parameters to initialize a group of counters.
@@ -116,6 +119,8 @@ message VoteRequest {
   bytes sum_balance_proof = 4;
   // the ballot proof for unlisted-candidates
   repeated CipherPointsToBallotProofPair unlisted_ballot_proof = 5;
+  // Range proof of candidate IDs and strictly positive adjacent differences.
+  bytes unlisted_candidate_range_proof = 6;
 }
 
 // Ciphertext ballot for all candidates.
@@ -129,6 +134,7 @@ message VoteStorage {
   Ballot zero_ballot = 6;
   // Coordinator-maintained IDs of accepted credentials; empty in a voter request.
   repeated bytes accepted_ballot_id = 7;
+  bytes poll_id = 8;
 }
 
 // the ballot for the unlisted-candidate
@@ -146,6 +152,7 @@ message CipherPointsToBallotProofPair {
   CipherPoints key = 1;
   // the ballot proof for given ulisted-candidate
   BallotProof value = 2;
+  bytes candidate_format_proof = 3;
 }
 
 // the cipher for the unlisted-candidate
@@ -172,6 +179,14 @@ message DecryptedResultPartStorage {
   CountingPart blank_part = 1;
   repeated StringToCountingPartPair candidate_part = 2;
   // the decrypted part for the unlisted-candidate
+  repeated UnlistedBallotDecryptedResult unlisted_candidate_part = 3;
+  // Original, individually verified counter contributions retained by the coordinator.
+  repeated CounterDecryptionRecord verified_counter_part = 4;
+}
+
+message CounterDecryptionRecord {
+  CountingPart blank_part = 1;
+  repeated StringToCountingPartPair candidate_part = 2;
   repeated UnlistedBallotDecryptedResult unlisted_candidate_part = 3;
 }
 

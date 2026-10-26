@@ -303,7 +303,8 @@ fn flow_cn() {
             coordinator::aggregate_decrypted_part_sum(
                 &poll_parameters,
                 &partially_decrypted_result,
-                &mut aggregated_decrypted_result
+                &mut aggregated_decrypted_result,
+                &encrypted_vote_sum,
             )
             .unwrap()
         );
@@ -720,7 +721,8 @@ fn flow_en() {
             coordinator::aggregate_decrypted_part_sum(
                 &poll_parameters,
                 &partially_decrypted_result,
-                &mut aggregated_decrypted_result
+                &mut aggregated_decrypted_result,
+                &encrypted_vote_sum,
             )
             .unwrap()
         );

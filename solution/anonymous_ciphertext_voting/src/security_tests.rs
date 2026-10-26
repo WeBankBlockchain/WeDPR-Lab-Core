@@ -22,6 +22,317 @@ struct Fixture {
     unbounded: RegistrationResponse,
 }
 
+#[test]
+fn final_result_cannot_be_forged_by_replacing_aggregate_decryption() {
+    let f = Fixture::new();
+    let (sum, mut decrypted, mut result) = f.tally(&f.bounded_vote(), false);
+    let ciphertext = bytes_to_point(
+        sum.get_voted_ballot()[0].get_ballot().get_ciphertext1(),
+    )
+    .unwrap();
+    decrypted.mut_candidate_part()[0]
+        .mut_value()
+        .set_blinding_c2(point_to_bytes(
+            &(ciphertext - Scalar::from(99u64) * *BASEPOINT_G1),
+        ));
+    result.mut_result()[1].set_value(99);
+    assert!(
+        !verifier::verify_vote_result(&f.poll, &sum, &decrypted, &result)
+            .unwrap()
+    );
+}
+
+#[test]
+fn decryption_aggregation_verifies_membership_proofs_and_replay_atomically() {
+    let f = Fixture::new();
+    let (sum, decrypted, result) = f.tally(&f.bounded_vote(), false);
+    let restored: DecryptedResultPartStorage =
+        bytes_to_proto(&proto_to_bytes(&decrypted).unwrap()).unwrap();
+    assert!(
+        verifier::verify_vote_result(&f.poll, &sum, &restored, &result)
+            .unwrap()
+    );
+    let part = counter::count("counter", &f.counter, &sum).unwrap();
+    let mut aggregate = DecryptedResultPartStorage::new();
+    coordinator::aggregate_decrypted_part_sum(
+        &f.poll,
+        &part,
+        &mut aggregate,
+        &sum,
+    )
+    .unwrap();
+    let original = aggregate.clone();
+    assert!(coordinator::aggregate_decrypted_part_sum(
+        &f.poll,
+        &part,
+        &mut aggregate,
+        &sum
+    )
+    .is_err());
+    assert_eq!(aggregate, original);
+    for mutation in 0..2 {
+        let mut invalid = part.clone();
+        match mutation {
+            0 => invalid
+                .mut_blank_part()
+                .set_counter_id("unregistered".to_owned()),
+            _ => invalid.mut_candidate_part()[0]
+                .mut_value()
+                .set_blinding_c2(point_to_bytes(&RistrettoPoint::default())),
+        }
+        let mut empty = DecryptedResultPartStorage::new();
+        let before = empty.clone();
+        assert!(coordinator::aggregate_decrypted_part_sum(
+            &f.poll, &invalid, &mut empty, &sum
+        )
+        .is_err());
+        assert_eq!(empty, before);
+    }
+    for mutation in 0..3 {
+        let mut forged = decrypted.clone();
+        match mutation {
+            0 => forged.clear_verified_counter_part(),
+            1 => forged
+                .mut_verified_counter_part()
+                .push(decrypted.get_verified_counter_part()[0].clone()),
+            _ => forged.mut_verified_counter_part()[0]
+                .mut_blank_part()
+                .clear_equality_proof(),
+        }
+        assert!(
+            !verifier::verify_vote_result(&f.poll, &sum, &forged, &result)
+                .unwrap()
+        );
+    }
+}
+
+#[test]
+fn unlisted_duplicate_plaintext_candidate_cannot_multiply_voting_weight() {
+    let f = Fixture::new();
+    let mut first = f.unlisted_vote();
+    let second = f.unlisted_vote();
+    first
+        .mut_vote()
+        .mut_voted_ballot_unlisted()
+        .push(second.get_vote().get_voted_ballot_unlisted()[0].clone());
+    first
+        .mut_unlisted_ballot_proof()
+        .push(second.get_unlisted_ballot_proof()[0].clone());
+    assert!(verifier::verify_unbounded_vote_request_unlisted(
+        &f.poll,
+        &first,
+        &f.public_key
+    )
+    .is_err());
+}
+
+#[test]
+fn credentials_are_bound_to_a_unique_poll() {
+    let f = Fixture::new();
+    let mut counters = CounterParametersStorage::new();
+    counters
+        .mut_counter_parameters_share()
+        .push(counter::make_parameters_share("counter", &f.counter).unwrap());
+    let another_poll =
+        coordinator::make_poll_parameters(f.poll.get_candidates(), &counters)
+            .unwrap();
+    assert!(verifier::verify_vote_request(
+        &another_poll,
+        &f.bounded_vote(),
+        &f.public_key
+    )
+    .is_err());
+    assert!(verifier::verify_unbounded_vote_request(
+        &another_poll,
+        &f.unbounded_vote(),
+        &f.public_key
+    )
+    .is_err());
+    let mut retagged = f.bounded_vote();
+    retagged
+        .mut_vote()
+        .set_poll_id(another_poll.get_poll_id().to_vec());
+    assert!(verifier::verify_vote_request(
+        &another_poll,
+        &retagged,
+        &f.public_key
+    )
+    .is_err());
+    let mut retagged = f.unbounded_vote();
+    retagged
+        .mut_vote()
+        .set_poll_id(another_poll.get_poll_id().to_vec());
+    assert!(verifier::verify_unbounded_vote_request(
+        &another_poll,
+        &retagged,
+        &f.public_key
+    )
+    .is_err());
+}
+
+#[test]
+fn credential_signature_covers_candidate_labels_and_counter_roster() {
+    let f = Fixture::new();
+    let mut poll = f.poll.clone();
+    poll.mut_candidates().mut_candidate()[0] = "C".to_owned();
+    let mut request = f.bounded_vote();
+    request.mut_vote().mut_voted_ballot()[0].set_candidate("C".to_owned());
+    request.mut_ballot_proof()[0].set_key("C".to_owned());
+    assert!(
+        verifier::verify_vote_request(&poll, &request, &f.public_key).is_err()
+    );
+    let mut poll = f.poll.clone();
+    poll.mut_counters().mut_counter_parameters_share()[0]
+        .set_counter_id("another counter".to_owned());
+    assert!(verifier::verify_vote_request(
+        &poll,
+        &f.bounded_vote(),
+        &f.public_key
+    )
+    .is_err());
+}
+
+#[test]
+fn counter_proof_cannot_be_relabelled_or_same_key_registered_twice() {
+    let f = Fixture::new();
+    let honest = counter::make_parameters_share("counter", &f.counter).unwrap();
+    let mut relabelled = honest.clone();
+    relabelled.set_counter_id("renamed".to_owned());
+    let mut counters = CounterParametersStorage::new();
+    counters.mut_counter_parameters_share().push(relabelled);
+    assert!(coordinator::make_poll_parameters(
+        f.poll.get_candidates(),
+        &counters
+    )
+    .is_err());
+    counters.clear_counter_parameters_share();
+    counters.mut_counter_parameters_share().extend([
+        honest,
+        counter::make_parameters_share("renamed", &f.counter).unwrap(),
+    ]);
+    assert!(coordinator::make_poll_parameters(
+        f.poll.get_candidates(),
+        &counters
+    )
+    .is_err());
+}
+
+#[test]
+fn unlisted_candidate_proofs_validate_ids_order_and_credential_binding() {
+    let f = Fixture::new();
+    let mut choices = f.choices(vec![10, 0]);
+    for id in [9, 0, 7] {
+        let mut choice = UnlistedVoteChoice::new();
+        choice.set_candidate_id(id);
+        choice.set_value(10);
+        choices.mut_unlisted_choice().push(choice);
+    }
+    let valid = voter::vote_unbounded_unlisted(
+        &f.secret,
+        &f.zero_secret,
+        &choices,
+        &f.unbounded,
+        &f.poll,
+    )
+    .unwrap();
+    assert!(verifier::verify_unbounded_vote_request_unlisted(
+        &f.poll,
+        &valid,
+        &f.public_key
+    )
+    .unwrap());
+    for mutation in 0..4 {
+        let mut changed = valid.clone();
+        match mutation {
+            0 => changed.clear_unlisted_candidate_range_proof(),
+            1 => changed.mut_unlisted_ballot_proof()[0]
+                .clear_candidate_format_proof(),
+            2 => changed.mut_vote().mut_voted_ballot_unlisted().swap(0, 1),
+            _ => changed.mut_vote().mut_voted_ballot_unlisted()[0]
+                .mut_key()
+                .set_ciphertext2(point_to_bytes(&RistrettoPoint::default())),
+        }
+        assert!(verifier::verify_unbounded_vote_request_unlisted(
+            &f.poll,
+            &changed,
+            &f.public_key
+        )
+        .is_err());
+    }
+    let valid_choices = choices.clone();
+    let duplicate = choices.get_unlisted_choice()[0].clone();
+    choices.mut_unlisted_choice().push(duplicate);
+    assert!(voter::vote_unbounded_unlisted(
+        &f.secret,
+        &f.zero_secret,
+        &choices,
+        &f.unbounded,
+        &f.poll
+    )
+    .is_err());
+    let secret = voter::make_voter_secret();
+    let zero = voter::make_voter_secret();
+    let registration =
+        voter::make_unbounded_registration_request(&zero, &secret, &f.poll)
+            .unwrap();
+    let response = coordinator::certify_unbounded_voter(
+        &f.signing_key,
+        &registration,
+        10,
+        &f.poll,
+    )
+    .unwrap();
+    let mut spliced = voter::vote_unbounded_unlisted(
+        &secret,
+        &zero,
+        &valid_choices,
+        &response,
+        &f.poll,
+    )
+    .unwrap();
+    // Keep this voter's valid weight proofs. Replace only candidate identities
+    // and their proofs with another voter's public proof material.
+    for i in 0..valid.get_vote().get_voted_ballot_unlisted().len() {
+        let other = &valid.get_unlisted_ballot_proof()[i];
+        spliced.mut_vote().mut_voted_ballot_unlisted()[i]
+            .set_key(other.get_key().clone());
+        spliced.mut_unlisted_ballot_proof()[i].set_key(other.get_key().clone());
+        spliced.mut_unlisted_ballot_proof()[i].set_candidate_format_proof(
+            other.get_candidate_format_proof().to_vec(),
+        );
+    }
+    spliced.set_unlisted_candidate_range_proof(
+        valid.get_unlisted_candidate_range_proof().to_vec(),
+    );
+    assert!(verifier::verify_unbounded_vote_request_unlisted(
+        &f.poll,
+        &spliced,
+        &f.public_key
+    )
+    .is_err());
+}
+
+#[test]
+fn poll_creation_rejects_rogue_counter_share_without_secret_knowledge() {
+    let f = Fixture::new();
+    let honest = counter::make_parameters_share("counter", &f.counter).unwrap();
+    let mut rogue = CounterParametersShareRequest::new();
+    rogue.set_counter_id("rogue".to_owned());
+    let combined_secret = Scalar::from(42u64);
+    let forged = combined_secret * *wedpr_l_crypto_zkp_utils::BASEPOINT_G2
+        - bytes_to_point(honest.get_poll_point_share()).unwrap();
+    rogue.set_poll_point_share(point_to_bytes(&forged));
+    let mut counters = CounterParametersStorage::new();
+    counters
+        .mut_counter_parameters_share()
+        .extend([honest, rogue]);
+    assert!(coordinator::make_poll_parameters(
+        f.poll.get_candidates(),
+        &counters
+    )
+    .is_err());
+}
+
 impl Fixture {
     fn new() -> Self {
         let counter = counter::make_counter_secret();
@@ -146,6 +457,7 @@ impl Fixture {
                 &self.poll,
                 &part,
                 &mut decrypted,
+                &sum,
             )
             .unwrap();
             coordinator::finalize_vote_result_unlisted(
@@ -181,6 +493,7 @@ impl Fixture {
                 &self.poll,
                 &part,
                 &mut decrypted,
+                &sum,
             )
             .unwrap();
             coordinator::finalize_vote_result(&self.poll, &sum, &decrypted, 20)

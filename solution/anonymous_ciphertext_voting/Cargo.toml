@@ -14,10 +14,10 @@ sm = ["wedpr_s_protos/wedpr_f_sm_signature"]
 [dependencies]
 curve25519-dalek = { version = "1", features = [ "serde" ] }
 lazy_static = "1.4.0"
-wedpr_l_crypto_zkp_discrete_logarithm_proof = {version = "1.3.0", git = "https://github.com/WeBankBlockchain/WeDPR-Lab-Crypto", rev = "ffeaaab822dabae3d75b2be7a8a587b0a937a918"}
+wedpr_l_crypto_zkp_discrete_logarithm_proof = {version = "1.3.0", git = "https://github.com/WeBankBlockchain/WeDPR-Lab-Crypto", rev = "3beca5a121c473489bd92f38d9fb904906b7f987"}
 wedpr_l_crypto_zkp_range_proof = "1.2.0"
 # feature-fix-acv
-wedpr_l_crypto_zkp_utils = {version = "1.3.0", git = "https://github.com/WeBankBlockchain/WeDPR-Lab-Crypto", rev = "ffeaaab822dabae3d75b2be7a8a587b0a937a918"}
+wedpr_l_crypto_zkp_utils = {version = "1.3.0", git = "https://github.com/WeBankBlockchain/WeDPR-Lab-Crypto", rev = "3beca5a121c473489bd92f38d9fb904906b7f987"}
 wedpr_l_macros = "1.0.0"
 wedpr_l_utils = "1.1.0"
 wedpr_s_protos = { path = "../../protos", default-features = false}
