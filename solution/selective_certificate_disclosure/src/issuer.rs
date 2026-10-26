@@ -60,12 +60,13 @@ pub fn sign_certificate(
         certificate_attribute_dict,
         certificate_template.get_certificate_schema(),
     )?;
-    let blinded_credential_secrets: wedpr_indy_crypto::cl::BlindedCredentialSecrets =
-        utils::safe_deserialize(sign_request.get_blinded_certificate_secrets())?;
-    let blinded_credential_secrets_correctness_proof: wedpr_indy_crypto::cl::BlindedCredentialSecretsCorrectnessProof =
-        utils::safe_deserialize(
-            sign_request.get_blinded_certificate_secrets_correctness_proof()
-        )?;
+    let (
+        blinded_credential_secrets,
+        blinded_credential_secrets_correctness_proof,
+    ) = utils::deserialize_blinded_certificate_secrets(
+        sign_request.get_blinded_certificate_secrets(),
+        sign_request.get_blinded_certificate_secrets_correctness_proof(),
+    )?;
 
     let cred_priv_key: wedpr_indy_crypto::cl::CredentialPrivateKey =
         utils::safe_deserialize(template_private_key.get_key())?;

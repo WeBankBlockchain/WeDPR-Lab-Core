@@ -1,3 +1,9 @@
+## 未发布：SCD 签发属性篡改修复
+
+- 签发入口仅允许盲化 `user_private_key`，禁止隐藏或承诺签发者审核的模板属性，阻止将已审核属性叠加为其他值。补充了审核 `age=25` 却生成可验证 `age>=100` 凭证的完整攻击回归。
+- 严格检查盲化证明响应的键集合，拒绝缺失、多余的响应，避免底层 Indy 直接索引缺失字段导致 panic。盲化秘密和正确性证明 JSON 各限 64 KiB，单个字符串限 4096 字节；本接口不签发可撤销凭证，丢弃旧模板产生的未使用 `ur` 字段，避免解析不受信任的无用配对点。
+- 修复阻止新增异常签发，不能识别修复前已签出的篡改属性凭证。若旧签发入口已对外开放，应更换签发模板密钥并重新签发凭证，验证方须同步更新可信模板。
+
 ## 未发布：多轮输入与信任边界审查修复
 
 - SCD 新增 `verify_selective_disclosure_with_context(rules, request, trusted_template, expected_nonce)`，必须采用验证方保存的签发模板和挑战；旧的无上下文 Rust/C/JNI 入口返回验证失败。Java 使用 `verifierVerifySelectiveDisclosureWithContext`，C 使用 `wedpr_scd_verify_selective_disclosure_with_context`，参数依次为规则、请求、可信模板和挑战。验证方必须将挑战绑定会话，并在成功后原子地消费，不能从请求中提取挑战充当可信值。
