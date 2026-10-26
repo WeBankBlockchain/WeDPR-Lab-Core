@@ -6,17 +6,20 @@ use crate::utils;
 use wedpr_indy_crypto::cl::verifier;
 use wedpr_l_utils::error::WedprError;
 use wedpr_s_protos::generated::scd::{
-    AttributeDict, StringToStringPair, VerificationRuleSet, VerifyRequest,
+    AttributeDict, CertificateTemplate, StringToStringPair,
+    VerificationRuleSet, VerifyRequest,
 };
 
 /// Gets revealed attributes selected by a user.
-/// Before calling this function, verify_selective_disclosure should be called
-/// to verify the validity of the VerifyRequest.
+/// Before calling this function, verify_selective_disclosure_with_context
+/// must return true for this VerifyRequest and the verifier's trusted context.
 pub fn get_revealed_attributes(
     verify_request: &VerifyRequest,
 ) -> Result<AttributeDict, WedprError> {
     let proof: wedpr_indy_crypto::cl::Proof =
-        utils::safe_deserialize(verify_request.get_verification_proof())?;
+        utils::deserialize_certificate_proof(
+            verify_request.get_verification_proof(),
+        )?;
     let eq_value = utils::safe_indy_check(proof.get_revealed_attrs_value())?;
     let mut attrs = AttributeDict::new();
     for (attr, value) in eq_value {
@@ -28,21 +31,39 @@ pub fn get_revealed_attributes(
     Ok(attrs)
 }
 
-/// Verifies the validity of a VerifyRequest containing selected attribute
-/// values and their value predicates.
+/// Deprecated entry point without trusted issuer or challenge context.
+/// It always fails closed; use verify_selective_disclosure_with_context.
 pub fn verify_selective_disclosure(
+    _rule_set: &VerificationRuleSet,
+    _verify_request: &VerifyRequest,
+) -> Result<bool, WedprError> {
+    Err(WedprError::VerificationError)
+}
+
+/// Verify against the issuer template and challenge saved by the verifier.
+/// The caller must consume the challenge atomically once verification succeeds.
+pub fn verify_selective_disclosure_with_context(
     rule_set: &VerificationRuleSet,
     verify_request: &VerifyRequest,
+    trusted_template: &CertificateTemplate,
+    expected_nonce: &str,
 ) -> Result<bool, WedprError> {
+    if expected_nonce.is_empty()
+        || verify_request.get_verification_nonce() != expected_nonce
+        || verify_request.get_certificate_template() != trusted_template
+    {
+        return Err(WedprError::VerificationError);
+    }
+    utils::validate_rule_set(rule_set)?;
     let (certificate_schema, non_certificate_schema) =
         utils::build_certificate_schema(
-            verify_request
-                .get_certificate_template()
-                .get_certificate_schema(),
+            trusted_template.get_certificate_schema(),
         )?;
 
     let proof: wedpr_indy_crypto::cl::Proof =
-        utils::safe_deserialize(verify_request.get_verification_proof())?;
+        utils::deserialize_certificate_proof(
+            verify_request.get_verification_proof(),
+        )?;
 
     let eq_value = utils::safe_indy_check(proof.get_revealed_attrs_value())?;
 
@@ -61,13 +82,6 @@ pub fn verify_selective_disclosure(
                     let expected = utils::safe_indy_check(value.to_dec())?;
                     let read_value = predicate.get_predicate_value() as i64;
                     if !(expected.eq(&read_value.to_string())) {
-                        wedpr_println!(
-                            "predicate_eq_value not equal \
-                             predicate.get_value(), expected = {:?}, \
-                             read_value = {:?}",
-                            expected,
-                            read_value
-                        );
                         return Err(WedprError::VerificationError);
                     }
                 }
@@ -90,14 +104,11 @@ pub fn verify_selective_disclosure(
 
     let cred_pub_key: wedpr_indy_crypto::cl::CredentialPublicKey =
         utils::safe_deserialize(
-            verify_request
-                .get_certificate_template()
-                .get_template_public_key()
-                .get_key(),
+            trusted_template.get_template_public_key().get_key(),
         )?;
 
     let proof_request_nonce: wedpr_indy_crypto::cl::Nonce =
-        utils::safe_deserialize(verify_request.get_verification_nonce())?;
+        utils::safe_deserialize(expected_nonce)?;
 
     let mut proof_verifier =
         utils::safe_indy_check(verifier::Verifier::new_proof_verifier())?;

@@ -1,5 +1,14 @@
 # 选择性披露方案
 
+验证入口现要求验证方保存的可信签发模板和一次性挑战，迁移后的声明为：
+
+```java
+public static native VerifierResult verifierVerifySelectiveDisclosureWithContext(
+        String ruleSet, String verifyRequest, String trustedTemplate, String expectedNonce);
+```
+
+前三个参数沿用现有 Protobuf 编码方式，`expectedNonce` 为验证方创建并绑定到当前会话的挑战原文。验证成功后应原子消费挑战。可信模板和挑战均不能从客户端请求中直接复制。旧的无上下文验证入口返回错误。
+
 ## 接口调用Java文件
 
 

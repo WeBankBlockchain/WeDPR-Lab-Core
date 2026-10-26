@@ -271,12 +271,14 @@ fn subflow_predicate_only_cn(
     // Set age range predicate.
     user_set_age_range_predicate(&mut rule_set);
 
+    let verification_nonce_str = verifier::get_verification_nonce().unwrap();
     let request_result = user_prove_rule_set(
         new_certificate_signature,
         certificate_attribute_dict,
         certificate_template,
         user_private_key_str,
         &mut rule_set,
+        &verification_nonce_str,
     );
     let request = match request_result {
         Ok(v) => v,
@@ -299,7 +301,12 @@ fn subflow_predicate_only_cn(
         "<<用户获得申请的筛选结果>>".yellow(),
     );
 
-    let result = verifier_verify_rule_set(&mut rule_set, &request);
+    let result = verifier_verify_rule_set(
+        &mut rule_set,
+        &request,
+        certificate_template,
+        &verification_nonce_str,
+    );
     println!("奖项授予方对用户断言证明的验证结果为：{:?}", result);
     // This result should not be false.
     assert!(result);
@@ -328,12 +335,14 @@ fn subflow_mixed_disclosure_cn(
     // Set age range predicate.
     user_set_age_range_predicate(&mut rule_set);
 
+    let verification_nonce_str = verifier::get_verification_nonce().unwrap();
     let request_result = user_prove_rule_set(
         new_certificate_signature,
         certificate_attribute_dict,
         certificate_template,
         user_private_key_str,
         &mut rule_set,
+        &verification_nonce_str,
     );
     let request = match request_result {
         Ok(v) => v,
@@ -345,7 +354,12 @@ fn subflow_mixed_disclosure_cn(
     };
 
     // This verification should be done before calling get_revealed_attributes.
-    assert!(verifier_verify_rule_set(&mut rule_set, &request));
+    assert!(verifier_verify_rule_set(
+        &mut rule_set,
+        &request,
+        certificate_template,
+        &verification_nonce_str
+    ));
     let attrs = verifier::get_revealed_attributes(&request).unwrap();
     println!(
         "{}\n{:?}",
@@ -618,12 +632,14 @@ fn subflow_predicate_only_en(
     // Set age range predicate.
     user_set_age_range_predicate(&mut rule_set);
 
+    let verification_nonce_str = verifier::get_verification_nonce().unwrap();
     let request_result = user_prove_rule_set(
         new_certificate_signature,
         certificate_attribute_dict,
         certificate_template,
         user_private_key_str,
         &mut rule_set,
+        &verification_nonce_str,
     );
     let request = match request_result {
         Ok(v) => v,
@@ -647,7 +663,12 @@ fn subflow_predicate_only_en(
         "<<Check application result>>".yellow()
     );
 
-    let result = verifier_verify_rule_set(&mut rule_set, &request);
+    let result = verifier_verify_rule_set(
+        &mut rule_set,
+        &request,
+        certificate_template,
+        &verification_nonce_str,
+    );
     println!("The verification result is: {:?}", result);
     // This result should not be false.
     assert!(result);
@@ -679,12 +700,14 @@ fn subflow_mixed_disclosure_en(
     // Set age range predicate.
     user_set_age_range_predicate(&mut rule_set);
 
+    let verification_nonce_str = verifier::get_verification_nonce().unwrap();
     let request_result = user_prove_rule_set(
         new_certificate_signature,
         certificate_attribute_dict,
         certificate_template,
         user_private_key_str,
         &mut rule_set,
+        &verification_nonce_str,
     );
     let request = match request_result {
         Ok(v) => v,
@@ -698,7 +721,12 @@ fn subflow_mixed_disclosure_en(
     };
 
     // This verification should be done before calling get_revealed_attributes.
-    assert!(verifier_verify_rule_set(&mut rule_set, &request));
+    assert!(verifier_verify_rule_set(
+        &mut rule_set,
+        &request,
+        certificate_template,
+        &verification_nonce_str
+    ));
     let attrs = verifier::get_revealed_attributes(&request).unwrap();
     println!("{}\n{:?}", "The disclosed values are:".yellow(), attrs);
     pause_en();
@@ -781,10 +809,8 @@ fn user_prove_rule_set(
     certificate_template: &CertificateTemplate,
     user_private_key_str: &str,
     rule_set: &mut VerificationRuleSet,
+    verification_nonce_str: &str,
 ) -> Result<VerifyRequest, WedprError> {
-    // In most cases, this nonce should be provided by the verifier to prevent
-    // replaying attacks.
-    let verification_nonce_str = verifier::get_verification_nonce().unwrap();
     user::prove_selective_disclosure(
         rule_set,
         new_certificate_signature,
@@ -798,8 +824,16 @@ fn user_prove_rule_set(
 fn verifier_verify_rule_set(
     rule_set: &mut VerificationRuleSet,
     request: &VerifyRequest,
+    trusted_template: &CertificateTemplate,
+    expected_nonce: &str,
 ) -> bool {
-    verifier::verify_selective_disclosure(&rule_set, &request).unwrap()
+    verifier::verify_selective_disclosure_with_context(
+        rule_set,
+        request,
+        trusted_template,
+        expected_nonce,
+    )
+    .unwrap()
 }
 
 // Utility functions

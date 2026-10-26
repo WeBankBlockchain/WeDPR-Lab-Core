@@ -17,6 +17,10 @@ pub fn fill_certificate(
     attribute_dict: &AttributeDict,
     certificate_template: &CertificateTemplate,
 ) -> Result<(SignCertificateRequest, String, String, String), WedprError> {
+    utils::validate_attributes(
+        attribute_dict,
+        certificate_template.get_certificate_schema(),
+    )?;
     let cred_key_correctness_proof: wedpr_indy_crypto::cl::CredentialKeyCorrectnessProof =
         utils::safe_deserialize(
             certificate_template.get_template_correctness_proof(),
@@ -95,6 +99,10 @@ pub fn blind_certificate_signature(
     certificate_secrets_blinding_factors: &str,
     issuer_nonce_str: &str,
 ) -> Result<CertificateSignature, WedprError> {
+    utils::validate_attributes(
+        attribute_dict,
+        certificate_template.get_certificate_schema(),
+    )?;
     let mut cred_signature: wedpr_indy_crypto::cl::CredentialSignature =
         utils::safe_deserialize(
             certificate_signature.get_certificate_signature(),
@@ -133,7 +141,7 @@ pub fn blind_certificate_signature(
     let cred_values =
         utils::safe_indy_check(credential_values_builder.finalize())?;
 
-    prover::Prover::process_credential_signature(
+    utils::safe_indy_check(prover::Prover::process_credential_signature(
         &mut cred_signature,
         &cred_values,
         &signature_correctness_proof,
@@ -143,8 +151,7 @@ pub fn blind_certificate_signature(
         None,
         None,
         None,
-    )
-    .unwrap();
+    ))?;
     let cred_signature_str = utils::safe_serialize(&cred_signature)?;
     let signature_correctness_proof_str =
         utils::safe_serialize(&signature_correctness_proof)?;
@@ -168,6 +175,11 @@ pub fn prove_selective_disclosure(
     user_private_key_str: &str,
     verification_nonce_str: &str,
 ) -> Result<VerifyRequest, WedprError> {
+    utils::validate_attributes(
+        attribute_dict,
+        certificate_template.get_certificate_schema(),
+    )?;
+    utils::validate_prover_predicates(rule_set, attribute_dict)?;
     let (certificate_schema, non_certificate_schema) =
         utils::build_certificate_schema(
             certificate_template.get_certificate_schema(),
@@ -208,8 +220,9 @@ pub fn prove_selective_disclosure(
         proof_builder.add_common_attribute("user_private_key"),
     )?;
 
-    let mut sub_proof_request_builder =
-        verifier::Verifier::new_sub_proof_request_builder().unwrap();
+    let mut sub_proof_request_builder = utils::safe_indy_check(
+        verifier::Verifier::new_sub_proof_request_builder(),
+    )?;
 
     for predicate in rule_set.get_attribute_predicate() {
         if predicate.get_predicate_type() == "EQ" {

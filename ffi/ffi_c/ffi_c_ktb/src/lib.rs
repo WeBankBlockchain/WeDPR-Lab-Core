@@ -11,3 +11,5 @@ extern crate wedpr_ffi_macros;
 extern crate wedpr_l_macros;
 
 pub mod hdk;
+
+mod input;

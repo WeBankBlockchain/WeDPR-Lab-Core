@@ -1,3 +1,13 @@
+## 未发布：多轮输入与信任边界审查修复
+
+- SCD 新增 `verify_selective_disclosure_with_context(rules, request, trusted_template, expected_nonce)`，必须采用验证方保存的签发模板和挑战；旧的无上下文 Rust/C/JNI 入口返回验证失败。Java 使用 `verifierVerifySelectiveDisclosureWithContext`，C 使用 `wedpr_scd_verify_selective_disclosure_with_context`，参数依次为规则、请求、可信模板和挑战。验证方必须将挑战绑定会话，并在成功后原子地消费，不能从请求中提取挑战充当可信值。
+- SCD 拒绝重复、缺失或不属于模板的属性；拒绝超出 Indy 有符号整数范围的谓词，并在证明生成前检查差值溢出和谓词条件。错误签名、错误签发挑战及畸形证明返回错误，不再触发未处理 panic。证明结构必须只包含一份证书子证明，拒绝本方案未提供验证能力的撤销证明。
+- SCD 拒绝重复的谓词子证明，证明 JSON 最大为 4 MiB，单个字符串最大为 4096 字节，限制解析和大整数运算的输入规模。
+- 更新 SCD 示例与 bounty 调用链，使挑战由验证方创建并单独保存。C 的 SCD、VCL、HDK 接口先拒绝空指针；非空指针仍须指向调用方持有的有效、以 NUL 结尾的内存。
+- HDK 错误日志不再输出助记词、密码、主密钥或派生私钥；SCD 错误日志不再输出可能包含私有输入的底层错误详情。
+- ACV 在改变汇总或标记凭证已使用之前拒绝名单外候选人密文键冲突，避免两个合法凭证故意选择相同随机数后破坏整场计票。仅处理名单内候选人的汇总、计票与解密接口明确拒绝包含名单外选票的输入。
+- `make_vote_choices` 改为返回 `Result<VoteChoices, WedprError>`，拒绝值列表与候选人列表长度不一致的输入，防止越界 panic 或静默丢弃多余值。
+
 ## 未发布：ACV 协议上下文、候选人去重及计票证明修复
 
 - 统一 Core 中通过 Git 引用的 ZKP 算子与工具依赖，固定到官方 Crypto 安全修复提交 `3beca5a121c473489bd92f38d9fb904906b7f987`。VCL 不再使用含 8 位批验证系数和数组长度检查缺陷的旧版算子。

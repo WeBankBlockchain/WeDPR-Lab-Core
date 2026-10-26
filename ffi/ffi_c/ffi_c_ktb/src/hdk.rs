@@ -3,10 +3,9 @@
 //! Library of macros and functions for FFI of HDK solution,
 //! targeting C/C++ compatible architectures (including iOS).
 
+use crate::input::c_char_pointer_to_string;
 use protobuf::{self, Message};
-use wedpr_ffi_common::utils::{
-    bytes_to_string, c_char_pointer_to_string, string_to_bytes,
-};
+use wedpr_ffi_common::utils::{bytes_to_string, string_to_bytes};
 use wedpr_s_hierarchical_deterministic_key;
 
 use wedpr_s_protos::generated::hdk::HdkResult;
@@ -95,4 +94,18 @@ pub extern "C" fn wedpr_ktb_hdk_derive_extended_key(
         c_safe_proto_to_c_char_pointer!(hdk_result)
     });
     c_safe_return!(result)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn null_key_inputs_fail_without_dereferencing() {
+        assert!(wedpr_ktb_hdk_create_master_key_en(
+            ptr::null_mut(),
+            ptr::null_mut()
+        )
+        .is_null());
+    }
 }

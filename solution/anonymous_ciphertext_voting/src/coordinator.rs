@@ -228,6 +228,19 @@ pub fn aggregate_vote_sum_response(
     vote_part: &VoteStorage,
     vote_sum: &mut VoteStorage,
 ) -> Result<bool, WedprError> {
+    if !vote_part.get_voted_ballot_unlisted().is_empty()
+        || !vote_sum.get_voted_ballot_unlisted().is_empty()
+    {
+        return Err(WedprError::ArgumentError);
+    }
+    aggregate_listed_vote_sum(poll_parameters, vote_part, vote_sum)
+}
+
+fn aggregate_listed_vote_sum(
+    poll_parameters: &PollParametersStorage,
+    vote_part: &VoteStorage,
+    vote_sum: &mut VoteStorage,
+) -> Result<bool, WedprError> {
     validate_vote_candidates(poll_parameters, vote_part)?;
     if poll_parameters.get_poll_id().len() != 32
         || vote_part.get_poll_id() != poll_parameters.get_poll_id()
@@ -330,7 +343,22 @@ pub fn aggregate_vote_sum_response_unlisted(
     vote_part: &VoteStorage,
     vote_sum: &mut VoteStorage,
 ) -> Result<bool, WedprError> {
-    aggregate_vote_sum_response(poll_parameters, vote_part, vote_sum)?;
+    // Candidate ciphertexts are record keys during joint decryption. Distinct
+    // credentials can still deliberately choose identical encryption
+    // randomness. Reject collisions before touching the totals or consuming
+    // a credential.
+    let mut keys = BTreeSet::new();
+    for ballot in vote_sum
+        .get_voted_ballot_unlisted()
+        .iter()
+        .chain(vote_part.get_voted_ballot_unlisted())
+    {
+        let key = ballot.get_key();
+        if !keys.insert((key.get_ciphertext1(), key.get_ciphertext2())) {
+            return Err(WedprError::VerificationError);
+        }
+    }
+    aggregate_listed_vote_sum(poll_parameters, vote_part, vote_sum)?;
     // aggregate all unlisted voting cipher ballot in vote_part
     for unlisted_ballot in vote_part.get_voted_ballot_unlisted() {
         vote_sum
@@ -583,6 +611,23 @@ pub fn finalize_vote_result(
     aggregated_decrypted_result: &DecryptedResultPartStorage,
     max_vote_limit: i64,
 ) -> Result<VoteResultStorage, WedprError> {
+    if !vote_sum.get_voted_ballot_unlisted().is_empty() {
+        return Err(WedprError::ArgumentError);
+    }
+    finalize_listed_vote_result(
+        poll_parameters,
+        vote_sum,
+        aggregated_decrypted_result,
+        max_vote_limit,
+    )
+}
+
+fn finalize_listed_vote_result(
+    poll_parameters: &PollParametersStorage,
+    vote_sum: &VoteStorage,
+    aggregated_decrypted_result: &DecryptedResultPartStorage,
+    max_vote_limit: i64,
+) -> Result<VoteResultStorage, WedprError> {
     validate_vote_candidates(poll_parameters, vote_sum)?;
     if !crate::verifier::verify_aggregated_decryption(
         poll_parameters,
@@ -700,7 +745,7 @@ pub fn finalize_vote_result_unlisted(
     max_vote_limit: i64,
     max_candidate_number: i64,
 ) -> Result<VoteResultStorage, WedprError> {
-    let mut vote_result = finalize_vote_result(
+    let mut vote_result = finalize_listed_vote_result(
         poll_parameters,
         vote_sum,
         aggregated_decrypted_result,

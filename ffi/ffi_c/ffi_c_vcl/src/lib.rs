@@ -9,10 +9,10 @@ extern crate wedpr_ffi_macros;
 #[macro_use]
 extern crate wedpr_l_macros;
 
+use crate::input::c_char_pointer_to_string;
 use protobuf::{self, Message};
 use wedpr_ffi_common::utils::{
-    bytes_to_string, c_char_pointer_to_string, string_to_bytes, FAILURE,
-    SUCCESS,
+    bytes_to_string, string_to_bytes, FAILURE, SUCCESS,
 };
 use wedpr_s_verifiable_confidential_ledger;
 
@@ -413,4 +413,21 @@ pub extern "C" fn wedpr_vcl_verify_range(
         }
     });
     c_safe_return_with_error_value!(result, FAILURE)
+}
+
+mod input;
+
+#[cfg(test)]
+mod null_input_tests {
+    use super::*;
+
+    #[test]
+    fn null_credit_inputs_fail_without_dereferencing() {
+        assert!(wedpr_vcl_prove_sum_balance(
+            ptr::null_mut(),
+            ptr::null_mut(),
+            ptr::null_mut()
+        )
+        .is_null());
+    }
 }

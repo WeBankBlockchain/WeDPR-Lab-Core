@@ -47,22 +47,18 @@ pub fn create_master_key_en(
     ) {
         Ok(v) => v,
         Err(_) => {
-            wedpr_println!(
-                "mnemonic check failed!, mnemonic = {}",
-                mnemonic_str
-            );
+            wedpr_println!("mnemonic check failed");
             return Err(WedprError::ArgumentError);
         },
     };
-    let master_extended_private_key = match mnemonic
-        .to_extended_private_key(Some(password))
-    {
-        Ok(v) => v,
-        Err(_) => {
-            wedpr_println!("password check failed!, password = {}", password);
-            return Err(WedprError::ArgumentError);
-        },
-    };
+    let master_extended_private_key =
+        match mnemonic.to_extended_private_key(Some(password)) {
+            Ok(v) => v,
+            Err(_) => {
+                wedpr_println!("master key creation failed");
+                return Err(WedprError::ArgumentError);
+            },
+        };
     Ok(master_extended_private_key.to_string().as_bytes().to_vec())
 }
 
@@ -88,10 +84,7 @@ pub fn derive_extended_key(
     let master_key_str = match str::from_utf8(&master_key_bytes) {
         Ok(v) => v,
         Err(_) => {
-            wedpr_println!(
-                "master_key_bytes check failed!, master_key_bytes = {:?}",
-                master_key_bytes
-            );
+            wedpr_println!("master key encoding check failed");
             return Err(WedprError::FormatError);
         },
     };
@@ -99,10 +92,7 @@ pub fn derive_extended_key(
         match HdkExtendedPrivateKey::<Mainnet>::from_str(master_key_str) {
             Ok(v) => v,
             Err(_) => {
-                wedpr_println!(
-                    "master_key_str check failed!, master_key_str = {}",
-                    master_key_str
-                );
+                wedpr_println!("master key check failed");
                 return Err(WedprError::FormatError);
             },
         };
@@ -140,10 +130,7 @@ pub fn derive_extended_key(
     let extended_private_key_bytes = match decode_hex_string(&private_key_hex) {
         Ok(v) => v,
         Err(_) => {
-            wedpr_println!(
-                "extended_private_key check failed!, extended_private_key = {}",
-                extended_private_key
-            );
+            wedpr_println!("extended private key encoding failed");
             return Err(WedprError::DecodeError);
         },
     };
@@ -168,7 +155,7 @@ fn decode_hex_string(input: &str) -> Result<Vec<u8>, WedprError> {
     match hex::decode(input) {
         Ok(v) => return Ok(v),
         Err(_) => {
-            wedpr_println!("hex decoding failed, input was: {}", input);
+            wedpr_println!("hex decoding failed");
             return Err(WedprError::DecodeError);
         },
     };

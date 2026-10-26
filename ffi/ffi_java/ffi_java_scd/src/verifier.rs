@@ -11,13 +11,15 @@ use jni::{
 use protobuf::{self, Message};
 
 use wedpr_ffi_common::utils::{
-    bytes_to_string, java_jstring_to_bytes, java_new_jobject,
-    java_set_error_field_and_extract_jobject,
+    bytes_to_string, java_jstring_to_bytes, java_jstring_to_string,
+    java_new_jobject, java_set_error_field_and_extract_jobject,
 };
 
 use wedpr_s_selective_certificate_disclosure;
 
-use wedpr_s_protos::generated::scd::{VerificationRuleSet, VerifyRequest};
+use wedpr_s_protos::generated::scd::{
+    CertificateTemplate, VerificationRuleSet, VerifyRequest,
+};
 
 const RESULT_JAVA_CLASS_NAME: &str = "com/webank/wedpr/scd/VerifierResult";
 
@@ -74,8 +76,27 @@ pub extern "system" fn Java_com_webank_wedpr_scd_NativeInterface_verifierGetReve
 pub extern "system" fn Java_com_webank_wedpr_scd_NativeInterface_verifierVerifySelectiveDisclosure(
     _env: JNIEnv,
     _class: JClass,
+    _rule_set_jstring: JString,
+    _verify_request_jstring: JString,
+) -> jobject {
+    let result_jobject = get_result_jobject(&_env);
+    java_set_error_field_and_extract_jobject(
+        &_env,
+        &result_jobject,
+        "Use verifierVerifySelectiveDisclosureWithContext with a trusted \
+         issuer template and server challenge",
+    )
+}
+
+/// Verify using server-owned issuer and challenge context.
+#[no_mangle]
+pub extern "system" fn Java_com_webank_wedpr_scd_NativeInterface_verifierVerifySelectiveDisclosureWithContext(
+    _env: JNIEnv,
+    _class: JClass,
     rule_set_jstring: JString,
     verify_request_jstring: JString,
+    trusted_template_jstring: JString,
+    expected_nonce_jstring: JString,
 ) -> jobject {
     let result_jobject = get_result_jobject(&_env);
 
@@ -92,9 +113,22 @@ pub extern "system" fn Java_com_webank_wedpr_scd_NativeInterface_verifierVerifyS
         VerifyRequest
     );
 
-    let bool_result = match wedpr_s_selective_certificate_disclosure::verifier::verify_selective_disclosure(
+    let trusted_template = java_safe_jstring_to_pb!(
+        _env,
+        result_jobject,
+        trusted_template_jstring,
+        CertificateTemplate
+    );
+    let expected_nonce = java_safe_jstring_to_string!(
+        _env,
+        result_jobject,
+        expected_nonce_jstring
+    );
+    let bool_result = match wedpr_s_selective_certificate_disclosure::verifier::verify_selective_disclosure_with_context(
         &rule_set_pb,
         &verify_request_pb,
+        &trusted_template,
+        &expected_nonce,
     ) {
         Ok(v) => v,
         Err(e) => {

@@ -56,6 +56,10 @@ pub fn sign_certificate(
 ) -> Result<(CertificateSignature, String), WedprError> {
     let certificate_attribute_dict =
         sign_request.get_certificate_attribute_dict();
+    utils::validate_attributes(
+        certificate_attribute_dict,
+        certificate_template.get_certificate_schema(),
+    )?;
     let blinded_credential_secrets: wedpr_indy_crypto::cl::BlindedCredentialSecrets =
         utils::safe_deserialize(sign_request.get_blinded_certificate_secrets())?;
     let blinded_credential_secrets_correctness_proof: wedpr_indy_crypto::cl::BlindedCredentialSecretsCorrectnessProof =

@@ -13,3 +13,5 @@ pub mod verifier;
 extern crate wedpr_ffi_macros;
 #[macro_use]
 extern crate wedpr_l_macros;
+
+mod input;

@@ -197,7 +197,8 @@ fn flow_cn() {
         let vote_choices = voter::make_vote_choices(
             &voting_ballot_count[index],
             &candidate_list,
-        );
+        )
+        .unwrap();
         let vote_request = match voter::vote(
             &voter_secret_list[index],
             &vote_choices,
@@ -609,7 +610,8 @@ fn flow_en() {
         let vote_choices = voter::make_vote_choices(
             &voting_ballot_count[index],
             &candidate_list,
-        );
+        )
+        .unwrap();
         let vote_request = match voter::vote(
             &voter_secret_list[index],
             &vote_choices,

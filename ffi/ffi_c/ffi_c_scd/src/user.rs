@@ -10,12 +10,11 @@ use wedpr_s_protos::generated::scd::{
     VerificationRuleSet,
 };
 
+use crate::input::c_char_pointer_to_string;
 use libc::c_char;
 use protobuf::{self, Message};
 use std::{ffi::CString, panic, ptr};
-use wedpr_ffi_common::utils::{
-    bytes_to_string, c_char_pointer_to_string, string_to_bytes,
-};
+use wedpr_ffi_common::utils::{bytes_to_string, string_to_bytes};
 
 /// C interface for 'wedpr_scd_fill_certificate'.
 #[no_mangle]
