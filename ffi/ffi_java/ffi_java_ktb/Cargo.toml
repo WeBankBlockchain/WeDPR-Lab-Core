@@ -1,6 +1,6 @@
 [package]
 name = "ffi_java_ktb"
-version = "1.4.0"
+version = "1.7.0"
 authors = [ "WeDPR <wedpr@webank.com>" ]
 edition = "2018"
 
