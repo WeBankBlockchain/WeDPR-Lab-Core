@@ -3,11 +3,55 @@
 //! Library of ACV utility functions.
 
 use curve25519_dalek::{ristretto::RistrettoPoint, scalar::Scalar};
+use std::collections::BTreeSet;
 use wedpr_l_utils::error::WedprError;
 use wedpr_s_protos::generated::acv::{
-    Ballot, CountingPart, DecryptedResultPartStorage, VoteResultStorage,
-    VoteStorage,
+    Ballot, CountingPart, DecryptedResultPartStorage, PollParametersStorage,
+    VoteResultStorage, VoteStorage,
 };
+
+pub fn validate_vote_candidates(
+    poll_parameters: &PollParametersStorage,
+    vote: &VoteStorage,
+) -> Result<(), WedprError> {
+    let expected: BTreeSet<_> = poll_parameters
+        .get_candidates()
+        .get_candidate()
+        .iter()
+        .map(String::as_str)
+        .collect();
+    let actual: BTreeSet<_> = vote
+        .get_voted_ballot()
+        .iter()
+        .map(|pair| pair.get_candidate())
+        .collect();
+    if expected.len() != poll_parameters.get_candidates().get_candidate().len()
+        || actual.len() != vote.get_voted_ballot().len()
+        || actual != expected
+    {
+        return Err(WedprError::VerificationError);
+    }
+    Ok(())
+}
+
+/// Recovers a small nonnegative plaintext, failing if the configured bound is
+/// insufficient.
+pub fn decode_vote_value(
+    target: &RistrettoPoint,
+    max_value: i64,
+) -> Result<u64, WedprError> {
+    if max_value < 0 {
+        return Err(WedprError::ArgumentError);
+    }
+    let mut point = RistrettoPoint::default();
+    for value in 0..=max_value {
+        if point == *target {
+            return Ok(value as u64);
+        }
+        point += *wedpr_l_crypto_zkp_utils::BASEPOINT_G1;
+    }
+    Err(WedprError::VerificationError)
+}
 
 pub fn get_counting_part_by_candidate(
     decrypted_result: &DecryptedResultPartStorage,

@@ -38,6 +38,8 @@ message RegistrationRequest {
 message RegistrationBlindingPoint {
   bytes blinding_poll_point = 1;
   bytes blinding_basepoint_g2 = 2;
+  // Proof of the same secret r in r * poll_point and r * BASEPOINT_G2.
+  bytes equality_proof = 3;
 }
 
 // Response of voter registration.
@@ -125,6 +127,8 @@ message VoteStorage {
   // the ballot for unlisted-candidates
   repeated CipherPointsToBallotPair voted_ballot_unlisted = 5;
   Ballot zero_ballot = 6;
+  // Coordinator-maintained IDs of accepted credentials; empty in a voter request.
+  repeated bytes accepted_ballot_id = 7;
 }
 
 // the ballot for the unlisted-candidate

@@ -1,3 +1,14 @@
+## 未发布：ACV 安全修复
+
+- 注册请求新增 `RegistrationBlindingPoint.equality_proof`，证明两个盲化点使用同一个秘密值；权重凭证及零值凭证均须验证后签发。缺失证明的旧请求会被拒绝。
+- Rust `certify_voter` 和 `certify_unbounded_voter` 新增最后一个参数 `&PollParametersStorage`，必须传入协调者保存的可信投票参数，不能采用客户端自行提交的参数。
+- Java 新增 `certifyVoterWithPollParameters(byte[] secretKey, String registrationRequest, int voterWeight, String pollParameters)` 和 `certifyUnboundedVoterWithPollParameters`（参数顺序相同），返回类型沿用 `CoordinatorResult`。旧 JNI 方法保留原 ABI 并返回迁移错误；调用方须重新生成 Java Protobuf 类型并更新 native 声明。
+- 投票验证要求候选人、选票、证明完整对应且不重复，区分普通投票与名单外投票接口；计票验证拒绝多余、重复的解密分片，结果验证覆盖名单外候选人的身份及总票数。
+- `VoteStorage.accepted_ballot_id` 保存协调者已接收的权重凭证标识，拒绝同一凭证重复计入（包括重新生成选票后再次提交）。接入方必须先验证完整请求，再原子持久化包含此字段的汇总状态。旧版汇总缺少此记录，会被拒绝继续累加；应从已验证的原始选票重建汇总。
+- 解密结果超出配置搜索范围时返回错误，支持总权重为零，拒绝名单外票数转换为 `uint32` 时溢出。
+
+升级已有投票时，须更换协调者签名密钥并重新签发凭证：旧版本已经签出的异常权重凭证无法仅凭签名与正常凭证区分。每个计票者的解密证明仍须先根据其可信公钥分片验证，再汇总并验证最终结果。
+
 ## v1.6.0
 (2022-08-29)
 

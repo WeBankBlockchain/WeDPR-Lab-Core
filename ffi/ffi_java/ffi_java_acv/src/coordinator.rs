@@ -79,15 +79,43 @@ pub extern "system" fn Java_com_webank_wedpr_acv_NativeInterface_makePollParamet
 }
 
 /// Java interface for 'com.webank.wedpr.acv.NativeInterface->certifyVoter'.
+/// Legacy ABI retained to reject registrations without trusted poll parameters.
 #[no_mangle]
 pub extern "system" fn Java_com_webank_wedpr_acv_NativeInterface_certifyVoter(
+    _env: JNIEnv,
+    _class: JClass,
+    _secret_key_data: jbyteArray,
+    _registration_request: JString,
+    _voter_weight: jint,
+) -> jobject {
+    let result_jobject = get_result_jobject(&_env);
+    java_set_error_field_and_extract_jobject(
+        &_env,
+        &result_jobject,
+        "Use certifyVoterWithPollParameters with trusted poll parameters and \
+         a registration equality proof",
+    )
+}
+
+/// Java interface for
+/// 'com.webank.wedpr.acv.NativeInterface->certifyVoterWithPollParameters'.
+#[no_mangle]
+pub extern "system" fn Java_com_webank_wedpr_acv_NativeInterface_certifyVoterWithPollParameters(
     _env: JNIEnv,
     _class: JClass,
     secret_key_data: jbyteArray,
     registration_request: JString,
     voter_weight: jint,
+    poll_parameters: JString,
 ) -> jobject {
     let result_jobject = get_result_jobject(&_env);
+    if voter_weight < 0 {
+        return java_set_error_field_and_extract_jobject(
+            &_env,
+            &result_jobject,
+            "voter_weight must be nonnegative",
+        );
+    }
     let certify_result =
         match wedpr_s_anonymous_ciphertext_voting::coordinator::certify_voter(
             &java_safe_jbytes_to_bytes!(_env, result_jobject, secret_key_data),
@@ -98,6 +126,12 @@ pub extern "system" fn Java_com_webank_wedpr_acv_NativeInterface_certifyVoter(
                 RegistrationRequest
             ),
             voter_weight as u32,
+            &java_safe_jstring_to_pb!(
+                _env,
+                result_jobject,
+                poll_parameters,
+                PollParametersStorage
+            ),
         ) {
             Ok(v) => v,
             Err(e) => {
@@ -119,15 +153,44 @@ pub extern "system" fn Java_com_webank_wedpr_acv_NativeInterface_certifyVoter(
 
 /// Java interface for
 /// 'com.webank.wedpr.acv.NativeInterface->certifyUnboundedVoter'.
+/// Legacy ABI retained to reject registrations without trusted poll parameters.
 #[no_mangle]
 pub extern "system" fn Java_com_webank_wedpr_acv_NativeInterface_certifyUnboundedVoter(
+    _env: JNIEnv,
+    _class: JClass,
+    _secret_key_data: jbyteArray,
+    _registration_request: JString,
+    _voter_weight: jint,
+) -> jobject {
+    let result_jobject = get_result_jobject(&_env);
+    java_set_error_field_and_extract_jobject(
+        &_env,
+        &result_jobject,
+        "Use certifyUnboundedVoterWithPollParameters with trusted poll \
+         parameters and registration equality proofs",
+    )
+}
+
+/// Java interface for
+/// 'com.webank.wedpr.acv.
+/// NativeInterface->certifyUnboundedVoterWithPollParameters'.
+#[no_mangle]
+pub extern "system" fn Java_com_webank_wedpr_acv_NativeInterface_certifyUnboundedVoterWithPollParameters(
     _env: JNIEnv,
     _class: JClass,
     secret_key_data: jbyteArray,
     registration_request: JString,
     voter_weight: jint,
+    poll_parameters: JString,
 ) -> jobject {
     let result_jobject = get_result_jobject(&_env);
+    if voter_weight < 0 {
+        return java_set_error_field_and_extract_jobject(
+            &_env,
+            &result_jobject,
+            "voter_weight must be nonnegative",
+        );
+    }
     let certify_result =
         match wedpr_s_anonymous_ciphertext_voting::coordinator::certify_unbounded_voter(
             &java_safe_jbytes_to_bytes!(_env, result_jobject, secret_key_data),
@@ -138,6 +201,12 @@ pub extern "system" fn Java_com_webank_wedpr_acv_NativeInterface_certifyUnbounde
                 RegistrationRequest
             ),
             voter_weight as u32,
+            &java_safe_jstring_to_pb!(
+                _env,
+                result_jobject,
+                poll_parameters,
+                PollParametersStorage
+            ),
         ) {
             Ok(v) => v,
             Err(e) => {

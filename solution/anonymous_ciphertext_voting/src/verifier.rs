@@ -3,6 +3,7 @@
 //! Library for a poll verifier.
 
 use curve25519_dalek::{ristretto::RistrettoPoint, scalar::Scalar};
+use std::collections::{BTreeMap, BTreeSet};
 use wedpr_l_crypto_zkp_discrete_logarithm_proof::{
     verify_either_equality_relationship_proof,
     verify_equality_relationship_proof, verify_format_proof,
@@ -29,6 +30,7 @@ use crate::{
     utils::{
         align_commitment_list_if_needed, get_ballot_by_candidate,
         get_counting_part_by_candidate, get_int64_by_candidate,
+        validate_vote_candidates,
     },
 };
 /// Verifies whether ciphertext ballots from a certified voter are valid.
@@ -37,6 +39,7 @@ pub fn verify_vote_request(
     vote_request: &VoteRequest,
     public_key: &[u8],
 ) -> Result<bool, WedprError> {
+    validate_vote_request_structure(poll_parameters, vote_request, false)?;
     let poll_point = bytes_to_point(poll_parameters.get_poll_point())?;
     let signature = vote_request.get_vote().get_signature();
 
@@ -101,6 +104,67 @@ pub fn verify_vote_request(
     Ok(true)
 }
 
+fn validate_vote_request_structure(
+    poll_parameters: &PollParametersStorage,
+    vote_request: &VoteRequest,
+    allow_unlisted: bool,
+) -> Result<(), WedprError> {
+    let vote = vote_request.get_vote();
+    if !vote.get_accepted_ballot_id().is_empty() {
+        return Err(WedprError::VerificationError);
+    }
+    validate_vote_candidates(poll_parameters, vote)?;
+    let ballot_candidates: BTreeSet<_> = vote
+        .get_voted_ballot()
+        .iter()
+        .map(|pair| pair.get_candidate())
+        .collect();
+    let proof_candidates: BTreeSet<_> = vote_request
+        .get_ballot_proof()
+        .iter()
+        .map(|pair| pair.get_key())
+        .collect();
+    if proof_candidates.len() != vote_request.get_ballot_proof().len()
+        || proof_candidates != ballot_candidates
+    {
+        return Err(WedprError::VerificationError);
+    }
+    let ballots = vote.get_voted_ballot_unlisted();
+    let proofs = vote_request.get_unlisted_ballot_proof();
+    if !allow_unlisted && (!ballots.is_empty() || !proofs.is_empty()) {
+        return Err(WedprError::VerificationError);
+    }
+    let ballot_keys: BTreeSet<_> = ballots
+        .iter()
+        .map(|pair| {
+            (
+                pair.get_key().get_ciphertext1(),
+                pair.get_key().get_ciphertext2(),
+            )
+        })
+        .collect();
+    let proof_keys: BTreeSet<_> = proofs
+        .iter()
+        .map(|pair| {
+            (
+                pair.get_key().get_ciphertext1(),
+                pair.get_key().get_ciphertext2(),
+            )
+        })
+        .collect();
+    if ballot_keys.len() != ballots.len()
+        || proof_keys.len() != proofs.len()
+        || ballot_keys != proof_keys
+    {
+        return Err(WedprError::VerificationError);
+    }
+    for ballot in ballots {
+        bytes_to_point(ballot.get_key().get_ciphertext1())?;
+        bytes_to_point(ballot.get_key().get_ciphertext2())?;
+    }
+    Ok(())
+}
+
 /// Verifies whether a partially decrypted result from a counter is valid.
 pub fn verify_count_request(
     poll_parameters: &PollParametersStorage,
@@ -108,6 +172,15 @@ pub fn verify_count_request(
     counter_share: &RistrettoPoint,
     partially_decrypted_result: &DecryptedResultPartStorage,
 ) -> Result<bool, WedprError> {
+    validate_vote_candidates(poll_parameters, encrypted_vote_sum)?;
+    if !has_expected_counting_parts(poll_parameters, partially_decrypted_result)
+        || !partially_decrypted_result
+            .get_unlisted_candidate_part()
+            .is_empty()
+        || !encrypted_vote_sum.get_voted_ballot_unlisted().is_empty()
+    {
+        return Ok(false);
+    }
     // Verify the total votes.
     let blank_c2_sum = bytes_to_point(
         &encrypted_vote_sum.get_blank_ballot().get_ciphertext2(),
@@ -160,12 +233,37 @@ pub fn verify_count_request(
 }
 
 /// Verifies whether the final vote result is valid.
+/// Each counter's partial decryption must first be checked against its trusted
+/// public share before aggregating it. This checks both listed and unlisted
+/// totals.
 pub fn verify_vote_result(
     poll_parameters: &PollParametersStorage,
     vote_sum: &VoteStorage,
     aggregated_decrypted_result: &DecryptedResultPartStorage,
     vote_result: &VoteResultStorage,
 ) -> Result<bool, WedprError> {
+    validate_vote_candidates(poll_parameters, vote_sum)?;
+    let mut expected_keys: BTreeSet<_> = poll_parameters
+        .get_candidates()
+        .get_candidate()
+        .iter()
+        .map(String::as_str)
+        .collect();
+    expected_keys.insert(POLL_RESULT_KEY_TOTAL_BALLOTS);
+    let actual_keys: BTreeSet<_> = vote_result
+        .get_result()
+        .iter()
+        .map(|pair| pair.get_key())
+        .collect();
+    if actual_keys.len() != vote_result.get_result().len()
+        || actual_keys != expected_keys
+        || vote_result
+            .get_result()
+            .iter()
+            .any(|pair| pair.get_value() < 0)
+    {
+        return Ok(false);
+    }
     let blank_c1_sum =
         bytes_to_point(&vote_sum.get_blank_ballot().get_ciphertext1())?;
     let blank_c2_r_sum = bytes_to_point(
@@ -202,7 +300,75 @@ pub fn verify_vote_result(
             return Ok(false);
         }
     }
-    Ok(true)
+    verify_unlisted_vote_result(
+        vote_sum,
+        aggregated_decrypted_result,
+        vote_result,
+    )
+}
+
+fn verify_unlisted_vote_result(
+    vote_sum: &VoteStorage,
+    decrypted: &DecryptedResultPartStorage,
+    result: &VoteResultStorage,
+) -> Result<bool, WedprError> {
+    let mut parts = BTreeMap::new();
+    for part in decrypted.get_unlisted_candidate_part() {
+        let cipher = part.get_candidate_cipher();
+        let key = (cipher.get_ciphertext1(), cipher.get_ciphertext2());
+        if parts.insert(key, part).is_some() {
+            return Ok(false);
+        }
+    }
+    if parts.len() != vote_sum.get_voted_ballot_unlisted().len() {
+        return Ok(false);
+    }
+    let mut totals = BTreeMap::new();
+    for ballot in vote_sum.get_voted_ballot_unlisted() {
+        let cipher = ballot.get_key();
+        let key = (cipher.get_ciphertext1(), cipher.get_ciphertext2());
+        let part = match parts.remove(&key) {
+            Some(part) => part,
+            None => return Ok(false),
+        };
+        let candidate_id = part.get_candidate();
+        if candidate_id < 0 || candidate_id > u32::max_value() as i64 {
+            return Ok(false);
+        }
+        let candidate_point = bytes_to_point(cipher.get_ciphertext1())?
+            - bytes_to_point(
+                part.get_decrypted_unlisted_candidate().get_blinding_c2(),
+            )?;
+        if candidate_point != *BASEPOINT_G1 * Scalar::from(candidate_id as u64)
+        {
+            return Ok(false);
+        }
+        let shares = part.get_decrypted_unlisted_candidate_ballot();
+        if shares.is_empty() {
+            return Ok(false);
+        }
+        let mut plaintext =
+            bytes_to_point(ballot.get_ballot().get_ciphertext1())?;
+        for share in shares {
+            plaintext -= bytes_to_point(share.get_blinding_c2())?;
+        }
+        *totals
+            .entry(candidate_id as u32)
+            .or_insert_with(RistrettoPoint::default) += plaintext;
+    }
+    if totals.len() != result.get_unlisted_result().len() {
+        return Ok(false);
+    }
+    for entry in result.get_unlisted_result() {
+        match totals.remove(&entry.get_candidate_id()) {
+            Some(point)
+                if point
+                    == *BASEPOINT_G1
+                        * Scalar::from(entry.get_value() as u64) => {},
+            _ => return Ok(false),
+        }
+    }
+    Ok(totals.is_empty())
 }
 
 fn verify_count_request_for_unlisted_candidate(
@@ -235,7 +401,7 @@ fn verify_count_request_for_unlisted_candidate(
         candidate_aggregated_unlisted_decrypted_result
             .get_decrypted_unlisted_candidate_ballot();
     // without candidate ballot
-    if decrypted_unlisted_candidate_ballot_list.is_empty() {
+    if decrypted_unlisted_candidate_ballot_list.len() != 1 {
         return Ok(false);
     }
     // verify equality proof for the candidate ballot
@@ -292,6 +458,39 @@ pub fn verify_count_request_unlisted(
     vote_sum: &VoteStorage,
     aggregated_decrypted_result: &DecryptedResultPartStorage,
 ) -> Result<bool, WedprError> {
+    validate_vote_candidates(poll_parameters, vote_sum)?;
+    if !has_expected_counting_parts(
+        poll_parameters,
+        aggregated_decrypted_result,
+    ) {
+        return Ok(false);
+    }
+    let ballot_keys: BTreeSet<_> = vote_sum
+        .get_voted_ballot_unlisted()
+        .iter()
+        .map(|ballot| {
+            (
+                ballot.get_key().get_ciphertext1(),
+                ballot.get_key().get_ciphertext2(),
+            )
+        })
+        .collect();
+    let parts = aggregated_decrypted_result.get_unlisted_candidate_part();
+    let part_keys: BTreeSet<_> = parts
+        .iter()
+        .map(|part| {
+            (
+                part.get_candidate_cipher().get_ciphertext1(),
+                part.get_candidate_cipher().get_ciphertext2(),
+            )
+        })
+        .collect();
+    if ballot_keys.len() != vote_sum.get_voted_ballot_unlisted().len()
+        || part_keys.len() != parts.len()
+        || ballot_keys != part_keys
+    {
+        return Ok(false);
+    }
     // verify equality for blank_ballot
     let blank_blinding_c2_sum =
         bytes_to_point(vote_sum.get_blank_ballot().get_ciphertext2())?;
@@ -357,6 +556,24 @@ pub fn verify_count_request_unlisted(
         }
     }
     Ok(true)
+}
+
+fn has_expected_counting_parts(
+    poll_parameters: &PollParametersStorage,
+    decrypted: &DecryptedResultPartStorage,
+) -> bool {
+    let expected: BTreeSet<_> = poll_parameters
+        .get_candidates()
+        .get_candidate()
+        .iter()
+        .map(String::as_str)
+        .collect();
+    let actual: BTreeSet<_> = decrypted
+        .get_candidate_part()
+        .iter()
+        .map(|part| part.get_key())
+        .collect();
+    actual.len() == decrypted.get_candidate_part().len() && actual == expected
 }
 
 fn verify_ballot_proof(
@@ -469,6 +686,19 @@ pub fn verify_unbounded_vote_request(
     vote_request: &VoteRequest,
     public_key: &[u8],
 ) -> Result<bool, WedprError> {
+    validate_vote_request_structure(poll_parameters, vote_request, false)?;
+    verify_unbounded_vote_request_proofs(
+        poll_parameters,
+        vote_request,
+        public_key,
+    )
+}
+
+fn verify_unbounded_vote_request_proofs(
+    poll_parameters: &PollParametersStorage,
+    vote_request: &VoteRequest,
+    public_key: &[u8],
+) -> Result<bool, WedprError> {
     // check signature for the ballot with public key
     let signature = vote_request.get_vote().get_signature();
     let weight_ballot = vote_request.get_vote().get_blank_ballot();
@@ -499,8 +729,9 @@ pub fn verify_unbounded_vote_request_unlisted(
     vote_request: &VoteRequest,
     public_key: &[u8],
 ) -> Result<bool, WedprError> {
+    validate_vote_request_structure(poll_parameters, vote_request, true)?;
     // verify the listed unbounded vote request
-    let verify_result = verify_unbounded_vote_request(
+    let verify_result = verify_unbounded_vote_request_proofs(
         &poll_parameters,
         &vote_request,
         public_key,

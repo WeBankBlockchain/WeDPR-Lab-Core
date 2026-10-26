@@ -16,6 +16,9 @@ pub mod verifier;
 pub mod voter;
 
 #[cfg(test)]
+mod security_tests;
+
+#[cfg(test)]
 mod tests {
     use super::*;
     use crate::{config::POLL_RESULT_KEY_TOTAL_BALLOTS, coordinator};
@@ -80,6 +83,7 @@ mod tests {
                 &secret_key,
                 &registration_request,
                 voter_weight,
+                &poll_parameters,
             )
             .unwrap();
             // Verify the blank ballot contained in registration_response.
@@ -278,6 +282,7 @@ mod tests {
             &coordinator_key_pair.1,
             &registration_request1,
             blank_ballot_count[0],
+            &poll_parameters,
         )
         .unwrap();
 
@@ -285,6 +290,7 @@ mod tests {
             &coordinator_key_pair.1,
             &registration_request2,
             blank_ballot_count[1],
+            &poll_parameters,
         )
         .unwrap();
 
@@ -292,6 +298,7 @@ mod tests {
             &coordinator_key_pair.1,
             &registration_request3,
             blank_ballot_count[2],
+            &poll_parameters,
         )
         .unwrap();
 
@@ -609,6 +616,7 @@ mod tests {
             &coordinator_key_pair.1,
             &registration_request1,
             blank_ballot_count[0],
+            &poll_parameters,
         )
         .unwrap();
 
@@ -616,6 +624,7 @@ mod tests {
             &coordinator_key_pair.1,
             &registration_request2,
             blank_ballot_count[1],
+            &poll_parameters,
         )
         .unwrap();
 
@@ -623,6 +632,7 @@ mod tests {
             &coordinator_key_pair.1,
             &registration_request3,
             blank_ballot_count[2],
+            &poll_parameters,
         )
         .unwrap();
         // verify blank ballot
