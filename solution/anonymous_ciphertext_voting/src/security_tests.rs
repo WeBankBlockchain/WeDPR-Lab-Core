@@ -23,6 +23,160 @@ struct Fixture {
 }
 
 #[test]
+fn choice_length_mismatch_is_an_error_instead_of_a_panic_or_truncation() {
+    let mut candidates = CandidateList::new();
+    candidates
+        .mut_candidate()
+        .extend(["A".to_owned(), "B".to_owned()]);
+    for values in [vec![], vec![1], vec![1, 2, 3]] {
+        assert!(voter::make_vote_choices(&values, &candidates).is_err());
+    }
+    assert_eq!(
+        voter::make_vote_choices(&vec![1, 2], &candidates)
+            .unwrap()
+            .get_choice()
+            .len(),
+        2
+    );
+}
+
+#[test]
+fn listed_only_apis_do_not_silently_drop_unlisted_votes() {
+    let f = Fixture::new();
+    let request = f.unlisted_vote();
+    let mut empty = VoteStorage::new();
+    assert!(coordinator::aggregate_vote_sum_response(
+        &f.poll,
+        request.get_vote(),
+        &mut empty
+    )
+    .is_err());
+    assert_eq!(empty, VoteStorage::new());
+    let (sum, decrypted, _) = f.tally(&request, true);
+    assert!(counter::count("counter", &f.counter, &sum).is_err());
+    assert!(
+        coordinator::finalize_vote_result(&f.poll, &sum, &decrypted, 20)
+            .is_err()
+    );
+}
+
+#[test]
+fn colliding_unlisted_ciphertexts_cannot_poison_the_poll() {
+    use wedpr_l_crypto_zkp_discrete_logarithm_proof::prove_format_proof;
+    use wedpr_l_crypto_zkp_range_proof::prove_value_range_in_batch;
+    use wedpr_l_crypto_zkp_utils::{bytes_to_scalar, Serialize, BASEPOINT_G2};
+    let f = Fixture::new();
+    let mut choices = f.choices(vec![10, 0]);
+    let mut choice = UnlistedVoteChoice::new();
+    choice.set_candidate_id(7);
+    choice.set_value(10);
+    choices.mut_unlisted_choice().push(choice);
+    let secret = voter::make_voter_secret();
+    let zero = voter::make_voter_secret();
+    let registration =
+        voter::make_unbounded_registration_request(&zero, &secret, &f.poll)
+            .unwrap();
+    let response = coordinator::certify_unbounded_voter(
+        &f.signing_key,
+        &registration,
+        10,
+        &f.poll,
+    )
+    .unwrap();
+    let retry = voter::vote_unbounded_unlisted(
+        &secret, &zero, &choices, &response, &f.poll,
+    )
+    .unwrap();
+    let mut first = f.unlisted_vote();
+    let mut second = retry.clone();
+    // Encryption randomness is a witness, not a promise of uniqueness. Both
+    // voters can legitimately know the same blinding and still prove validity.
+    let blinding = Scalar::from(1u64);
+    let poll_point = bytes_to_point(f.poll.get_poll_point()).unwrap();
+    let mut cipher = CipherPoints::new();
+    cipher.set_ciphertext1(point_to_bytes(
+        &(Scalar::from(7u64) * *BASEPOINT_G1 + blinding * poll_point),
+    ));
+    cipher.set_ciphertext2(point_to_bytes(&(blinding * *BASEPOINT_G2)));
+    for (request, voter_secret) in
+        [(&mut first, &f.secret), (&mut second, &secret)]
+    {
+        request.mut_vote().mut_voted_ballot_unlisted()[0]
+            .set_key(cipher.clone());
+        request.mut_unlisted_ballot_proof()[0].set_key(cipher.clone());
+        request.mut_unlisted_ballot_proof()[0].set_candidate_format_proof(
+            prove_format_proof(
+                7,
+                &blinding,
+                &BASEPOINT_G1,
+                &BASEPOINT_G2,
+                &poll_point,
+            )
+            .serialize(),
+        );
+        let (proof, _) = prove_value_range_in_batch(
+            &[10, 7],
+            &[
+                bytes_to_scalar(voter_secret.get_voter_secret()).unwrap(),
+                blinding,
+            ],
+            &poll_point,
+        )
+        .unwrap();
+        request.set_unlisted_candidate_range_proof(proof);
+        assert!(verifier::verify_unbounded_vote_request_unlisted(
+            &f.poll,
+            request,
+            &f.public_key
+        )
+        .unwrap());
+    }
+    let mut sum = VoteStorage::new();
+    coordinator::aggregate_vote_sum_response_unlisted(
+        &f.poll,
+        first.get_vote(),
+        &mut sum,
+    )
+    .unwrap();
+    let original = sum.clone();
+    assert!(coordinator::aggregate_vote_sum_response_unlisted(
+        &f.poll,
+        second.get_vote(),
+        &mut sum
+    )
+    .is_err());
+    assert_eq!(sum, original);
+    coordinator::aggregate_vote_sum_response_unlisted(
+        &f.poll,
+        retry.get_vote(),
+        &mut sum,
+    )
+    .unwrap();
+    let part = counter::count_unlisted("counter", &f.counter, &sum).unwrap();
+    let mut decrypted = DecryptedResultPartStorage::new();
+    coordinator::aggregate_decrypted_part_sum_unlisted(
+        &f.poll,
+        &part,
+        &mut decrypted,
+        &sum,
+    )
+    .unwrap();
+    let result = coordinator::finalize_vote_result_unlisted(
+        &f.poll,
+        &sum,
+        &mut decrypted,
+        20,
+        10,
+    )
+    .unwrap();
+    assert_eq!(result.get_unlisted_result()[0].get_value(), 20);
+    assert!(
+        verifier::verify_vote_result(&f.poll, &sum, &decrypted, &result)
+            .unwrap()
+    );
+}
+
+#[test]
 fn final_result_cannot_be_forged_by_replacing_aggregate_decryption() {
     let f = Fixture::new();
     let (sum, mut decrypted, mut result) = f.tally(&f.bounded_vote(), false);
@@ -384,7 +538,7 @@ impl Fixture {
     }
 
     fn choices(&self, values: Vec<u32>) -> VoteChoices {
-        voter::make_vote_choices(&values, self.poll.get_candidates())
+        voter::make_vote_choices(&values, self.poll.get_candidates()).unwrap()
     }
 
     fn bounded_vote(&self) -> VoteRequest {

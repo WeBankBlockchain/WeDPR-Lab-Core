@@ -80,19 +80,26 @@ fn play_scd_prove_greater() {
     let threshold = utils::wait_for_number_en();
     let mut rule_set = make_greater_predicate_rule(threshold);
 
+    let verification_nonce = verifier::get_verification_nonce().unwrap();
     let proof_or_err = generate_predicate_proof(
         &mut certificate_attribute_dict,
         &certificate_template,
         template_private_key,
         value,
         &mut rule_set,
+        &verification_nonce,
     );
 
     let mut is_rule_satisfied = true;
     match proof_or_err {
         Ok(v) => {
             println!("✓ Proof generated");
-            if verifier_verify_rule_set(&mut rule_set, &v) {
+            if verifier_verify_rule_set(
+                &mut rule_set,
+                &v,
+                &certificate_template,
+                &verification_nonce,
+            ) {
                 println!(
                     "✓ Proof verification succeeded due to your inputs {} > {}",
                     value, threshold,
@@ -145,19 +152,26 @@ fn play_scd_prove_equal() {
     let threshold = utils::wait_for_number_en();
     let mut rule_set = make_equal_predicate_rule(threshold);
 
+    let verification_nonce = verifier::get_verification_nonce().unwrap();
     let proof_or_err = generate_predicate_proof(
         &mut certificate_attribute_dict,
         &certificate_template,
         template_private_key,
         value,
         &mut rule_set,
+        &verification_nonce,
     );
 
     let mut is_rule_satisfied = true;
     match proof_or_err {
         Ok(v) => {
             println!("✓ Proof generated");
-            if verifier_verify_rule_set(&mut rule_set, &v) {
+            if verifier_verify_rule_set(
+                &mut rule_set,
+                &v,
+                &certificate_template,
+                &verification_nonce,
+            ) {
                 println!(
                     "✓ Proof verification succeeded due to your inputs {} == \
                      {}",
@@ -211,19 +225,26 @@ fn play_scd_prove_greater_or_equal() {
     let threshold = utils::wait_for_number_en();
     let mut rule_set = make_greater_or_equal_predicate_rule(threshold);
 
+    let verification_nonce = verifier::get_verification_nonce().unwrap();
     let proof_or_err = generate_predicate_proof(
         &mut certificate_attribute_dict,
         &certificate_template,
         template_private_key,
         value,
         &mut rule_set,
+        &verification_nonce,
     );
 
     let mut is_rule_satisfied = true;
     match proof_or_err {
         Ok(v) => {
             println!("✓ Proof generated");
-            if verifier_verify_rule_set(&mut rule_set, &v) {
+            if verifier_verify_rule_set(
+                &mut rule_set,
+                &v,
+                &certificate_template,
+                &verification_nonce,
+            ) {
                 println!(
                     "✓ Proof verification succeeded due to your inputs {} >= \
                      {}",
@@ -297,6 +318,7 @@ fn generate_predicate_proof(
     template_private_key: TemplatePrivateKey,
     value: u64,
     rule_set: &mut VerificationRuleSet,
+    verification_nonce_str: &str,
 ) -> Result<VerifyRequest, WedprError> {
     user_fill_certificate_attribute(certificate_attribute_dict, value);
     let (
@@ -334,6 +356,7 @@ fn generate_predicate_proof(
         &certificate_template,
         &user_private_key_str,
         rule_set,
+        verification_nonce_str,
     );
     request_result
 }
@@ -365,10 +388,8 @@ fn user_prove_rule_set(
     certificate_template: &CertificateTemplate,
     user_private_key_str: &str,
     rule_set: &mut VerificationRuleSet,
+    verification_nonce_str: &str,
 ) -> Result<VerifyRequest, WedprError> {
-    // In most cases, this nonce should be provided by the verifier to prevent
-    // replaying attacks.
-    let verification_nonce_str = verifier::get_verification_nonce().unwrap();
     user::prove_selective_disclosure(
         rule_set,
         new_certificate_signature,
@@ -382,6 +403,14 @@ fn user_prove_rule_set(
 fn verifier_verify_rule_set(
     rule_set: &mut VerificationRuleSet,
     request: &VerifyRequest,
+    trusted_template: &CertificateTemplate,
+    expected_nonce: &str,
 ) -> bool {
-    verifier::verify_selective_disclosure(&rule_set, &request).unwrap()
+    verifier::verify_selective_disclosure_with_context(
+        rule_set,
+        request,
+        trusted_template,
+        expected_nonce,
+    )
+    .unwrap()
 }

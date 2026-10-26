@@ -10,5 +10,8 @@ pub mod user;
 pub mod utils;
 pub mod verifier;
 
+#[cfg(test)]
+mod security_tests;
+
 // TODO: Add E2E tests for all SCD functions.
 // TODO: Add benches for all SCD functions.

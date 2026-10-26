@@ -12,6 +12,7 @@ crate-type = [ "cdylib", "staticlib" ]
 
 [dependencies]
 libc = "0.2.60"
+wedpr_l_utils = "1.1.0"
 protobuf = "2.22.1"
 wedpr_ffi_common = "1.0.0"
 wedpr_ffi_macros = "1.0.0"

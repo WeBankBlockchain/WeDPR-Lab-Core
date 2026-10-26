@@ -112,7 +112,8 @@ mod tests {
             let vote_choices = voter::make_vote_choices(
                 &voter_choice_list[index],
                 &candidate_list,
-            );
+            )
+            .unwrap();
             let vote_request = voter::vote(
                 &voter_secret_list[index],
                 &vote_choices,

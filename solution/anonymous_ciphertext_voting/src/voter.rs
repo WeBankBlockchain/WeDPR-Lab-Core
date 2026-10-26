@@ -117,7 +117,10 @@ pub fn verify_blank_ballot(
 pub fn make_vote_choices(
     choice_list: &Vec<u32>,
     candidate_list: &CandidateList,
-) -> VoteChoices {
+) -> Result<VoteChoices, WedprError> {
+    if choice_list.len() != candidate_list.get_candidate().len() {
+        return Err(WedprError::ArgumentError);
+    }
     let mut choices = VoteChoices::new();
     for i in 0..candidate_list.get_candidate().len() {
         let mut pair = VoteChoice::new();
@@ -125,7 +128,7 @@ pub fn make_vote_choices(
         pair.set_value(choice_list[i]);
         choices.mut_choice().push(pair);
     }
-    choices
+    Ok(choices)
 }
 
 /// Votes the ciphertext ballots and generates associated ZKP proofs.

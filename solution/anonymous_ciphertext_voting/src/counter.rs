@@ -61,6 +61,17 @@ pub fn count(
     counter_secret: &CounterSecret,
     encrypted_vote_sum: &VoteStorage,
 ) -> Result<DecryptedResultPartStorage, WedprError> {
+    if !encrypted_vote_sum.get_voted_ballot_unlisted().is_empty() {
+        return Err(WedprError::ArgumentError);
+    }
+    count_listed(counter_id, counter_secret, encrypted_vote_sum)
+}
+
+fn count_listed(
+    counter_id: &str,
+    counter_secret: &CounterSecret,
+    encrypted_vote_sum: &VoteStorage,
+) -> Result<DecryptedResultPartStorage, WedprError> {
     let secret_share =
         bytes_to_scalar(&counter_secret.get_poll_secret_share())?;
     let mut partially_decrypted_result = DecryptedResultPartStorage::new();
@@ -115,7 +126,7 @@ pub fn count_unlisted(
     encrypted_vote_sum: &VoteStorage,
 ) -> Result<DecryptedResultPartStorage, WedprError> {
     let mut partially_decrypted_result =
-        count(counter_id, counter_secret, encrypted_vote_sum)?;
+        count_listed(counter_id, counter_secret, encrypted_vote_sum)?;
     // count unlisted ballot
     let secret_share =
         bytes_to_scalar(&counter_secret.get_poll_secret_share())?;
