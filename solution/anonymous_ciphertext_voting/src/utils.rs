@@ -6,14 +6,50 @@ use curve25519_dalek::{ristretto::RistrettoPoint, scalar::Scalar};
 use std::collections::BTreeSet;
 use wedpr_l_utils::error::WedprError;
 use wedpr_s_protos::generated::acv::{
-    Ballot, CountingPart, DecryptedResultPartStorage, PollParametersStorage,
-    VoteResultStorage, VoteStorage,
+    Ballot, CounterDecryptionRecord, CountingPart, DecryptedResultPartStorage,
+    PollParametersStorage, VoteResultStorage, VoteStorage,
 };
+
+pub fn counter_record(
+    part: &DecryptedResultPartStorage,
+) -> CounterDecryptionRecord {
+    let mut record = CounterDecryptionRecord::new();
+    record.set_blank_part(part.get_blank_part().clone());
+    record.set_candidate_part(part.get_candidate_part().to_vec().into());
+    record.set_unlisted_candidate_part(
+        part.get_unlisted_candidate_part().to_vec().into(),
+    );
+    record
+}
+
+pub fn counter_part(
+    record: &CounterDecryptionRecord,
+) -> DecryptedResultPartStorage {
+    let mut part = DecryptedResultPartStorage::new();
+    part.set_blank_part(record.get_blank_part().clone());
+    part.set_candidate_part(record.get_candidate_part().to_vec().into());
+    part.set_unlisted_candidate_part(
+        record.get_unlisted_candidate_part().to_vec().into(),
+    );
+    part
+}
+
+pub fn counter_binding_scalar(counter_id: &str) -> Scalar {
+    let mut context = b"WeDPR/ACV/counter-key/v2".to_vec();
+    context.extend_from_slice(&(counter_id.len() as u64).to_be_bytes());
+    context.extend_from_slice(counter_id.as_bytes());
+    wedpr_l_crypto_zkp_utils::hash_to_scalar(&context)
+}
 
 pub fn validate_vote_candidates(
     poll_parameters: &PollParametersStorage,
     vote: &VoteStorage,
 ) -> Result<(), WedprError> {
+    if poll_parameters.get_poll_id().len() != 32
+        || vote.get_poll_id() != poll_parameters.get_poll_id()
+    {
+        return Err(WedprError::VerificationError);
+    }
     let expected: BTreeSet<_> = poll_parameters
         .get_candidates()
         .get_candidate()

@@ -339,11 +339,35 @@ pub extern "system" fn Java_com_webank_wedpr_acv_NativeInterface_aggregateVoteSu
 pub extern "system" fn Java_com_webank_wedpr_acv_NativeInterface_aggregateDecryptedPartSum(
     _env: JNIEnv,
     _class: JClass,
+    _poll_parameters: JString,
+    _partially_decrypted_result: JString,
+    _aggregated_decrypted_result: JString,
+) -> jobject {
+    let result_jobject = get_result_jobject(&_env);
+    java_set_error_field_and_extract_jobject(
+        &_env,
+        &result_jobject,
+        "Use aggregateDecryptedPartSumWithVoteSum to verify counter \
+         contributions",
+    )
+}
+
+#[no_mangle]
+pub extern "system" fn Java_com_webank_wedpr_acv_NativeInterface_aggregateDecryptedPartSumWithVoteSum(
+    _env: JNIEnv,
+    _class: JClass,
     poll_parameters: JString,
     partially_decrypted_result: JString,
     aggregated_decrypted_result: JString,
+    encrypted_vote_sum: JString,
 ) -> jobject {
     let result_jobject = get_result_jobject(&_env);
+    let pb_vote_sum = java_safe_jstring_to_pb!(
+        _env,
+        result_jobject,
+        encrypted_vote_sum,
+        VoteStorage
+    );
     let pb_poll_parameters = java_safe_jstring_to_pb!(
         _env,
         result_jobject,
@@ -367,6 +391,7 @@ pub extern "system" fn Java_com_webank_wedpr_acv_NativeInterface_aggregateDecryp
             &pb_poll_parameters,
             &pb_partially_decrypted_result,
             &mut pb_aggregated_decrypted_result,
+            &pb_vote_sum,
         ) {
             Ok(v) => v,
             Err(e) => {
@@ -400,11 +425,35 @@ pub extern "system" fn Java_com_webank_wedpr_acv_NativeInterface_aggregateDecryp
 pub extern "system" fn Java_com_webank_wedpr_acv_NativeInterface_aggregateDecryptedPartSumUnlisted(
     _env: JNIEnv,
     _class: JClass,
+    _poll_parameters: JString,
+    _partially_decrypted_result: JString,
+    _aggregated_decrypted_result: JString,
+) -> jobject {
+    let result_jobject = get_result_jobject(&_env);
+    java_set_error_field_and_extract_jobject(
+        &_env,
+        &result_jobject,
+        "Use aggregateDecryptedPartSumUnlistedWithVoteSum to verify counter \
+         contributions",
+    )
+}
+
+#[no_mangle]
+pub extern "system" fn Java_com_webank_wedpr_acv_NativeInterface_aggregateDecryptedPartSumUnlistedWithVoteSum(
+    _env: JNIEnv,
+    _class: JClass,
     poll_parameters: JString,
     partially_decrypted_result: JString,
     aggregated_decrypted_result: JString,
+    encrypted_vote_sum: JString,
 ) -> jobject {
     let result_jobject = get_result_jobject(&_env);
+    let pb_vote_sum = java_safe_jstring_to_pb!(
+        _env,
+        result_jobject,
+        encrypted_vote_sum,
+        VoteStorage
+    );
     let pb_poll_parameters = java_safe_jstring_to_pb!(
         _env,
         result_jobject,
@@ -427,6 +476,7 @@ pub extern "system" fn Java_com_webank_wedpr_acv_NativeInterface_aggregateDecryp
             &pb_poll_parameters,
             &pb_partially_decrypted_result,
             &mut pb_aggregated_decrypted_result,
+            &pb_vote_sum,
         ) {
         Ok(v) => v,
         Err(e) => {

@@ -160,7 +160,8 @@ mod tests {
             assert!(coordinator::aggregate_decrypted_part_sum(
                 &poll_parameters,
                 &partially_decrypted_result,
-                &mut aggregated_decrypted_result
+                &mut aggregated_decrypted_result,
+                &encrypted_vote_sum,
             )
             .unwrap());
         }
@@ -447,6 +448,7 @@ mod tests {
                 &poll_parameters,
                 &decrypt_request1,
                 &mut vote_sum_total,
+                &encrypted_vote_sum,
             )
             .unwrap()
         );
@@ -472,6 +474,7 @@ mod tests {
                 &poll_parameters,
                 &decrypt_request2,
                 &mut vote_sum_total,
+                &encrypted_vote_sum,
             )
             .unwrap()
         );
@@ -497,6 +500,7 @@ mod tests {
                 &poll_parameters,
                 &decrypt_request3,
                 &mut vote_sum_total,
+                &encrypted_vote_sum,
             )
             .unwrap()
         );
@@ -821,6 +825,7 @@ mod tests {
                 &poll_parameters,
                 &decrypt_request1,
                 &mut vote_sum_total,
+                &encrypted_vote_sum,
             )
             .unwrap()
         );
@@ -859,6 +864,7 @@ mod tests {
                 &poll_parameters,
                 &decrypt_request2,
                 &mut vote_sum_total,
+                &encrypted_vote_sum,
             )
             .unwrap()
         );
@@ -898,6 +904,7 @@ mod tests {
                 &poll_parameters,
                 &decrypt_request3,
                 &mut vote_sum_total,
+                &encrypted_vote_sum,
             )
             .unwrap()
         );

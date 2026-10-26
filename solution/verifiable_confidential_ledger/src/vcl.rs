@@ -308,6 +308,52 @@ mod tests {
     const BATCH_SIZE: usize = 10;
 
     #[test]
+    fn malformed_batches_fail_closed() {
+        let (c1, s1) = make_credit(10);
+        let (c2, s2) = make_credit(20);
+        let (c3, s3) = make_credit(31);
+        let proof = prove_sum_balance(&s1, &s2, &s3);
+        assert!(!verify_sum_balance(&c1, &c2, &c3, &proof).unwrap());
+        assert!(!verify_sum_balance_in_batch(
+            &vec![],
+            &vec![],
+            &vec![],
+            &vec![]
+        )
+        .unwrap());
+        assert!(!verify_product_balance_in_batch(
+            &vec![],
+            &vec![],
+            &vec![],
+            &vec![]
+        )
+        .unwrap());
+        assert!(!verify_sum_balance_in_batch(
+            &vec![c1.clone()],
+            &vec![],
+            &vec![c3.clone()],
+            &vec![proof.clone()]
+        )
+        .unwrap());
+        assert!(!verify_product_balance_in_batch(
+            &vec![c1.clone()],
+            &vec![],
+            &vec![c3.clone()],
+            &vec![proof.clone()]
+        )
+        .unwrap());
+        for _ in 0..256 {
+            assert!(!verify_sum_balance_in_batch(
+                &vec![c1.clone()],
+                &vec![c2.clone()],
+                &vec![c3.clone()],
+                &vec![proof.clone()]
+            )
+            .unwrap());
+        }
+    }
+
+    #[test]
     fn test_sum_balance_proof() {
         let mut c1_credits: Vec<ConfidentialCredit> = vec![];
         let mut c2_credits: Vec<ConfidentialCredit> = vec![];

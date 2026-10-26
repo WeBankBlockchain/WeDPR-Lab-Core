@@ -5,7 +5,8 @@
 use curve25519_dalek::{ristretto::RistrettoPoint, scalar::Scalar};
 use wedpr_l_crypto_zkp_discrete_logarithm_proof::verify_equality_relationship_proof;
 use wedpr_l_crypto_zkp_utils::{
-    bytes_to_point, point_to_bytes, Deserialize, BASEPOINT_G1, BASEPOINT_G2,
+    bytes_to_point, get_random_scalar, point_to_bytes, scalar_to_bytes,
+    Deserialize, BASEPOINT_G1, BASEPOINT_G2,
 };
 use wedpr_l_utils::error::WedprError;
 
@@ -26,8 +27,9 @@ use wedpr_s_protos::{
 use crate::{
     config::POLL_RESULT_KEY_TOTAL_BALLOTS,
     utils::{
-        decode_vote_value, get_ballot_by_candidate,
-        get_counting_part_by_candidate, validate_vote_candidates,
+        counter_binding_scalar, counter_record, decode_vote_value,
+        get_ballot_by_candidate, get_counting_part_by_candidate,
+        validate_vote_candidates,
     },
 };
 
@@ -61,8 +63,27 @@ pub fn make_poll_parameters(
         return Err(WedprError::ArgumentError);
     }
     let mut poll_point = RistrettoPoint::default();
+    let mut seen_points = BTreeSet::new();
     for share in counter_parameters.get_counter_parameters_share() {
-        poll_point += bytes_to_point(share.get_poll_point_share())?;
+        let point = bytes_to_point(share.get_poll_point_share())?;
+        if share.get_counter_id().is_empty()
+            || point == RistrettoPoint::default()
+            || !seen_points.insert(point_to_bytes(&point))
+        {
+            return Err(WedprError::ArgumentError);
+        }
+        let proof = Deserialize::deserialize(share.get_knowledge_proof())?;
+        let binding = counter_binding_scalar(share.get_counter_id());
+        if !verify_equality_relationship_proof(
+            &point,
+            &(binding * point),
+            &proof,
+            &BASEPOINT_G2,
+            &(binding * *BASEPOINT_G2),
+        )? {
+            return Err(WedprError::VerificationError);
+        }
+        poll_point += point;
     }
     if poll_point == RistrettoPoint::default() {
         return Err(WedprError::ArgumentError);
@@ -71,6 +92,8 @@ pub fn make_poll_parameters(
     let mut storage = PollParametersStorage::default();
     storage.set_candidates(candidate_list.clone());
     storage.set_poll_point(point_to_bytes(&poll_point));
+    storage.set_poll_id(scalar_to_bytes(&get_random_scalar()));
+    storage.set_counters(counter_parameters.clone());
     Ok(storage)
 }
 
@@ -105,7 +128,11 @@ pub fn certify_voter(
     );
     let mut response = RegistrationResponse::new();
     // Sign the above data.
-    response.set_signature(generate_ballot_signature(secret_key, &ballot)?);
+    response.set_signature(generate_ballot_signature(
+        secret_key,
+        &ballot,
+        poll_parameters,
+    )?);
     response.set_ballot(ballot);
     response.set_voter_weight(voter_weight as u32);
     Ok(response)
@@ -164,6 +191,7 @@ pub fn certify_unbounded_voter(
         secret_key,
         &weight_ballot,
         &zero_ballot,
+        poll_parameters,
     )?);
     response.set_ballot(weight_ballot);
     response.set_zero_ballot(zero_ballot);
@@ -201,6 +229,13 @@ pub fn aggregate_vote_sum_response(
     vote_sum: &mut VoteStorage,
 ) -> Result<bool, WedprError> {
     validate_vote_candidates(poll_parameters, vote_part)?;
+    if poll_parameters.get_poll_id().len() != 32
+        || vote_part.get_poll_id() != poll_parameters.get_poll_id()
+        || (vote_sum.has_blank_ballot()
+            && vote_sum.get_poll_id() != poll_parameters.get_poll_id())
+    {
+        return Err(WedprError::VerificationError);
+    }
     if !vote_part.get_accepted_ballot_id().is_empty() {
         return Err(WedprError::ArgumentError);
     }
@@ -286,6 +321,7 @@ pub fn aggregate_vote_sum_response(
         .mut_blank_ballot()
         .set_ciphertext2(point_to_bytes(&blank_c2_sum));
     vote_sum.mut_accepted_ballot_id().push(ballot_id);
+    vote_sum.set_poll_id(poll_parameters.get_poll_id().to_vec());
     Ok(true)
 }
 
@@ -306,6 +342,73 @@ pub fn aggregate_vote_sum_response_unlisted(
 
 /// Aggregates a partially decrypted result from a counter.
 pub fn aggregate_decrypted_part_sum(
+    poll_parameters: &PollParametersStorage,
+    partially_decrypted_result: &DecryptedResultPartStorage,
+    aggregated_decrypted_result: &mut DecryptedResultPartStorage,
+    vote_sum: &VoteStorage,
+) -> Result<bool, WedprError> {
+    verify_new_counter_part(
+        poll_parameters,
+        vote_sum,
+        partially_decrypted_result,
+        aggregated_decrypted_result,
+        false,
+    )?;
+    let mut updated = aggregated_decrypted_result.clone();
+    aggregate_decrypted_part_sum_unchecked(
+        poll_parameters,
+        partially_decrypted_result,
+        &mut updated,
+    )?;
+    updated
+        .mut_verified_counter_part()
+        .push(counter_record(partially_decrypted_result));
+    *aggregated_decrypted_result = updated;
+    Ok(true)
+}
+
+fn verify_new_counter_part(
+    poll: &PollParametersStorage,
+    votes: &VoteStorage,
+    part: &DecryptedResultPartStorage,
+    aggregate: &DecryptedResultPartStorage,
+    unlisted: bool,
+) -> Result<(), WedprError> {
+    if aggregate.has_blank_part()
+        && aggregate.get_verified_counter_part().is_empty()
+    {
+        return Err(WedprError::VerificationError);
+    }
+    let id = part.get_blank_part().get_counter_id();
+    if aggregate
+        .get_verified_counter_part()
+        .iter()
+        .any(|record| record.get_blank_part().get_counter_id() == id)
+        || !part.get_verified_counter_part().is_empty()
+    {
+        return Err(WedprError::VerificationError);
+    }
+    let counter = poll
+        .get_counters()
+        .get_counter_parameters_share()
+        .iter()
+        .find(|counter| counter.get_counter_id() == id)
+        .ok_or(WedprError::VerificationError)?;
+    let point = bytes_to_point(counter.get_poll_point_share())?;
+    let valid = if unlisted {
+        crate::verifier::verify_count_request_unlisted(
+            poll, &point, votes, part,
+        )?
+    } else {
+        crate::verifier::verify_count_request(poll, votes, &point, part)?
+    };
+    if !valid {
+        return Err(WedprError::VerificationError);
+    }
+    Ok(())
+}
+
+fn aggregate_decrypted_part_sum_unchecked(
     poll_parameters: &PollParametersStorage,
     partially_decrypted_result: &DecryptedResultPartStorage,
     aggregated_decrypted_result: &mut DecryptedResultPartStorage,
@@ -411,8 +514,34 @@ pub fn aggregate_decrypted_part_sum_unlisted(
     poll_parameters: &PollParametersStorage,
     partially_decrypted_result: &DecryptedResultPartStorage,
     aggregated_decrypted_result: &mut DecryptedResultPartStorage,
+    vote_sum: &VoteStorage,
 ) -> Result<bool, WedprError> {
-    aggregate_decrypted_part_sum(
+    verify_new_counter_part(
+        poll_parameters,
+        vote_sum,
+        partially_decrypted_result,
+        aggregated_decrypted_result,
+        true,
+    )?;
+    let mut updated = aggregated_decrypted_result.clone();
+    aggregate_decrypted_part_sum_unlisted_unchecked(
+        poll_parameters,
+        partially_decrypted_result,
+        &mut updated,
+    )?;
+    updated
+        .mut_verified_counter_part()
+        .push(counter_record(partially_decrypted_result));
+    *aggregated_decrypted_result = updated;
+    Ok(true)
+}
+
+fn aggregate_decrypted_part_sum_unlisted_unchecked(
+    poll_parameters: &PollParametersStorage,
+    partially_decrypted_result: &DecryptedResultPartStorage,
+    aggregated_decrypted_result: &mut DecryptedResultPartStorage,
+) -> Result<bool, WedprError> {
+    aggregate_decrypted_part_sum_unchecked(
         poll_parameters,
         partially_decrypted_result,
         aggregated_decrypted_result,
@@ -455,6 +584,13 @@ pub fn finalize_vote_result(
     max_vote_limit: i64,
 ) -> Result<VoteResultStorage, WedprError> {
     validate_vote_candidates(poll_parameters, vote_sum)?;
+    if !crate::verifier::verify_aggregated_decryption(
+        poll_parameters,
+        vote_sum,
+        aggregated_decrypted_result,
+    )? {
+        return Err(WedprError::VerificationError);
+    }
     let mut result = VoteResultStorage::new();
     let blank_c1_sum =
         bytes_to_point(vote_sum.get_blank_ballot().get_ciphertext1())?;

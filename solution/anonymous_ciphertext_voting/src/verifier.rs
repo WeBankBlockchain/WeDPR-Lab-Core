@@ -28,7 +28,7 @@ use wedpr_s_protos::generated::acv::{
 use crate::{
     config::POLL_RESULT_KEY_TOTAL_BALLOTS,
     utils::{
-        align_commitment_list_if_needed, get_ballot_by_candidate,
+        align_commitment_list_if_needed, counter_part, get_ballot_by_candidate,
         get_counting_part_by_candidate, get_int64_by_candidate,
         validate_vote_candidates,
     },
@@ -44,8 +44,12 @@ pub fn verify_vote_request(
     let signature = vote_request.get_vote().get_signature();
 
     let blank_ballot = vote_request.get_vote().get_blank_ballot();
-    let verify_result =
-        verify_ballot_signature(public_key, blank_ballot, &signature.to_vec())?;
+    let verify_result = verify_ballot_signature(
+        public_key,
+        blank_ballot,
+        &signature.to_vec(),
+        poll_parameters,
+    )?;
     if !verify_result {
         return Err(WedprError::VerificationError);
     }
@@ -110,6 +114,11 @@ fn validate_vote_request_structure(
     allow_unlisted: bool,
 ) -> Result<(), WedprError> {
     let vote = vote_request.get_vote();
+    if poll_parameters.get_poll_id().len() != 32
+        || vote.get_poll_id() != poll_parameters.get_poll_id()
+    {
+        return Err(WedprError::VerificationError);
+    }
     if !vote.get_accepted_ballot_id().is_empty() {
         return Err(WedprError::VerificationError);
     }
@@ -132,6 +141,11 @@ fn validate_vote_request_structure(
     let ballots = vote.get_voted_ballot_unlisted();
     let proofs = vote_request.get_unlisted_ballot_proof();
     if !allow_unlisted && (!ballots.is_empty() || !proofs.is_empty()) {
+        return Err(WedprError::VerificationError);
+    }
+    if !allow_unlisted
+        && !vote_request.get_unlisted_candidate_range_proof().is_empty()
+    {
         return Err(WedprError::VerificationError);
     }
     let ballot_keys: BTreeSet<_> = ballots
@@ -243,6 +257,13 @@ pub fn verify_vote_result(
     vote_result: &VoteResultStorage,
 ) -> Result<bool, WedprError> {
     validate_vote_candidates(poll_parameters, vote_sum)?;
+    if !verify_aggregated_decryption(
+        poll_parameters,
+        vote_sum,
+        aggregated_decrypted_result,
+    )? {
+        return Ok(false);
+    }
     let mut expected_keys: BTreeSet<_> = poll_parameters
         .get_candidates()
         .get_candidate()
@@ -305,6 +326,49 @@ pub fn verify_vote_result(
         aggregated_decrypted_result,
         vote_result,
     )
+}
+
+pub(crate) fn verify_aggregated_decryption(
+    poll: &PollParametersStorage,
+    votes: &VoteStorage,
+    aggregate: &DecryptedResultPartStorage,
+) -> Result<bool, WedprError> {
+    let records = aggregate.get_verified_counter_part();
+    if records.is_empty()
+        || records.len()
+            != poll.get_counters().get_counter_parameters_share().len()
+    {
+        return Ok(false);
+    }
+    let mut rebuilt = DecryptedResultPartStorage::new();
+    for record in records {
+        let part = counter_part(record);
+        let result = if votes.get_voted_ballot_unlisted().is_empty() {
+            crate::coordinator::aggregate_decrypted_part_sum(
+                poll,
+                &part,
+                &mut rebuilt,
+                votes,
+            )
+        } else {
+            crate::coordinator::aggregate_decrypted_part_sum_unlisted(
+                poll,
+                &part,
+                &mut rebuilt,
+                votes,
+            )
+        };
+        if result.is_err() {
+            return Ok(false);
+        }
+    }
+    // Candidate IDs are recovered only during finalization; their correctness
+    // is checked separately against the verified candidate decryption points.
+    let mut normalized = aggregate.clone();
+    for part in normalized.mut_unlisted_candidate_part() {
+        part.set_candidate(0);
+    }
+    Ok(rebuilt == normalized)
 }
 
 fn verify_unlisted_vote_result(
@@ -708,6 +772,7 @@ fn verify_unbounded_vote_request_proofs(
         weight_ballot,
         zero_ballot,
         &signature.to_vec(),
+        poll_parameters,
     )?;
     if !verify_result {
         return Err(WedprError::VerificationError);
@@ -739,6 +804,7 @@ pub fn verify_unbounded_vote_request_unlisted(
     if !verify_result {
         return Err(WedprError::VerificationError);
     }
+    verify_unlisted_candidate_ids(poll_parameters, vote_request)?;
     // verify the unlisted unbouded vote request
     let result = batch_verify_unlisted_candidate_ballot_proof(
         &poll_parameters,
@@ -749,4 +815,55 @@ pub fn verify_unbounded_vote_request_unlisted(
         return Err(WedprError::VerificationError);
     }
     Ok(true)
+}
+
+fn verify_unlisted_candidate_ids(
+    poll: &PollParametersStorage,
+    request: &VoteRequest,
+) -> Result<(), WedprError> {
+    let ballots = request.get_vote().get_voted_ballot_unlisted();
+    if ballots.is_empty() {
+        return if request.get_unlisted_candidate_range_proof().is_empty() {
+            Ok(())
+        } else {
+            Err(WedprError::VerificationError)
+        };
+    }
+    let poll_point = bytes_to_point(poll.get_poll_point())?;
+    for proof_pair in request.get_unlisted_ballot_proof() {
+        let key = proof_pair.get_key();
+        let proof =
+            Deserialize::deserialize(proof_pair.get_candidate_format_proof())?;
+        if !verify_format_proof(
+            &bytes_to_point(key.get_ciphertext1())?,
+            &bytes_to_point(key.get_ciphertext2())?,
+            &proof,
+            &BASEPOINT_G1,
+            &BASEPOINT_G2,
+            &poll_point,
+        )? {
+            return Err(WedprError::VerificationError);
+        }
+    }
+    let mut commitments = vec![bytes_to_point(
+        request.get_vote().get_blank_ballot().get_ciphertext1(),
+    )?];
+    let mut previous = None;
+    for ballot in ballots {
+        let point = bytes_to_point(ballot.get_key().get_ciphertext1())?;
+        commitments.push(point);
+        if let Some(previous_point) = previous {
+            commitments.push(point - previous_point - *BASEPOINT_G1);
+        }
+        previous = Some(point);
+    }
+    align_commitment_list_if_needed(&mut commitments);
+    if !verify_value_range_in_batch(
+        &commitments,
+        request.get_unlisted_candidate_range_proof(),
+        &poll_point,
+    ) {
+        return Err(WedprError::VerificationError);
+    }
+    Ok(())
 }

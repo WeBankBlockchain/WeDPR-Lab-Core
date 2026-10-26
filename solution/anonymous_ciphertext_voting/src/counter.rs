@@ -2,6 +2,7 @@
 
 //! Library for a poll counter.
 
+use crate::utils::counter_binding_scalar;
 use wedpr_l_crypto_zkp_discrete_logarithm_proof::prove_equality_relationship_proof;
 use wedpr_l_crypto_zkp_utils::{
     bytes_to_point, bytes_to_scalar, get_random_scalar, point_to_bytes,
@@ -32,10 +33,22 @@ pub fn make_parameters_share(
 ) -> Result<CounterParametersShareRequest, WedprError> {
     let secret_scalar =
         bytes_to_scalar(counter_secret.get_poll_secret_share())?;
+    if counter_id.is_empty()
+        || secret_scalar == curve25519_dalek::scalar::Scalar::zero()
+    {
+        return Err(WedprError::ArgumentError);
+    }
     let poll_point_share = secret_scalar * *BASEPOINT_G2;
+    let binding_base = counter_binding_scalar(counter_id) * *BASEPOINT_G2;
+    let proof = prove_equality_relationship_proof(
+        &secret_scalar,
+        &BASEPOINT_G2,
+        &binding_base,
+    );
     Ok(CounterParametersShareRequest {
         counter_id: counter_id.to_string(),
         poll_point_share: point_to_bytes(&poll_point_share),
+        knowledge_proof: proof.serialize(),
         unknown_fields: Default::default(),
         cached_size: Default::default(),
     })
