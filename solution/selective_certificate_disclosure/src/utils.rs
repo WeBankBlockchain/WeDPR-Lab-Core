@@ -34,6 +34,58 @@ pub fn validate_rule_set(
     Ok(())
 }
 
+/// This protocol hides only the holder's master secret. All schema attributes
+/// are issuer-verified known values; allowing them in U would add an attacker
+/// chosen offset to the value the issuer signs.
+pub fn deserialize_blinded_certificate_secrets(
+    secrets: &str,
+    correctness_proof: &str,
+) -> Result<
+    (
+        wedpr_indy_crypto::cl::BlindedCredentialSecrets,
+        wedpr_indy_crypto::cl::BlindedCredentialSecretsCorrectnessProof,
+    ),
+    WedprError,
+> {
+    // Bound untrusted parsing and BIGNUM construction before entering Indy.
+    if secrets.len() > 64 * 1024 || correctness_proof.len() > 64 * 1024 {
+        return Err(WedprError::FormatError);
+    }
+    let mut secrets: serde_json::Value = safe_deserialize(secrets)?;
+    let proof: serde_json::Value = safe_deserialize(correctness_proof)?;
+    validate_proof_json_strings(&secrets)?;
+    validate_proof_json_strings(&proof)?;
+    let hidden = secrets["hidden_attributes"]
+        .as_array()
+        .ok_or(WedprError::FormatError)?;
+    let committed = secrets["committed_attributes"]
+        .as_object()
+        .ok_or(WedprError::FormatError)?;
+    let m_caps = proof["m_caps"].as_object().ok_or(WedprError::FormatError)?;
+    let r_caps = proof["r_caps"].as_object().ok_or(WedprError::FormatError)?;
+    if hidden.len() != 1
+        || hidden[0].as_str() != Some("user_private_key")
+        || !committed.is_empty()
+        // Indy indexes these response maps without checking for missing keys.
+        || m_caps.len() != 1
+        || !m_caps.contains_key("user_private_key")
+        || !r_caps.is_empty()
+    {
+        return Err(WedprError::FormatError);
+    }
+    // Existing templates include a revocation key, so honest clients also send
+    // `ur`. This API never issues revocable credentials. Discard this unused
+    // field instead of passing an untrusted pairing point to the Indy parser.
+    secrets
+        .as_object_mut()
+        .ok_or(WedprError::FormatError)?
+        .remove("ur");
+    Ok((
+        serde_json::from_value(secrets).map_err(|_| WedprError::DecodeError)?,
+        serde_json::from_value(proof).map_err(|_| WedprError::DecodeError)?,
+    ))
+}
+
 // Indy asserts that its proof count matches the configured credential count.
 // This API configures one credential; reject malformed envelopes before Indy.
 pub fn deserialize_certificate_proof(

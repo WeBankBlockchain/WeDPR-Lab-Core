@@ -344,3 +344,179 @@ fn duplicate_predicate_proofs_and_oversized_numbers_are_rejected_early() {
     )
     .is_err());
 }
+
+#[test]
+fn issuer_rejects_blinding_of_issuer_verified_attributes() {
+    use crate::utils;
+    use wedpr_indy_crypto::{
+        bn::BigNumber,
+        cl::{
+            issuer::Issuer, prover::Prover, CredentialKeyCorrectnessProof,
+            CredentialPublicKey,
+        },
+    };
+    let (template, private_key) = trusted_template();
+    let public_key: CredentialPublicKey =
+        utils::safe_deserialize(template.get_template_public_key().get_key())
+            .unwrap();
+    let correctness: CredentialKeyCorrectnessProof =
+        utils::safe_deserialize(template.get_template_correctness_proof())
+            .unwrap();
+    let master = Prover::new_master_secret().unwrap();
+    let mut values = Issuer::new_credential_values_builder().unwrap();
+    values
+        .add_value_hidden("user_private_key", &master.value().unwrap())
+        .unwrap();
+    values
+        .add_value_hidden("age", &BigNumber::from_dec("75").unwrap())
+        .unwrap();
+    let values = values.finalize().unwrap();
+    let user_nonce = utils::get_random_nonce().unwrap();
+    let (blinded, factors, proof) = Prover::blind_credential_secrets(
+        &public_key,
+        &correctness,
+        &values,
+        &user_nonce,
+    )
+    .unwrap();
+    let mut attributes = AttributeDict::new();
+    let mut pair = StringToStringPair::new();
+    pair.set_key("age".to_owned());
+    pair.set_value("25".to_owned());
+    attributes.mut_pair().push(pair);
+    let mut request = SignCertificateRequest::new();
+    request.set_certificate_attribute_dict(attributes.clone());
+    request.set_blinded_certificate_secrets(
+        utils::safe_serialize(&blinded).unwrap(),
+    );
+    request.set_blinded_certificate_secrets_correctness_proof(
+        utils::safe_serialize(&proof).unwrap(),
+    );
+    let issued = issuer::sign_certificate(
+        template,
+        private_key,
+        &request,
+        "synthetic-user",
+        &utils::safe_serialize(&user_nonce).unwrap(),
+    );
+    if let Ok((signature, issuer_nonce)) = issued {
+        attributes.mut_pair()[0].set_value("100".to_owned());
+        let secret = utils::safe_serialize(&master).unwrap();
+        let processed = user::blind_certificate_signature(
+            &signature,
+            &attributes,
+            template,
+            &secret,
+            &utils::safe_serialize(&factors).unwrap(),
+            &issuer_nonce,
+        )
+        .unwrap();
+        let mut rules = VerificationRuleSet::new();
+        let mut predicate = Predicate::new();
+        predicate.set_attribute_name("age".to_owned());
+        predicate.set_predicate_type("GE".to_owned());
+        predicate.set_predicate_value(100);
+        rules.mut_attribute_predicate().push(predicate);
+        let nonce = verifier::get_verification_nonce().unwrap();
+        let forged = user::prove_selective_disclosure(
+            &rules,
+            &processed,
+            &attributes,
+            template,
+            &secret,
+            &nonce,
+        )
+        .unwrap();
+        assert!(verifier::verify_selective_disclosure_with_context(
+            &rules, &forged, template, &nonce
+        )
+        .unwrap());
+        panic!("issuer approved age 25 but an age 100 credential was accepted");
+    }
+}
+
+#[test]
+fn malformed_blinding_requests_are_rejected_without_panicking() {
+    let (template, key) = trusted_template();
+    let mut attributes = AttributeDict::new();
+    let mut pair = StringToStringPair::new();
+    pair.set_key("age".to_owned());
+    pair.set_value("25".to_owned());
+    attributes.mut_pair().push(pair);
+    let (request, _, _, nonce) =
+        user::fill_certificate(&attributes, template).unwrap();
+    let secrets: serde_json::Value =
+        serde_json::from_str(request.get_blinded_certificate_secrets())
+            .unwrap();
+    let proof: serde_json::Value = serde_json::from_str(
+        request.get_blinded_certificate_secrets_correctness_proof(),
+    )
+    .unwrap();
+    let mut cases = Vec::new();
+    for hidden in [
+        serde_json::json!([]),
+        serde_json::json!(["age"]),
+        serde_json::json!(["user_private_key", "age"]),
+        serde_json::json!(["user_private_key", "user_private_key"]),
+    ] {
+        let mut malformed = secrets.clone();
+        malformed["hidden_attributes"] = hidden;
+        cases.push((malformed, proof.clone()));
+    }
+    let mut committed = secrets.clone();
+    committed["committed_attributes"] = serde_json::json!({"age": "1"});
+    cases.push((committed, proof.clone()));
+    let mut missing_response = proof.clone();
+    missing_response["m_caps"] = serde_json::json!({});
+    cases.push((secrets.clone(), missing_response));
+    let mut extra_response = proof.clone();
+    extra_response["m_caps"]["age"] = serde_json::json!("1");
+    cases.push((secrets.clone(), extra_response));
+    let mut committed_response = proof.clone();
+    committed_response["r_caps"] = serde_json::json!({"age": "1"});
+    cases.push((secrets.clone(), committed_response));
+    let mut oversized = proof.clone();
+    oversized["v_dash_cap"] = serde_json::json!("9".repeat(4097));
+    cases.push((secrets.clone(), oversized));
+    for (secrets, proof) in cases {
+        let mut malformed = request.clone();
+        malformed.set_blinded_certificate_secrets(secrets.to_string());
+        malformed.set_blinded_certificate_secrets_correctness_proof(
+            proof.to_string(),
+        );
+        let result = std::panic::catch_unwind(|| {
+            issuer::sign_certificate(
+                template,
+                key,
+                &malformed,
+                "synthetic-user",
+                &nonce,
+            )
+        });
+        assert!(result.is_ok(), "untrusted signing input must not unwind");
+        assert!(result.unwrap().is_err());
+    }
+    for field in ["secrets", "proof"] {
+        let mut oversized = request.clone();
+        let padding = " ".repeat(64 * 1024);
+        if field == "secrets" {
+            oversized.set_blinded_certificate_secrets(
+                padding + request.get_blinded_certificate_secrets(),
+            );
+        } else {
+            oversized.set_blinded_certificate_secrets_correctness_proof(
+                padding
+                    + request
+                        .get_blinded_certificate_secrets_correctness_proof(),
+            );
+        }
+        assert!(issuer::sign_certificate(
+            template,
+            key,
+            &oversized,
+            "synthetic-user",
+            &nonce,
+        )
+        .is_err());
+    }
+}
